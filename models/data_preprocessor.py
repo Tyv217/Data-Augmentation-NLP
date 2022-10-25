@@ -17,12 +17,18 @@ class PreProcessor(ABC):
     def get_tokenizer(self):
         pass
             
+    def get_vocab(self):
+        return self.vocab
+        
+    def get_dataloader(self):
+        return self.dataloader
+
+    def get_device(self):
+        return self.device
+
     def yield_tokens(self):
         for _, text in self.data_iter:
             yield self.tokenizer(text)
-
-    def get_vocab(self):
-        return self.vocab
 
     def text_pipeline(self, input_string):
         return self.vocab(self.tokenizer(input_string))
@@ -34,18 +40,14 @@ class PreProcessor(ABC):
         label_list, text_list, offsets = [], [], [0]
         for (label, text) in data_batch:
             label_list.append(self.label_pipeline(label))
-            text_indices = torch.tensor(self.text_pipeline(text), dtype = torch.int64)
+            text_indices = torch.tensor(self.text_pipeline(text))
             text_list.append(text_indices)
             offsets.append(text_indices.size(dim = 0))
         label_list = torch.tensor(label_list, dtype = torch.int64)
-        print(offsets)
         offsets = torch.tensor(offsets[:-1]).cumsum(dim = 0)
-        print(offsets)
         text_list = torch.cat(text_list)
         return label_list.to(self.device), text_list.to(self.device), offsets.to(self.device)
 
-    def get_dataloader(self):
-        return self.dataloader
 
 class EnglishPreProcessor(PreProcessor):
     def get_tokenizer(self):

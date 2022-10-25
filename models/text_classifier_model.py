@@ -1,9 +1,10 @@
 from torch import nn
 
-class TextClassificationModel(nn.Module):
+# TODO: Change to better implementation
+class TextClassifierModel(nn.Module):
 
     def __init__(self, vocab_size, embed_dim, num_classes):
-        super(TextClassificationModel, self).__init__()
+        super(TextClassifierModel, self).__init__()
         self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse = True)
         self.fc = nn.Linear(embed_dim, num_classes)
         self.init_weights()

@@ -65,7 +65,7 @@ def eval_model(dataloader, model, loss_fn, epoch_number, logger):
 # Use pytorch lightning
 
 def run_model(model):
-    EPOCHS = 10
+    EPOCHS = 50
     LEARNING_RATE = 5
     BATCH_SIZE = 64
 
@@ -85,9 +85,9 @@ def run_model(model):
     preprocessor = EnglishPreProcessor(train_iter)
     logger = Logger()
 
-    train_dataloader = preprocessor.get_dataloader(split_train, batch_size=BATCH_SIZE, shuffle=True)
-    valid_dataloader = preprocessor.get_dataloader(split_valid, batch_size=BATCH_SIZE, shuffle=True)
-    test_dataloader = preprocessor.get_dataloader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    train_dataloader = preprocessor.get_dataloader(split_train, batch_size = BATCH_SIZE, shuffle = True)
+    valid_dataloader = preprocessor.get_dataloader(split_valid, batch_size = BATCH_SIZE, shuffle = True)
+    test_dataloader = preprocessor.get_dataloader(test_dataset, batch_size = BATCH_SIZE, shuffle = True)
 
     for epoch_number in range(1, EPOCHS + 1):
         start_time = time.time()
@@ -98,10 +98,9 @@ def run_model(model):
         else:
             total_accuracy = curr_accuracy
             logger.log_epoch(epoch_number, time.time() - start_time, curr_accuracy)
-    
-    print('Checking the results of test dataset.')
+
     test_accuracy = eval_model(test_dataloader, model, loss_fn, epoch_number, logger)
-    print('test accuracy {:8.3f}'.format(test_accuracy))
+    logger.log_test_result(test_accuracy)
 
 def text_classify():
     train_iter = agnews(split='train')

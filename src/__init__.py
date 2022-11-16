@@ -1,2 +1,2 @@
-from .models.text_classifier import *
+from .models.train_model import *
 from .models import *

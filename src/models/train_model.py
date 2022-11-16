@@ -5,7 +5,7 @@ from torchtext.data.functional import to_map_style_dataset
 from .helpers import EnglishPreProcessor, Logger
 from text_classifier import TextClassifierEmbeddingModel
 
-def train_model(dataloader, model, loss_fn, optimizer, epoch_number, logger):
+def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger):
     model.train()
     accuracy, count = 0, 0
     log_interval = 500
@@ -30,7 +30,7 @@ def train_model(dataloader, model, loss_fn, optimizer, epoch_number, logger):
             accuracy, count = 0, 0
             start_time = time.time()
 
-def eval_model(dataloader, model, loss_fn, epoch_number, logger):
+def eval_model_text_classifier(dataloader, model, loss_fn, epoch_number, logger):
     model.eval()
     accuracy, count = 0, 0
 
@@ -45,7 +45,7 @@ def eval_model(dataloader, model, loss_fn, epoch_number, logger):
 
 # Use pytorch lightning
 
-def run_model(model):
+def run_model_text_classifier(model):
     EPOCHS = 50
     LEARNING_RATE = 5
     BATCH_SIZE = 64
@@ -72,8 +72,8 @@ def run_model(model):
 
     for epoch_number in range(1, EPOCHS + 1):
         start_time = time.time()
-        train_model(train_dataloader, model, loss_fn, optimizer, epoch_number, logger)
-        curr_accuracy = eval_model(valid_dataloader, model, loss_fn, epoch_number, logger)
+        train_model_text_classifier(train_dataloader, model, loss_fn, optimizer, epoch_number, logger)
+        curr_accuracy = eval_model_text_classifier(valid_dataloader, model, loss_fn, epoch_number, logger)
         if total_accuracy is not None and total_accuracy > curr_accuracy:
             scheduler.step()
         else:
@@ -90,4 +90,4 @@ def text_classify():
     vocab_size = len(eng_pre_processor_train.get_vocab())
     embed_size = 64
     model = TextClassifierEmbeddingModel(vocab_size, embed_size, num_class).to(eng_pre_processor_train.get_device())
-    run_model(model)
+    run_model_text_classifier(model)

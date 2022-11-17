@@ -101,13 +101,51 @@ class Decoder(pl.LightningModule):
         return prediction, hidden.squeeze(0), attn.squeeze(1)
         
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, encoder, decoder, input_padding_index, device):
+    def __init__(self, input_vocab_size, output_vocab_size, embed_size, hidden_size, dropout, input_padding_index):
         super().__init__()
-
-        self.encoder = encoder
-        self.decoder = decoder
+        self.input_size = input_vocab_size
+        self.output_size = output_vocab_size
+        self.enc_emb_size = embed_size
+        self.dec_emb_size = embed_size
+        self.enc_hid_size = hidden_size
+        self.dec_hid_size = hidden_size
+        self.enc_dropout = dropout
+        self.dec_dropout = dropout
         self.input_padding_index = input_padding_index
-        self.device = device
+
+        self.save_hyperparameters()
+
+        self.loss = torch.nn.CrossEntropyLoss(ignore_index = self.input_padding_index)
+        self.learning_rate = 0.0005
+        self.max_epochs = 50
+
+        self.encoder = Encoder(
+            self.input_size, 
+            self.enc_emb_size, 
+            self.enc_hid_size, 
+            self.dec_hid_size, 
+            self.enc_dropout
+        )
+
+        self.attention = Attention(self.enc_hid_size, self.dec_hid_size)
+
+        self.decoder = Decoder(
+            self.output_size, 
+            self.dec_emb_size, 
+            self.enc_hid_size, 
+            self.dec_hid_size, 
+            self.dec_dropout, 
+            self.attention
+        )
+
+        self.init_weights()
+
+    def init_weights(self):
+        for name, param in self.named_parameters():
+            if 'weight' in name:
+                torch.nn.init.normal_(param.data, mean=0, std=0.01)
+            else:
+                torch.nn.init.constant_(param.data, 0)
 
     def create_mask(self, input_):
         mask = (input_ != self.input_padding_index).permute(1, 0)
@@ -118,7 +156,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         training_size = training.shape[0]
         training_vocab_size = self.decoder.output_size
 
-        outputs = torch.zeros(training_size, batch_size, training_vocab_size).to(self.device)
+        decoder_outputs = torch.zeros(training_size, batch_size, training_vocab_size)
 
         encoder_outputs, hidden = self.encoder(input_, input_lengths)
 
@@ -128,19 +166,117 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         for t in range(1, training_length):
             
-            output, hidden, _ = self.decoder(decoder_input, hidden, encoder_outputs, mask)
+            decoder_output, hidden, _ = self.decoder(decoder_input, hidden, encoder_outputs, mask)
             
             #place predictions in a tensor holding predictions for each token
-            outputs[t] = output
+            decoder_outputs[t] = decoder_output
             
             #decide if we are going to use teacher forcing or not
             teacher_force = random.random() < teacher_forcing_ratio
             
             #get the highest predicted token from our predictions
-            top_predicted_token = output.argmax(1) 
+            top_predicted_token = decoder_output.argmax(1) 
             
             #if teacher forcing, use actual next token as next input
             #if not, use predicted token
             decoder_input = training[t] if teacher_force else top_predicted_token
             
-        return outputs
+        return decoder_outputs
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = F.cross_entropy(y_hat, y)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = optim.AdamW(self.parameters(), lr = self.learning_rate)
+        lr_scheduler = {
+            "scheduler": optim.lr_scheduler.OneCycleLR(
+                optimizer,
+                max_lr = self.learning_rate,
+                steps_per_epoch = int(len(self.train_dataloader())),
+                epochs = self.max_epochs,
+                anneal_strategy = "linear",
+                final_div_factor = 1000,
+                pct_start = 0.01,
+            ),
+            "name": "learning_rate",
+            "interval": "step",
+            "frequency": 1,
+        }
+
+        return [optimizer], [lr_scheduler]
+
+    def training_step(batch, batch_idx):
+        input_batch, training_batch = batch
+        input_, input_lengths = input_batch
+
+        output = self.forward(input_, input_lengths, training_batch)
+
+        output_dim = output.shape[-1]
+        output = output[1:].view(-1, self.output_size)
+        training = training[1:].view(-1)
+
+        loss = self.loss(output, training)
+
+        self.log(
+            "training_loss",
+            loss.item(),
+            on_step = True,
+            on_epoch = True,
+            prog_bar = True,
+            logger = rue,
+        )
+
+        return loss
+
+    def validation_step(batch, batch_idx):
+        input_batch, training_batch = batch
+        input_, input_lengths = input_batch
+
+        output = self.forward(input_, input_lengths, training_batch, 0)
+
+        output_dim = output.shape[-1]
+        output = output[1:].view(-1, self.output_size)
+        training = training[1:].view(-1)
+
+        loss = self.loss(output, training)
+
+        self.log(
+            "validation_loss",
+            loss.item(),
+            on_step = True,
+            on_epoch = True,
+            prog_bar = True,
+            logger = rue,
+        )
+
+        pred_seq = outputs[1:].argmax(2)
+
+        # change layout: seq_len * batch_size -> batch_size * seq_len
+        pred_seq = pred_seq.T
+
+        # compere list of predicted ids for all sequences in a batch to targets
+        acc = plfunc.accuracy(pred_seq.reshape(-1), training_batch.reshape(-1))
+
+        # need to cast to list of predicted sequences (as list of token ids)   [ [seq1_tok1, seq1_tok2, ...seq1_tokN],..., [seqK_tok1, seqK_tok2, ...seqK_tokZ]]
+        predicted_ids = pred_seq.tolist()
+
+        # need to add additional dim to each target reference sequence in order to
+        # convert to format needed by bleu_score function [ seq1=[ [reference1], [reference2] ], seq2=[ [reference1] ] ]
+        target_ids = torch.unsqueeze(trg_batch, 1).tolist()
+
+        # bleu score needs two arguments
+        # first: predicted_ids - list of predicted sequences as a list of predicted ids
+        # second: target_ids - list of references (can be many, list)
+        bleu_score = plfunc.nlp.bleu_score(predicted_ids, target_ids, n_gram=3).to(
+            self.device
+        )  # torch.unsqueeze(trg_batchT,1).tolist())
+
+        return loss, acc, bleu_score
+
+    
+
+
+

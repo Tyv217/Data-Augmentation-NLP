@@ -2,10 +2,12 @@ import torch, time
 from torchtext.datasets import AG_NEWS as agnews
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
+from torch.utils.tensorboard import SummaryWriter
 from .helpers import EnglishPreProcessor, Logger
-from text_classifier import TextClassifierEmbeddingModel
+from .text_classifier import TextClassifierEmbeddingModel
 
-def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger):
+
+def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
     model.train()
     accuracy, count = 0, 0
     log_interval = 500
@@ -16,6 +18,7 @@ def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_num
         predicted_label = model(text, offsets) # Calls forward function
 
         loss = loss_fn(predicted_label, label)
+        writer.add_scalar("Loss/train", loss, epoch_number)
         loss.backward() 
 
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.1)
@@ -29,6 +32,8 @@ def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_num
             logger.log_batch(epoch_number, index, len(dataloader), accuracy, count)
             accuracy, count = 0, 0
             start_time = time.time()
+        
+        writer.flush()
 
 def eval_model_text_classifier(dataloader, model, loss_fn, epoch_number, logger):
     model.eval()
@@ -49,6 +54,8 @@ def run_model_text_classifier(model):
     EPOCHS = 50
     LEARNING_RATE = 5
     BATCH_SIZE = 64
+    
+    writer = SummaryWriter()    
 
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr = LEARNING_RATE)
@@ -72,7 +79,7 @@ def run_model_text_classifier(model):
 
     for epoch_number in range(1, EPOCHS + 1):
         start_time = time.time()
-        train_model_text_classifier(train_dataloader, model, loss_fn, optimizer, epoch_number, logger)
+        train_model_text_classifier(train_dataloader, model, loss_fn, optimizer, epoch_number, logger, writer)
         curr_accuracy = eval_model_text_classifier(valid_dataloader, model, loss_fn, epoch_number, logger)
         if total_accuracy is not None and total_accuracy > curr_accuracy:
             scheduler.step()
@@ -82,6 +89,7 @@ def run_model_text_classifier(model):
 
     test_accuracy = eval_model(test_dataloader, model, loss_fn, epoch_number, logger)
     logger.log_test_result(test_accuracy)
+    writer.close()
 
 def text_classify():
     train_iter = agnews(split='train')

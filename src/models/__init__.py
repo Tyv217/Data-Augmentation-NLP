@@ -1,2 +1,3 @@
 from .helpers import *
-from .text_classifier import text_classify
+from .text_classifier import TextClassifierEmbeddingModel
+from .train_model import text_classify

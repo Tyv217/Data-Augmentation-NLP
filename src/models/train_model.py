@@ -63,7 +63,7 @@ def run_model_text_classifier(model):
 
     total_accuracy = None
     train_iter, test_iter = agnews()
-    print(train_iter)
+    print(list(train_iter))
 
     train_dataset = to_map_style_dataset(train_iter)
     print(train_dataset)

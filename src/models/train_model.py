@@ -63,8 +63,10 @@ def run_model_text_classifier(model):
 
     total_accuracy = None
     train_iter, test_iter = agnews()
+    print(train_iter)
 
     train_dataset = to_map_style_dataset(train_iter)
+    print(train_dataset)
     test_dataset = to_map_style_dataset(test_iter)
     num_train = int(len(train_dataset) * 0.95)
     split_train, split_valid = random_split(train_dataset, [num_train, len(train_dataset) - num_train], \

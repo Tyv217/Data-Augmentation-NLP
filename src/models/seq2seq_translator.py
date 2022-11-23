@@ -270,7 +270,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # bleu score needs two arguments
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
         # second: target_ids - list of references (can be many, list)
-        bleu_score = plfunc.nlp.bleu_score(predicted_ids, target_ids, n_gram=3).to(
+        bleu_score = plfunc.nlp.bleu_score(predicted_ids, target_ids, n_gram = 3).to(
             self.device
         )  # torch.unsqueeze(trg_batchT,1).tolist())
 

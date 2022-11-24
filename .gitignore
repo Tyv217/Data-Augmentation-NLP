@@ -2,3 +2,4 @@ venv/
 __pycache__/
 anaconda3/
 .vscode/
+runs/

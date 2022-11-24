@@ -1,10 +1,11 @@
-import torch, time
+import torch, time, random
 from torchtext.datasets import AG_NEWS as agnews
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
 from torch.utils.tensorboard import SummaryWriter
 from .helpers import EnglishPreProcessor, Logger
 from .text_classifier import TextClassifierEmbeddingModel
+from .data_augmentors import Synonym_Replacer
 
 
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
@@ -50,23 +51,24 @@ def eval_model_text_classifier(dataloader, model, loss_fn, epoch_number, logger)
 
 # Use pytorch lightning
 
-def run_model_text_classifier(model):
-    EPOCHS = 50
-    LEARNING_RATE = 5
+def run_model_text_classifier(model, train_iter):
+    EPOCHS = 20
+    LEARNING_RATE = 0.1
+    MOMENTUM = 0.9
     BATCH_SIZE = 64
     
     writer = SummaryWriter()    
 
     loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr = LEARNING_RATE)
+    optimizer = torch.optim.SGD(model.parameters(), lr = LEARNING_RATE, momentum = MOMENTUM)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma = 0.1)
 
     total_accuracy = None
-    train_iter, test_iter = agnews()
-    print(list(train_iter))
+    _, test_iter = agnews()
 
     train_dataset = to_map_style_dataset(train_iter)
-    print(train_dataset)
+
+
     test_dataset = to_map_style_dataset(test_iter)
     num_train = int(len(train_dataset) * 0.95)
     split_train, split_valid = random_split(train_dataset, [num_train, len(train_dataset) - num_train], \
@@ -85,19 +87,26 @@ def run_model_text_classifier(model):
         curr_accuracy = eval_model_text_classifier(valid_dataloader, model, loss_fn, epoch_number, logger)
         if total_accuracy is not None and total_accuracy > curr_accuracy:
             scheduler.step()
+            logger.log_epoch(epoch_number, time.time() - start_time, total_accuracy)
         else:
             total_accuracy = curr_accuracy
             logger.log_epoch(epoch_number, time.time() - start_time, curr_accuracy)
 
-    test_accuracy = eval_model(test_dataloader, model, loss_fn, epoch_number, logger)
+    test_accuracy = eval_model_text_classifier(test_dataloader, model, loss_fn, epoch_number, logger)
     logger.log_test_result(test_accuracy)
     writer.close()
 
 def text_classify():
-    train_iter = agnews(split='train')
+    train_iter = list(agnews(split='train'))
+    random.shuffle(train_iter)
+    # train_iter = train_iter[:len(train_iter) // 10]
+    print("Length of dataset before augmentation:", len(list(train_iter)))
+    synonym_replacer = Synonym_Replacer('english')
+    # train_iter = synonym_replacer.augment_dataset(train_iter)
+    print("Length of dataset after augmentation:", len(list(train_iter)))
     eng_pre_processor_train = EnglishPreProcessor(train_iter)
     num_class = len(set([label for (label, text) in train_iter]))
     vocab_size = len(eng_pre_processor_train.get_vocab())
     embed_size = 64
     model = TextClassifierEmbeddingModel(vocab_size, embed_size, num_class).to(eng_pre_processor_train.get_device())
-    run_model_text_classifier(model)
+    run_model_text_classifier(model, train_iter)

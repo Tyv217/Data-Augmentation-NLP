@@ -1,9 +1,11 @@
-import torch
+import torch, spacy, en_core_web_sm, de_core_news_sm
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SequentialSampler, RandomSampler, BatchSampler
 import pytorch_lightning as pl
-import pytorch_lightning.metrics.functional as plfunc
+import torchmetrics.functional as plfunc
 from pytorch_lightning.loggers import TensorBoardLogger
+from torchnlp.encoders.text.static_tokenizer_encoder import StaticTokenizerEncoder
+# from torchtext.legacy.data import Field, BucketIterator
 
 class Encoder(pl.LightningModule):
 
@@ -276,7 +278,55 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         return loss, acc, bleu_score
 
-    
+class Seq2SeqDataModule(pl.LightningDataModule):
+    def __init__(self, batch_size: int = 32):
+        super().__init__()
 
+        self.dataset = load_dataset("iwslt2017", "iwslt2017-en-de")
+        self.build_vocab(dataset["train"])
+        self.batch_size = batch_size
 
+    def build_vocab(self):
+        self.dataset = load_dataset("iwslt2017", "iwslt2017-en-de")
+        en_lines = []
+        de_lines = []
+        for line in self.dataset['train']:
+            en_lines.append(line['translation']['en'])
+            de_lines.append(line['translation']['de'])
 
+        en_tokenizer = StaticTokenizerEncoder(en_lines, append_eos = True)
+        de_tokenizer = StaticTokenizerEncoder(de_lines, append_eos = True)
+        
+        self.input_vocab_size = en_tokenizer.vocab_size
+        self.output_vocab_size = de_tokenizer.vocab_size
+
+    def split_and_pad_data(self, data):
+        en_index_lines = []
+        de_index_lines = []
+        for line in data:
+            en_index_lines.append(en_tokenizer.encode(line['translation']['en']))
+            de_index_lines.append(de_tokenizer.encode(line['translation']['de']))
+
+        en_index_lines = pad_sequence(en_index_lines, batch_first = True)
+        de_index_lines = pad_sequence(de_index_lines, batch_first = True)
+
+        return en_index_lines, de_index_lines
+
+    def setup(self, stage: str):
+        pass
+
+    def train_dataloader(self):
+        return DataLoader(self.train_iterator, batch_size=self.batch_size)
+
+    def val_dataloader(self):
+        return DataLoader(self.valid_iterator, batch_size=self.batch_size)
+
+    def test_dataloader(self):
+        return DataLoader(self.test_iterator, batch_size=self.batch_size)
+
+    def predict_dataloader(self):
+        return DataLoader(self.test_iterator, batch_size=self.batch_size)
+
+    def teardown(self, stage: str):
+        # Used to clean-up when the run is finished
+        pass

@@ -1,4 +1,4 @@
-import torch, spacy, en_core_web_sm, de_core_news_sm
+import torch, random
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SequentialSampler, RandomSampler, BatchSampler
 import pytorch_lightning as pl
@@ -7,24 +7,25 @@ from torchnlp.encoders.text.static_tokenizer_encoder import StaticTokenizerEncod
 from datasets import load_dataset
 from torch.nn.utils.rnn import pad_sequence
 # from torchtext.legacy.data import Field, BucketIterator
+import pdb
 
 class Encoder(pl.LightningModule):
 
     def __init__(self, input_size, embed_size, enc_hid_size, dec_hid_size, dropout):
         super().__init__()
         
-        self.example_input_array = torch.Tensor(32, 1, 28, 28)
         self.embedding = torch.nn.Embedding(input_size, embed_size)
-        self.gru = torch.nn.GRU(embed_size, enc_hid_size, bidirectional = True)
+        self.gru = torch.nn.GRU(embed_size, enc_hid_size, num_layers = 1, bidirectional = True)
         self.fc = torch.nn.Linear(enc_hid_size * 2, dec_hid_size)
-        self.dropout = torch.nn.Dropout(dropout)
+        self.dropout = torch.nn.Dropout(dropout, inplace = True)
 
     def forward(self, input, input_lengths):
         embedded = self.dropout(self.embedding(input))
-        packed_embedded = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths.to('cpu'), enforce_sorted = False)
+        packed_embedded = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths.cpu(), enforce_sorted = False)
+        # embedded = [seq len, 32 = batch size, 256 = embedding feature size]
 
         packed_outputs, hidden = self.gru(packed_embedded)
-        outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(packed_outputs)
+        outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(packed_outputs, total_length = input.shape[0])
 
         #hidden is stacked [forward_1, backward_1, forward_2, backward_2, ...]
         #outputs are always from the last layer
@@ -35,7 +36,6 @@ class Encoder(pl.LightningModule):
         #initial decoder hidden is final hidden state of the forwards and backwards 
         #  encoder RNNs fed through a linear layer
         hidden = torch.tanh(self.fc(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim = 1)))
-
         return outputs, hidden
 
 class Attention(pl.LightningModule):
@@ -47,7 +47,7 @@ class Attention(pl.LightningModule):
         self.v = torch.nn.Linear(enc_hid_size, 1, bias = False)
 
     def forward(self, hidden, encoder_outputs, mask):
-        batch_size = encoder_outputs.shape[1]
+        # batch_size = encoder_outputs.shape[1]
         input_lengths = encoder_outputs.shape[0]
     
         hidden = hidden.unsqueeze(1).repeat(1, input_lengths, 1)
@@ -55,6 +55,7 @@ class Attention(pl.LightningModule):
         
         energy = torch.tanh(self.attn(torch.cat((hidden, encoder_outputs), dim = 2)))
         attention = self.v(energy).squeeze(2)
+        
         attention = attention.masked_fill(mask == 0, -1e10)
         
         return torch.nn.functional.softmax(attention, dim = 1)
@@ -100,7 +101,7 @@ class Decoder(pl.LightningModule):
         output = output.squeeze(0)
         weighted_encoder_outputs = weighted_encoder_outputs.squeeze(0)
         
-        prediction = self.fc(torch.cat((output, weighted, embedded), dim = 1))
+        prediction = self.fc(torch.cat((output, weighted_encoder_outputs, embedded), dim = 1))
 
         return prediction, hidden.squeeze(0), attn.squeeze(1)
         
@@ -143,8 +144,6 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         self.init_weights()
 
-        self.example_input_array = torch.zeros(32, 1, 28, 28, dtype = torch.int32).cpu(), torch.zeros(32, dtype = torch.int32).cpu(), torch.zeros(32, 1, 28, 28, dtype = torch.int32).cpu()
-
     def init_weights(self):
         for name, param in self.named_parameters():
             if 'weight' in name:
@@ -169,7 +168,7 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         mask = self.create_mask(input_)
 
-        for t in range(1, training_length):
+        for t in range(1, training_size):
             
             decoder_output, hidden, _ = self.decoder(decoder_input, hidden, encoder_outputs, mask)
             
@@ -177,7 +176,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             decoder_outputs[t] = decoder_output
             
             #decide if we are going to use teacher forcing or not
-            teacher_force = random.random() < teacher_forcing_ratio
+            teacher_force = random.random() < teaching_forcing_ratio
             
             #get the highest predicted token from our predictions
             top_predicted_token = decoder_output.argmax(1) 
@@ -227,7 +226,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             on_step = True,
             on_epoch = True,
             prog_bar = True,
-            logger = rue,
+            logger = True,
         )
 
         return loss
@@ -240,27 +239,30 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         target_seq = target_batch["trg"].transpose(0,1)
 
-        output = self.forward(input_seq, input_lengths, target_seq, 0)
+        outputs = self.forward(input_seq, input_lengths, target_seq, 0)
 
-        output = output[1:].view(-1, self.output_size)
+        output = outputs[1:].view(-1, self.output_size)
         target = target_seq[1:].reshape(-1)
 
         loss = self.loss(output, target)
 
-        prediction = output[1:].argmax(2).T
+        prediction = outputs[1:].argmax(2).T
 
         target_batch = target_seq[1:].T
 
-        acc = plfunc.accuracy(prediction.reshape(-1), target_batch.reshape(-1))
+        # acc = plfunc.accuracy(prediction.reshape(-1), target_batch.reshape(-1))
 
         predicted_seq = prediction.tolist()
 
         target_seq_bleu = torch.unsqueeze(target_batch, 1).tolist()
 
+        import pdb
+        pdb.set_trace()
+
         # bleu score needs two arguments
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
         # second: target_ids - list of references (can be many, list)
-        bleu_score = plfunc.nlp.bleu_score(predicted_seq, target_seq_bleu, n_gram = 3).to(
+        bleu_score = plfunc.bleu_score(predicted_seq, target_seq_bleu, n_gram = 3).to(
             self.device
         )  # torch.unsqueeze(trg_batchT,1).tolist())
 
@@ -270,17 +272,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             on_step = True,
             on_epoch = True,
             prog_bar = True,
-            logger = rue,
-        )
-
-        self.log(
-            "val_acc",
-            acc,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            logger=True,
-            sync_dist=True,
+            logger = True,
         )
 
         self.log(
@@ -293,7 +285,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             sync_dist=True,
         )
 
-        return loss, acc, bleu_score
+        return loss, bleu_score
 
 class Seq2SeqDataModule(pl.LightningDataModule):
     def __init__(self, batch_size: int = 32):
@@ -323,22 +315,21 @@ class Seq2SeqDataModule(pl.LightningDataModule):
         de_lengths = []
 
         for line in data:
-            en_index_lines.append(self.en_tokenizer.encode(line['translation']['en']))
-            en_lengths.append(len(line['translation']['en']))
-            de_index_lines.append(self.de_tokenizer.encode(line['translation']['de'][::-1]))
-            de_lengths.append(len(line['translation']['de']))
-
+            en_line = self.en_tokenizer.encode(line['translation']['en'])
+            en_index_lines.append(en_line)
+            en_lengths.append(len(en_line))
+            de_line = self.de_tokenizer.encode(line['translation']['de'])
+            de_index_lines.append(de_line)
+            de_lengths.append(len(de_line))
         en_index_lines = pad_sequence(en_index_lines, batch_first = True)
         de_index_lines = pad_sequence(de_index_lines, batch_first = True)
 
         data_seq = []
-
         for i in range(len(en_index_lines)):
             if(en_lengths[i] > 0 and de_lengths[i] > 0):
-                input_ = {'src': en_index_lines[i], 'src_len': en_lengths[i]}
+                input = {'src': en_index_lines[i], 'src_len': en_lengths[i]}
                 output = {'trg': de_index_lines[i], 'trg_len': de_lengths[i]}
-                data_seq.append((input_,output))
-
+                data_seq.append((input,output))
         return data_seq
 
     def setup(self, stage: str):

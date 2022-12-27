@@ -17,4 +17,4 @@ if __name__ == "__main__":
     # with open("accuracies.txt", "a") as f:
     #     f.write("Percentage: " + str(AUGMENTATION_PERCENTAGE * 100) + "%, accuracy: " + "{0:.3g}\n".format(accuracy))
 
-    # seq2seq_translate()
+    seq2seq_translate()

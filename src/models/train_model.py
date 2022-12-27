@@ -127,8 +127,8 @@ def seq2seq_translate():
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--embed_size", type=int, default=256)
-    parser.add_argument("--hidden_size", type=int, default=512)
+    parser.add_argument("--embed_size", type=int, default=64)
+    parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -150,7 +150,6 @@ def seq2seq_translate():
     #     input_, output = batch
     #     print(input_['src_len'])
     
-    model_args = vars(args)
     model = Seq2SeqTranslator(
         input_vocab_size = data.input_vocab_size, output_vocab_size = data.output_vocab_size, embed_size = args.embed_size, hidden_size = args.hidden_size, dropout = args.dropout, input_padding_index=data.padding_index
     )

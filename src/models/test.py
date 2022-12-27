@@ -2,8 +2,6 @@
 from datasets import load_dataset
 from torchtext.vocab import build_vocab_from_iterator
 from torchtext.data import get_tokenizer
-import en_core_web_sm
-import spacy
 
 from torchnlp.encoders.text.static_tokenizer_encoder import StaticTokenizerEncoder
 from torch.nn.utils.rnn import pad_sequence
@@ -28,4 +26,5 @@ def main():
     de_index_lines = pad_sequence(de_index_lines, batch_first = True)
 
 if __name__ == "__main__":
-    main()
+    line = [1,2,3,4,5]
+    print(line[-1])

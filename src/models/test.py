@@ -27,6 +27,5 @@ def main():
     en_index_lines = pad_sequence(en_index_lines, batch_first = True)
     de_index_lines = pad_sequence(de_index_lines, batch_first = True)
 
-
 if __name__ == "__main__":
     main()

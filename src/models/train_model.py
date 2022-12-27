@@ -10,6 +10,7 @@ from .helpers import EnglishPreProcessor, Logger
 from .text_classifier import TextClassifierEmbeddingModel
 from .data_augmentors import Synonym_Replacer
 from .seq2seq_translator import Seq2SeqDataModule, Seq2SeqTranslator
+from pytorch_lightning.loggers import TensorBoardLogger
 
 
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
@@ -129,7 +130,6 @@ def seq2seq_translate():
     parser.add_argument("--embed_size", type=int, default=256)
     parser.add_argument("--hidden_size", type=int, default=512)
     parser.add_argument("--dropout", type=float, default=0.5)
-
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     data = Seq2SeqDataModule(batch_size=args.batch_size)
@@ -137,19 +137,22 @@ def seq2seq_translate():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "model_corrector", name="pl_tensorboard_logs", comment=log_desc
+        "runs", name="pl_tensorboard_logs"
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
-
+    print(args)
     trainer = pl.Trainer.from_argparse_args(
         args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
     )  # , distributed_backend='ddp_cpu')
-
+    
+    # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
+    #     input_, output = batch
+    #     print(input_['src_len'])
+    
     model_args = vars(args)
     model = Seq2SeqTranslator(
-        input_vocab_size = data.input_vocab_size, output_vocab_size = data.output_vocab_size, embed_size = args.embed_size, hidden_size = args.hidden_size, dropout = args.dropout, input_padding_index=data.padding_index, **model_args
+        input_vocab_size = data.input_vocab_size, output_vocab_size = data.output_vocab_size, embed_size = args.embed_size, hidden_size = args.hidden_size, dropout = args.dropout, input_padding_index=data.padding_index
     )
-
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)

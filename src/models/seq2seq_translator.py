@@ -3,23 +3,25 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SequentialSampler, RandomSampler, BatchSampler
 import pytorch_lightning as pl
 import torchmetrics.functional as plfunc
-from pytorch_lightning.loggers import TensorBoardLogger
 from torchnlp.encoders.text.static_tokenizer_encoder import StaticTokenizerEncoder
+from datasets import load_dataset
+from torch.nn.utils.rnn import pad_sequence
 # from torchtext.legacy.data import Field, BucketIterator
 
 class Encoder(pl.LightningModule):
 
     def __init__(self, input_size, embed_size, enc_hid_size, dec_hid_size, dropout):
         super().__init__()
-
+        
+        self.example_input_array = torch.Tensor(32, 1, 28, 28)
         self.embedding = torch.nn.Embedding(input_size, embed_size)
         self.gru = torch.nn.GRU(embed_size, enc_hid_size, bidirectional = True)
         self.fc = torch.nn.Linear(enc_hid_size * 2, dec_hid_size)
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = torch.nn.Dropout(dropout)
 
     def forward(self, input, input_lengths):
         embedded = self.dropout(self.embedding(input))
-        packed_embedded = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths.to('cpu'))
+        packed_embedded = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths.to('cpu'), enforce_sorted = False)
 
         packed_outputs, hidden = self.gru(packed_embedded)
         outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(packed_outputs)
@@ -41,8 +43,8 @@ class Attention(pl.LightningModule):
         super().__init__()
 
         # Hidden state of forward & backward of encoder + hidden state of decoder -> hidden state of decoder
-        self.attn = nn.Linear((enc_hid_size * 2) + dec_hid_size, dec_hid_size)
-        self.v = nn.Linear(enc_hid_size, 1, bias = False)
+        self.attn = torch.nn.Linear((enc_hid_size * 2) + dec_hid_size, dec_hid_size)
+        self.v = torch.nn.Linear(enc_hid_size, 1, bias = False)
 
     def forward(self, hidden, encoder_outputs, mask):
         batch_size = encoder_outputs.shape[1]
@@ -64,10 +66,10 @@ class Decoder(pl.LightningModule):
         self.output_size = output_size
         self.attention = attention
         
-        self.embedding = nn.Embedding(output_size, embed_size)
-        self.gru = nn.GRU((enc_hid_size * 2) + embed_size, dec_hid_size)
-        self.fc = nn.Linear((enc_hid_size * 2) + dec_hid_size + embed_size, output_size)
-        self.dropout = nn.Dropout(dropout)
+        self.embedding = torch.nn.Embedding(output_size, embed_size)
+        self.gru = torch.nn.GRU((enc_hid_size * 2) + embed_size, dec_hid_size)
+        self.fc = torch.nn.Linear((enc_hid_size * 2) + dec_hid_size + embed_size, output_size)
+        self.dropout = torch.nn.Dropout(dropout)
 
     def forward(self, input, hidden, encoder_outputs, mask):
         input = input.unsqueeze(0)
@@ -114,7 +116,6 @@ class Seq2SeqTranslator(pl.LightningModule):
         self.enc_dropout = dropout
         self.dec_dropout = dropout
         self.input_padding_index = input_padding_index
-
         self.save_hyperparameters()
 
         self.loss = torch.nn.CrossEntropyLoss(ignore_index = self.input_padding_index)
@@ -141,6 +142,8 @@ class Seq2SeqTranslator(pl.LightningModule):
         )
 
         self.init_weights()
+
+        self.example_input_array = torch.zeros(32, 1, 28, 28, dtype = torch.int32).cpu(), torch.zeros(32, dtype = torch.int32).cpu(), torch.zeros(32, 1, 28, 28, dtype = torch.int32).cpu()
 
     def init_weights(self):
         for name, param in self.named_parameters():
@@ -185,19 +188,13 @@ class Seq2SeqTranslator(pl.LightningModule):
             
         return decoder_outputs
 
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y)
-        return loss
-
     def configure_optimizers(self):
-        optimizer = optim.AdamW(self.parameters(), lr = self.learning_rate)
+        optimizer = torch.optim.AdamW(self.parameters(), lr = self.learning_rate)
         lr_scheduler = {
-            "scheduler": optim.lr_scheduler.OneCycleLR(
+            "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr = self.learning_rate,
-                steps_per_epoch = int(len(self.train_dataloader())),
+                steps_per_epoch = self.trainer.accumulate_grad_batches,
                 epochs = self.max_epochs,
                 anneal_strategy = "linear",
                 final_div_factor = 1000,
@@ -210,17 +207,19 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         return [optimizer], [lr_scheduler]
 
-    def training_step(batch, batch_idx):
-        input_batch, training_batch = batch
-        input_, input_lengths = input_batch
+    def training_step(self, batch, batch_idx):
+        input_batch, target_batch = batch
+        input_seq = input_batch["src"].transpose(0,1)
+        input_lengths = input_batch["src_len"]
 
-        output = self.forward(input_, input_lengths, training_batch)
+        target_seq = target_batch["trg"].transpose(0,1)
 
-        output_dim = output.shape[-1]
+        output = self.forward(input_seq, input_lengths, target_seq)
+
         output = output[1:].view(-1, self.output_size)
-        training = training[1:].view(-1)
+        target = target_seq[1:].reshape(-1)
 
-        loss = self.loss(output, training)
+        loss = self.loss(output, target)
 
         self.log(
             "training_loss",
@@ -233,17 +232,37 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         return loss
 
-    def validation_step(batch, batch_idx):
-        input_batch, training_batch = batch
-        input_, input_lengths = input_batch
+    def validation_step(self, batch, batch_idx):
+        input_batch, target_batch = batch
 
-        output = self.forward(input_, input_lengths, training_batch, 0)
+        input_seq = input_batch["src"].transpose(0,1)
+        input_lengths = input_batch["src_len"]
 
-        output_dim = output.shape[-1]
+        target_seq = target_batch["trg"].transpose(0,1)
+
+        output = self.forward(input_seq, input_lengths, target_seq, 0)
+
         output = output[1:].view(-1, self.output_size)
-        training = training[1:].view(-1)
+        target = target_seq[1:].reshape(-1)
 
-        loss = self.loss(output, training)
+        loss = self.loss(output, target)
+
+        prediction = output[1:].argmax(2).T
+
+        target_batch = target_seq[1:].T
+
+        acc = plfunc.accuracy(prediction.reshape(-1), target_batch.reshape(-1))
+
+        predicted_seq = prediction.tolist()
+
+        target_seq_bleu = torch.unsqueeze(target_batch, 1).tolist()
+
+        # bleu score needs two arguments
+        # first: predicted_ids - list of predicted sequences as a list of predicted ids
+        # second: target_ids - list of references (can be many, list)
+        bleu_score = plfunc.nlp.bleu_score(predicted_seq, target_seq_bleu, n_gram = 3).to(
+            self.device
+        )  # torch.unsqueeze(trg_batchT,1).tolist())
 
         self.log(
             "validation_loss",
@@ -254,27 +273,25 @@ class Seq2SeqTranslator(pl.LightningModule):
             logger = rue,
         )
 
-        pred_seq = outputs[1:].argmax(2)
+        self.log(
+            "val_acc",
+            acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            sync_dist=True,
+        )
 
-        # change layout: seq_len * batch_size -> batch_size * seq_len
-        pred_seq = pred_seq.T
-
-        # compere list of predicted ids for all sequences in a batch to targets
-        acc = plfunc.accuracy(pred_seq.reshape(-1), training_batch.reshape(-1))
-
-        # need to cast to list of predicted sequences (as list of token ids)   [ [seq1_tok1, seq1_tok2, ...seq1_tokN],..., [seqK_tok1, seqK_tok2, ...seqK_tokZ]]
-        predicted_ids = pred_seq.tolist()
-
-        # need to add additional dim to each target reference sequence in order to
-        # convert to format needed by bleu_score function [ seq1=[ [reference1], [reference2] ], seq2=[ [reference1] ] ]
-        target_ids = torch.unsqueeze(trg_batch, 1).tolist()
-
-        # bleu score needs two arguments
-        # first: predicted_ids - list of predicted sequences as a list of predicted ids
-        # second: target_ids - list of references (can be many, list)
-        bleu_score = plfunc.nlp.bleu_score(predicted_ids, target_ids, n_gram = 3).to(
-            self.device
-        )  # torch.unsqueeze(trg_batchT,1).tolist())
+        self.log(
+            "val_bleu_idx",
+            bleu_score,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            sync_dist=True,
+        )
 
         return loss, acc, bleu_score
 
@@ -283,37 +300,52 @@ class Seq2SeqDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.dataset = load_dataset("iwslt2017", "iwslt2017-en-de")
-        self.build_vocab(dataset["train"])
         self.batch_size = batch_size
 
     def build_vocab(self):
-        self.dataset = load_dataset("iwslt2017", "iwslt2017-en-de")
         en_lines = []
         de_lines = []
         for line in self.dataset['train']:
             en_lines.append(line['translation']['en'])
             de_lines.append(line['translation']['de'])
 
-        en_tokenizer = StaticTokenizerEncoder(en_lines, append_eos = True)
-        de_tokenizer = StaticTokenizerEncoder(de_lines, append_eos = True)
+        self.en_tokenizer = StaticTokenizerEncoder(en_lines, append_eos = True)
+        self.de_tokenizer = StaticTokenizerEncoder(de_lines, append_eos = True)
+        self.padding_index = self.en_tokenizer.padding_index
         
-        self.input_vocab_size = en_tokenizer.vocab_size
-        self.output_vocab_size = de_tokenizer.vocab_size
+        self.input_vocab_size = self.en_tokenizer.vocab_size
+        self.output_vocab_size = self.de_tokenizer.vocab_size
 
     def split_and_pad_data(self, data):
         en_index_lines = []
         de_index_lines = []
+        en_lengths = []
+        de_lengths = []
+
         for line in data:
-            en_index_lines.append(en_tokenizer.encode(line['translation']['en']))
-            de_index_lines.append(de_tokenizer.encode(line['translation']['de']))
+            en_index_lines.append(self.en_tokenizer.encode(line['translation']['en']))
+            en_lengths.append(len(line['translation']['en']))
+            de_index_lines.append(self.de_tokenizer.encode(line['translation']['de'][::-1]))
+            de_lengths.append(len(line['translation']['de']))
 
         en_index_lines = pad_sequence(en_index_lines, batch_first = True)
         de_index_lines = pad_sequence(de_index_lines, batch_first = True)
 
-        return en_index_lines, de_index_lines
+        data_seq = []
+
+        for i in range(len(en_index_lines)):
+            if(en_lengths[i] > 0 and de_lengths[i] > 0):
+                input_ = {'src': en_index_lines[i], 'src_len': en_lengths[i]}
+                output = {'trg': de_index_lines[i], 'trg_len': de_lengths[i]}
+                data_seq.append((input_,output))
+
+        return data_seq
 
     def setup(self, stage: str):
-        pass
+        self.build_vocab() 
+        self.train_iterator = self.split_and_pad_data(self.dataset['train'])
+        self.valid_iterator = self.split_and_pad_data(self.dataset['validation'])
+        self.test_iterator = self.split_and_pad_data(self.dataset['test'])
 
     def train_dataloader(self):
         return DataLoader(self.train_iterator, batch_size=self.batch_size)

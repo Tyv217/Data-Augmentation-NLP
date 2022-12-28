@@ -107,7 +107,7 @@ class Decoder(pl.LightningModule):
         return prediction, hidden.squeeze(0), attn.squeeze(1)
         
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, input_vocab_size, output_vocab_size, embed_size, hidden_size, dropout, input_padding_index, input_tokenizer, output_tokenizer):
+    def __init__(self, input_vocab_size, output_vocab_size, embed_size, hidden_size, dropout, input_padding_index, input_tokenizer, output_tokenizer, steps_per_epoch):
         super().__init__()
         self.input_size = input_vocab_size
         self.output_size = output_vocab_size
@@ -145,6 +145,7 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         self.input_tokenizer = input_tokenizer
         self.output_tokenizer = output_tokenizer
+        self.steps_per_epoch = steps_per_epoch
         self.init_weights()
 
     def init_weights(self):
@@ -196,7 +197,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr = self.learning_rate,
-                steps_per_epoch = self.trainer.accumulate_grad_batches,
+                steps_per_epoch = self.steps_per_epoch,
                 epochs = self.max_epochs,
                 anneal_strategy = "linear",
                 final_div_factor = 1000,

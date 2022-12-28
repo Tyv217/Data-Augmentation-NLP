@@ -137,7 +137,7 @@ def seq2seq_translate():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "runs", name="pl_tensorboard_logs"
+        "runs", name="fit"
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -158,7 +158,10 @@ def seq2seq_translate():
         dropout = args.dropout, 
         input_padding_index = data.padding_index,
         input_tokenizer = data.en_tokenizer,
-        output_tokenizer = data.de_tokenizer
-    )
+        output_tokenizer = data.de_tokenizer,
+        steps_per_epoch = int(len(data.train_dataloader()))
+    ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
     # most basic trainer, uses good defaults (1 gpu)
+    trainer.tune(model, data)
     trainer.fit(model, data)

@@ -6,6 +6,7 @@ import torchmetrics.functional as plfunc
 from torchnlp.encoders.text.static_tokenizer_encoder import StaticTokenizerEncoder
 from datasets import load_dataset
 from torch.nn.utils.rnn import pad_sequence
+from torchnlp.encoders.text.text_encoder import TextEncoder
 # from torchtext.legacy.data import Field, BucketIterator
 import pdb
 
@@ -106,7 +107,7 @@ class Decoder(pl.LightningModule):
         return prediction, hidden.squeeze(0), attn.squeeze(1)
         
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, input_vocab_size, output_vocab_size, embed_size, hidden_size, dropout, input_padding_index):
+    def __init__(self, input_vocab_size, output_vocab_size, embed_size, hidden_size, dropout, input_padding_index, input_tokenizer, output_tokenizer):
         super().__init__()
         self.input_size = input_vocab_size
         self.output_size = output_vocab_size
@@ -142,6 +143,8 @@ class Seq2SeqTranslator(pl.LightningModule):
             self.attention
         )
 
+        self.input_tokenizer = input_tokenizer
+        self.output_tokenizer = output_tokenizer
         self.init_weights()
 
     def init_weights(self):
@@ -207,16 +210,19 @@ class Seq2SeqTranslator(pl.LightningModule):
         return [optimizer], [lr_scheduler]
 
     def training_step(self, batch, batch_idx):
+        torch.cuda.empty_cache()
+
         input_batch, target_batch = batch
         input_seq = input_batch["src"].transpose(0,1)
         input_lengths = input_batch["src_len"]
 
         target_seq = target_batch["trg"].transpose(0,1)
 
-        output = self.forward(input_seq, input_lengths, target_seq)
+        outputs = self.forward(input_seq, input_lengths, target_seq)
 
-        output = output[1:].view(-1, self.output_size)
-        target = target_seq[1:].reshape(-1)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        output = outputs[1:].view(-1, self.output_size).to(device)
+        target = target_seq[1:].reshape(-1).to(device)
 
         loss = self.loss(output, target)
 
@@ -232,6 +238,8 @@ class Seq2SeqTranslator(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        torch.cuda.empty_cache()
+
         input_batch, target_batch = batch
 
         input_seq = input_batch["src"].transpose(0,1)
@@ -240,9 +248,10 @@ class Seq2SeqTranslator(pl.LightningModule):
         target_seq = target_batch["trg"].transpose(0,1)
 
         outputs = self.forward(input_seq, input_lengths, target_seq, 0)
-
-        output = outputs[1:].view(-1, self.output_size)
-        target = target_seq[1:].reshape(-1)
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        output = outputs[1:].view(-1, self.output_size).to(device)
+        target = target_seq[1:].reshape(-1).to(device)
 
         loss = self.loss(output, target)
 
@@ -256,13 +265,20 @@ class Seq2SeqTranslator(pl.LightningModule):
 
         target_seq_bleu = torch.unsqueeze(target_batch, 1).tolist()
 
-        import pdb
-        pdb.set_trace()
-
+        predicted_seq_words = []
+        target_seq_words = []
+        for i in range(len(predicted_seq)):
+            targets = []
+            for target in target_seq_bleu[i]:
+                targets.append(self.output_tokenizer.decode(target))
+            target_seq_words.append(targets)
+            predicted_seq_words.append(self.output_tokenizer.decode(predicted_seq[i]))
+            
         # bleu score needs two arguments
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
         # second: target_ids - list of references (can be many, list)
-        bleu_score = plfunc.bleu_score(predicted_seq, target_seq_bleu, n_gram = 3).to(
+        # pdb.set_trace()
+        bleu_score = plfunc.bleu_score(predicted_seq_words, target_seq_words, n_gram = 3).to(
             self.device
         )  # torch.unsqueeze(trg_batchT,1).tolist())
 
@@ -301,8 +317,8 @@ class Seq2SeqDataModule(pl.LightningDataModule):
             en_lines.append(line['translation']['en'])
             de_lines.append(line['translation']['de'])
 
-        self.en_tokenizer = StaticTokenizerEncoder(en_lines, append_eos = True)
-        self.de_tokenizer = StaticTokenizerEncoder(de_lines, append_eos = True)
+        self.en_tokenizer = CustomTokenizerEncoder(en_lines, append_eos = True)
+        self.de_tokenizer = CustomTokenizerEncoder(de_lines, append_eos = True)
         self.padding_index = self.en_tokenizer.padding_index
         
         self.input_vocab_size = self.en_tokenizer.vocab_size
@@ -353,3 +369,24 @@ class Seq2SeqDataModule(pl.LightningDataModule):
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished
         pass
+
+
+class CustomTokenizerEncoder(StaticTokenizerEncoder):
+    def decode_index_to_token(self, index):
+        if(index > self.vocab_size):
+            return '<unk>'
+        else:
+            return self.index_to_token[index]
+
+    def decode(self, encoded):
+        """ Decodes a tensor into a sequence.
+
+        Args:
+            encoded (torch.Tensor): Encoded sequence.
+
+        Returns:
+            str: Sequence decoded from ``encoded``.
+        """
+        encoded = TextEncoder.decode(self, encoded)
+        tokens = [self.decode_index_to_token(index) for index in encoded]
+        return self.detokenize(tokens)

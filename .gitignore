@@ -3,4 +3,4 @@ __pycache__/
 anaconda3/
 .vscode/
 runs/
-*.ckpt
+*.ckptgit 

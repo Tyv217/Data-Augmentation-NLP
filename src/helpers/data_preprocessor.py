@@ -3,6 +3,8 @@ import torch
 from torch.utils.data import DataLoader
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
+from torchnlp.encoders.text.static_tokenizer_encoder import StaticTokenizerEncoder
+from torchnlp.encoders.text.text_encoder import TextEncoder
 
 class PreProcessor(ABC):
     def __init__(self, data_iters):
@@ -50,8 +52,26 @@ class PreProcessor(ABC):
     def get_dataloader(self, data_iters, batch_size, shuffle = False):
         return DataLoader(data_iters, batch_size = batch_size, shuffle = shuffle, collate_fn = self.collate_batch)
 
-
-
 class EnglishPreProcessor(PreProcessor):
     def get_tokenizer(self):
         return get_tokenizer('basic_english')
+
+class CustomTokenizerEncoder(StaticTokenizerEncoder):
+    def decode_index_to_token(self, index):
+        if(index > self.vocab_size):
+            return '<unk>'
+        else:
+            return self.index_to_token[index]
+
+    def decode(self, encoded):
+        """ Decodes a tensor into a sequence.
+
+        Args:
+            encoded (torch.Tensor): Encoded sequence.
+
+        Returns:
+            str: Sequence decoded from ``encoded``.
+        """
+        encoded = TextEncoder.decode(self, encoded)
+        tokens = [self.decode_index_to_token(index) for index in encoded]
+        return self.detokenize(tokens)

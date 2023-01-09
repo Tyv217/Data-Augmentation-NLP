@@ -3,12 +3,13 @@ from nltk.corpus import wordnet as wn, stopwords
 from torchdata.datapipes.iter import IterableWrapper
 import random
 import re
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('stopwords')
+import googletrans as trans
 
 class Synonym_Replacer():
     def __init__(self, stopword_language):
+        nltk.download('wordnet')
+        nltk.download('omw-1.4')
+        nltk.download('stopwords')
         self.stopwords = stopwords.words(stopword_language)
     
     def get_synonym(self, word):
@@ -38,3 +39,25 @@ class Synonym_Replacer():
     def augment_dataset(self, data_iter, augmentation_percentage):
         augmented_sentences = [self.replace_with_synonyms(label, sentence, augmentation_percentage) for (label, sentence) in list(data_iter)]
         return IterableWrapper(augmented_sentences)
+
+class Back_Translator():
+    def __init__(self, translator, src, dest):
+        self.translator = translator
+        self.src = src
+        self.dest = dest
+    
+    def bulk_translate(self, sentences, src, dest):
+        translations = self.translator.translate(sentences, dest = dest, src = src)
+
+        return [translation.text for translation in translations]
+
+    def augment_dataset(self, data_iter, augmentation_percentage):
+        data_list = list(data_iter)
+        random.shuffle(data_list)
+        to_translate_len = int(len(data_list) * augmentation_percentage)
+        translated_data = self.bulk_translate([sentence for (label, sentence) in data_list[:to_translate_len]], self.src, self.dest)
+        back_translated_data = self.bulk_translate(translated_data, self.dest, self.src)
+        labels = [label for (label, sentence) in data_list[:to_translate_len]]
+        data_list[:to_translate_len] = zip(labels, back_translated_data)
+        return IterableWrapper(data_list)
+            

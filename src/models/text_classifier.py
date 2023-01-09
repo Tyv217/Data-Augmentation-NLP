@@ -2,7 +2,7 @@ import torch, time
 from torchtext.datasets import AG_NEWS as agnews
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
-from .helpers import EnglishPreProcessor, Logger
+from ..helpers import EnglishPreProcessor, Logger
 
 # TODO: Change to better implementation
 # Taken from https://pytorch.org/tutorials/beginner/text_sentiment_ngrams_tutorial.html

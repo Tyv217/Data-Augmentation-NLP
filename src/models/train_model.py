@@ -166,5 +166,5 @@ def seq2seq_translate():
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # most basic trainer, uses good defaults (1 gpu)
-    # trainer.fit(model, data)
+    trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())

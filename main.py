@@ -1,7 +1,6 @@
 from src.models import text_classify, seq2seq_translate, Synonym_Replacer, Back_Translator
 import random, torch, numpy
 import pytorch_lightning.utilities.seed as plseed
-from googletrans import Translator
 import pdb
 
 SEED = 42

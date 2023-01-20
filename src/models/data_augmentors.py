@@ -76,8 +76,8 @@ class Back_Translator():
         self.src = src
         self.dest = dest
         import pdb
-        pdb.set_trace()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        pdb.set_trace()
 
     def bulk_translate(self, sentences, model, tokenizer):
         input_encoding = tokenizer(

@@ -2,6 +2,7 @@ import torch, random
 import pytorch_lightning as pl
 import torchmetrics.functional as plfunc
 from transformers import T5ForConditionalGeneration
+from datasets import load_metric
 import evaluate
 
 class Seq2SeqTranslator(pl.LightningModule):
@@ -38,6 +39,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         return [optimizer], [lr_scheduler]
 
     def training_step(self, batch, batch_idx):
+        
         loss = self.forward(batch['input_id'], batch['attention_mask'], batch['label']).loss
 
         self.log(
@@ -63,7 +65,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
         # second: target_ids - list of references (can be many, list)
         
-        bleu_metric = evaluate.load_metric("sacrebleu")
+        bleu_metric = evaluate.load("sacrebleu")
         bleu_score = bleu_metric.compute(predictions = pred_outputs, references = references)['score']
         loss = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label']).loss
         # torch.unsqueeze(trg_batchT,1).tolist())
@@ -101,7 +103,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
         # second: target_ids - list of references (can be many, list)
         
-        bleu_metric = evaluate.load_metric("sacrebleu")
+        bleu_metric = evaluate.load("sacrebleu")
         bleu_score = bleu_metric.compute(predictions = pred_outputs, references = references)['score']
         # torch.unsqueeze(trg_batchT,1).tolist())
         

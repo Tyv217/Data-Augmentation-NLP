@@ -55,11 +55,10 @@ def eval_model_text_classifier(dataloader, model, loss_fn, epoch_number, logger)
 
 # Use pytorch lightning
 
-def run_model_text_classifier(model, train_iter, augmentation_percentage, augmentor):
+def run_model_text_classifier(model, train_iter, augmentation_percentage, augmentor, learning_rate):
     EPOCHS = 7
-    LEARNING_RATE = 0.1
-    MOMENTUM = 0.9
-    BATCH_SIZE = 16
+    LEARNING_RATE = learning_rate
+    BATCH_SIZE = 64
     
     writer = SummaryWriter()
     
@@ -82,10 +81,11 @@ def run_model_text_classifier(model, train_iter, augmentation_percentage, augmen
     for epoch_number in range(1, EPOCHS + 1):
         torch.cuda.empty_cache()
         start_time = time.time()
-        model.eval()
         if augmentor is not None and augmentation_percentage is not None:
-            train_iter = augmentor.augment_dataset(train_iter, augmentation_percentage)
-            print("Augmented!")
+            model.eval()
+            with torch.no_grad():
+                train_iter = augmentor.augment_dataset(train_iter, augmentation_percentage)
+                print("Augmented!")
         train_dataset = to_map_style_dataset(train_iter)
         num_train = int(len(train_dataset) * 0.95)
         split_train, split_valid = random_split(train_dataset, [num_train, len(train_dataset) - num_train])
@@ -106,7 +106,7 @@ def run_model_text_classifier(model, train_iter, augmentation_percentage, augmen
     return test_accuracy
     writer.close()
 
-def text_classify(augmentor):
+def text_classify(augmentor, learning_rate):
     # print("Gets to here 1")
     # parser = ArgumentParser()
     # print("Gets to here 2")
@@ -114,7 +114,7 @@ def text_classify(augmentor):
     # print("Gets to here 3")
     # args = parser.parse_args()
     # print("Gets to here 4")
-    augmentation_percentage = 0.01
+    augmentation_percentage = 0.3
     print("Gets to here")
     train_iter = list(agnews(split='train'))
     random.shuffle(train_iter)
@@ -125,24 +125,28 @@ def text_classify(augmentor):
     vocab_size = len(eng_pre_processor_train.get_vocab())
     embed_size = 64
     model = TextClassifierEmbeddingModel(vocab_size, embed_size, num_class).to(eng_pre_processor_train.get_device())
-    accuracy = run_model_text_classifier(model, train_iter, augmentation_percentage, augmentor)
+    accuracy = run_model_text_classifier(model, train_iter, augmentation_percentage, augmentor, learning_rate)
     with open("/home/xty20/Data-Augmentation-NLP/accuracies.txt", "a") as f:
         f.write("Percentage: " + str(augmentation_percentage * 100) + "%, accuracy: " + "{0:.3g}\n".format(accuracy))
     return accuracy
 
-def seq2seq_translate():
+def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser = ArgumentParser()
 
     # add PROGRAM level args
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
-    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--embed_size", type=int, default=32)
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    data = TranslationDataModule(batch_size=args.batch_size)
+    data = TranslationDataModule(
+        augmentation_percentage = augmentation_percentage,
+        augmentor = augmentor,
+        batch_size=args.batch_size
+    )
     data.prepare_data()
     data.setup("fit")
 

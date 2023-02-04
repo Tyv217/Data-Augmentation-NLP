@@ -72,6 +72,10 @@ def main():
     loss.item()
 
 if __name__ == "__main__":
-    l = ["I", "ate", "an", "apple"]
-    l = " ".join(l)
-    print(l)
+    
+    import pytorch_lightning as pl
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser = pl.Trainer.add_argparse_args(parser)
+    args = parser.parse_args()
+    print(args)

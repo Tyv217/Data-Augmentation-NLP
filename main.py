@@ -7,22 +7,14 @@ from argparse import ArgumentParser
 
 # from src.helpers import EnglishPreProcessor, Logger
 
-# SEED = 0
-# print("Seed 1")
-# random.seed(SEED)
-# print("Seed 2")
-# numpy.random.seed(SEED)
-# print("Seed 3")
-# g = torch.Generator()
-# print("Seed 4")
-# g.manual_seed(SEED)
-# print("Seed 5")
-# torch.cuda.manual_seed(SEED)     
-# print("Seed 6")          
-# torch.cuda.manual_seed_all(SEED)
-# print("Seed 7")
-# plseed.seed_everything(SEED)
-# print("Seed 8")
+SEED = 0
+random.seed(SEED)
+numpy.random.seed(SEED)
+g = torch.Generator()
+g.manual_seed(SEED)
+torch.cuda.manual_seed(SEED)           
+torch.cuda.manual_seed_all(SEED)
+plseed.seed_everything(SEED)
 
 if __name__ == "__main__":
     # learning_rate = 1.2

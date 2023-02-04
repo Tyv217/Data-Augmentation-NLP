@@ -131,6 +131,7 @@ def text_classify(augmentors, learning_rate, augmentation_percentage = 0, datase
     return accuracy
 
 def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
+    MODEL_NAME = "t5-small"
     parser = ArgumentParser()
 
     # add PROGRAM level args
@@ -143,6 +144,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     data = TranslationDataModule(
+        model_name = MODEL_NAME,
         augmentation_percentage = augmentation_percentage,
         augmentor = augmentor,
         batch_size=args.batch_size
@@ -166,6 +168,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     #     print(input_['src_len'])
     
     model = Seq2SeqTranslator(
+        model_name = MODEL_NAME,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader()))

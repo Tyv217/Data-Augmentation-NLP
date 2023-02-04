@@ -6,12 +6,12 @@ from transformers import T5Tokenizer
 
 
 class TranslationDataModule(pl.LightningDataModule):
-    def __init__(self, augmentation_percentage, augmentor, batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
+    def __init__(self, model_name, augmentation_percentage, augmentor, batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
         super().__init__()
 
         self.dataset = load_dataset("iwslt2017", "iwslt2017-" + input_language + "-" + output_language)
         self.batch_size = batch_size
-        self.tokenizer = T5Tokenizer.from_pretrained('t5-base', model_max_length = model_max_length)
+        self.tokenizer = T5Tokenizer.from_pretrained(model_name, model_max_length = model_max_length)
         self.task_prefix = task_prefix
         self.input_language = input_language
         self.output_language = output_language

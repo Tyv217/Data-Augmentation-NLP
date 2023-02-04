@@ -2,18 +2,19 @@ from multiprocessing.spawn import import_main_path
 import torch, random
 import pytorch_lightning as pl
 import torchmetrics.functional as plfunc
-from transformers import T5ForConditionalGeneration
+from transformers import AutoConfig, T5ForConditionalGeneration
 from datasets import load_metric
 import evaluate
 
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, tokenizer, steps_per_epoch):
+    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch):
         super().__init__()
 
-        self.learning_rate = 3e-4
-        self.max_epochs = 50
+        self.learning_rate = 0.01
+        self.max_epochs = max_epochs
         self.tokenizer = tokenizer
-        self.model = T5ForConditionalGeneration.from_pretrained('t5-base')
+        self.config = AutoConfig.from_pretrained(model_name)
+        self.model = T5ForConditionalGeneration(self.config)
         self.steps_per_epoch = steps_per_epoch
         self.model.resize_token_embeddings(len(tokenizer))
     

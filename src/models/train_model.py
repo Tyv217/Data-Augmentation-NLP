@@ -13,7 +13,6 @@ from ..data import TranslationDataModule, TextClassificationDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 
-
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
     model.train()
     accuracy, count = 0, 0

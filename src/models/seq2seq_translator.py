@@ -1,3 +1,4 @@
+from multiprocessing.spawn import import_main_path
 import torch, random
 import pytorch_lightning as pl
 import torchmetrics.functional as plfunc
@@ -55,9 +56,14 @@ class Seq2SeqTranslator(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        pred_output_ids = self.model.generate(input_ids = batch['input_id'], attention_mask = batch['attention_mask'], do_sample=False, max_length = 512)
-        pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
         label_ids = batch['label']
+        output = self.forward(batch['input_id'], batch['attention_mask'], label_ids)
+        loss = output.loss
+        logits = output.logits
+        pred_output_ids = torch.argmax(logits, axis = 2)
+        pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
+        import pdb
+        pdb.set_trace()
         label_ids[label_ids == -100] = 0
         labels = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
         references = [[label] for label in labels]
@@ -66,6 +72,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # second: target_ids - list of references (can be many, list)
         
         bleu_metric = evaluate.load("sacrebleu")
+        pdb.set_trace()
         bleu_score = bleu_metric.compute(predictions = pred_outputs, references = references)['score']
         loss = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label']).loss
         # torch.unsqueeze(trg_batchT,1).tolist())
@@ -118,3 +125,9 @@ class Seq2SeqTranslator(pl.LightningModule):
         )
 
         return bleu_score
+
+    def predict_step(self, batch, batch_idx):
+        pred_output_ids = self.model.generate(input_ids = batch['input_id'], attention_mask = batch['attention_mask'], do_sample=False, max_length = 512)
+        pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
+
+        return pred_outputs

@@ -9,8 +9,9 @@ from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
-from ..data import TranslationDataModule
+from ..data import TranslationDataModule, TextClassificationDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
+from .better_text_classifier import Better_Text_Classifier
 
 
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
@@ -55,8 +56,8 @@ def eval_model_text_classifier(dataloader, model, loss_fn, epoch_number, logger)
 
 # Use pytorch lightning
 
-def run_model_text_classifier(model, train_iter, augmentation_percentage, augmentor, learning_rate):
-    EPOCHS = 7
+def run_model_text_classifier(model, train_iter, preprocessor, augmentation_percentage, augmentors, learning_rate):
+    EPOCHS = 10
     LEARNING_RATE = learning_rate
     BATCH_SIZE = 64
     
@@ -73,20 +74,21 @@ def run_model_text_classifier(model, train_iter, augmentation_percentage, augmen
 
     test_dataset = to_map_style_dataset(test_iter)
 
-
-    preprocessor = EnglishPreProcessor(train_iter)
     logger = Logger()
     test_dataloader = preprocessor.get_dataloader(test_dataset, batch_size = BATCH_SIZE, shuffle = True)
 
     for epoch_number in range(1, EPOCHS + 1):
         torch.cuda.empty_cache()
         start_time = time.time()
-        if augmentor is not None and augmentation_percentage is not None:
+        if augmentors is not None and augmentation_percentage is not None:
             model.eval()
             with torch.no_grad():
-                train_iter = augmentor.augment_dataset(train_iter, augmentation_percentage)
+                for augmentor in augmentors:
+                    augmented_train_iter = augmentor.augment_dataset(train_iter, augmentation_percentage, preprocessor)
                 print("Augmented!")
-        train_dataset = to_map_style_dataset(train_iter)
+        else:
+            augmented_train_iter = train_iter
+        train_dataset = to_map_style_dataset(augmented_train_iter)
         num_train = int(len(train_dataset) * 0.95)
         split_train, split_valid = random_split(train_dataset, [num_train, len(train_dataset) - num_train])
         train_dataloader = preprocessor.get_dataloader(split_train, batch_size = BATCH_SIZE, shuffle = True)
@@ -106,28 +108,27 @@ def run_model_text_classifier(model, train_iter, augmentation_percentage, augmen
     return test_accuracy
     writer.close()
 
-def text_classify(augmentor, learning_rate):
+def text_classify(augmentors, learning_rate, augmentation_percentage = 0, dataset_percentage = 1):
     # print("Gets to here 1")
     # parser = ArgumentParser()
     # print("Gets to here 2")
-    # parser.add_argument("--augmentation_percentage", type=int, default=0)
+    # parser.add_argument("--augmentation_prcentage", type=int, default=0)
     # print("Gets to here 3")
     # args = parser.parse_args()
     # print("Gets to here 4")
-    augmentation_percentage = 0.3
     print("Gets to here")
     train_iter = list(agnews(split='train'))
     random.shuffle(train_iter)
-    # train_iter = train_iter[:len(train_iter) // ]
+    train_iter = train_iter[:int(len(train_iter) * dataset_percentage)]
     print("Augmentation Percentage:", str(augmentation_percentage * 100) + "%")
     eng_pre_processor_train = EnglishPreProcessor(train_iter)
     num_class = len(set([label for (label, text) in train_iter]))
     vocab_size = len(eng_pre_processor_train.get_vocab())
     embed_size = 64
     model = TextClassifierEmbeddingModel(vocab_size, embed_size, num_class).to(eng_pre_processor_train.get_device())
-    accuracy = run_model_text_classifier(model, train_iter, augmentation_percentage, augmentor, learning_rate)
-    with open("/home/xty20/Data-Augmentation-NLP/accuracies.txt", "a") as f:
-        f.write("Percentage: " + str(augmentation_percentage * 100) + "%, accuracy: " + "{0:.3g}\n".format(accuracy))
+    accuracy = run_model_text_classifier(model, train_iter, eng_pre_processor_train, augmentation_percentage, augmentors, learning_rate)
+    # with open("/home/xty20/Data-Augmentation-NLP/accuracies.txt", "a") as f:
+    #     f.write("Percentage: " + str(augmentation_percentage * 100) + "%, accuracy: " + "{0:.3g}\n".format(accuracy))
     return accuracy
 
 def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
@@ -156,6 +157,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     print(args)
+
     trainer = pl.Trainer.from_argparse_args(
         args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
     )  # , distributed_backend='ddp_cpu')
@@ -165,7 +167,41 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     #     print(input_['src_len'])
     
     model = Seq2SeqTranslator(
+        max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
+        steps_per_epoch = int(len(data.train_dataloader()))
+    ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+    # most basic trainer, uses good defaults (1 gpu)
+    trainer.fit(model, data)
+    trainer.test(model, dataloaders = data.test_dataloader())
+
+def better_text_classify(args, augmentors = None, dataset_percentage = 100, augmentation_percentage = 0):
+    data = TextClassificationDataModule(
+        augmentation_percentage = augmentation_percentage,
+        dataset_percentage = dataset_percentage,
+        augmentors = augmentors,
+        batch_size=args.batch_size
+    )
+    data.prepare_data()
+    data.setup("fit")
+
+    logger = TensorBoardLogger(
+        "runs_better_text_classify", name="fit"
+    )
+
+    lr_monitor = LearningRateMonitor(logging_interval="step")
+    print(args)
+    trainer = pl.Trainer.from_argparse_args(
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
+    )  # , distributed_backend='ddp_cpu')
+    
+    # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
+    #     input_, output = batch
+    #     print(input_['src_len'])
+    
+    model = Better_Text_Classifier(
+        max_epochs = args.max_epochs,
         steps_per_epoch = int(len(data.train_dataloader()))
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 

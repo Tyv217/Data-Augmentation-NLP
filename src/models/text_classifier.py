@@ -10,7 +10,7 @@ class TextClassifierEmbeddingModel(torch.nn.Module):
 
     def __init__(self, vocab_size, embed_dim, num_classes):
         super(TextClassifierEmbeddingModel, self).__init__()
-        self.embedding = torch.nn.EmbeddingBag(vocab_size, embed_dim, sparse = True)
+        self.embedding = torch.nn.EmbeddingBag(vocab_size, embed_dim)
         self.fc = torch.nn.Linear(embed_dim, num_classes)
         self.init_weights()
 

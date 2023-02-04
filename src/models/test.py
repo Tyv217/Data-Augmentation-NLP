@@ -72,16 +72,6 @@ def main():
     loss.item()
 
 if __name__ == "__main__":
-    import random
-    sentence = '1 2 3 4 5 6 7 8 9 10'
-    N = 2
-    word_list = sentence.split(" ")
-    for i in range(N):
-        index = random.randint(0, len(word_list) - 1)
-        try:
-            word_list.pop(index)
-        except IndexError:
-            print(word_list)
-            print(index)
-    sentence = " ".join(word_list)
-    print(sentence)
+    l = ["I", "ate", "an", "apple"]
+    l = " ".join(l)
+    print(l)

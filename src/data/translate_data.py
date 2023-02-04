@@ -22,8 +22,12 @@ class TranslationDataModule(pl.LightningDataModule):
         input_lines = []
         output_lines = []
         for line in data:
-            input_lines.append(line['translation'][self.input_language])
-            output_lines.append(line['translation'][self.output_language])
+            import pdb
+            try:
+                input_lines.append(line['translation'][self.input_language])
+                output_lines.append(line['translation'][self.output_language])
+            except:
+                pdb.set_trace()
         return input_lines, output_lines
 
     def split_and_pad_data(self, data, augment = False):
@@ -59,7 +63,7 @@ class TranslationDataModule(pl.LightningDataModule):
     def setup(self, stage: str):
         self.train_iterator = self.split_and_pad_data(self.dataset['train'], augment = True)
         self.valid_iterator = self.split_and_pad_data(self.dataset['validation'])
-        self.test_iterator = self.split_and_pad_data(self.dataset['test'])
+        self.test_iterator = self.split_and_pad_data(self.dataset['test'])[:50]
 
     def train_dataloader(self):
         return DataLoader(self.train_iterator, batch_size=self.batch_size)

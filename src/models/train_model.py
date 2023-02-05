@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from argparse import ArgumentParser
-from ..helpers import EnglishPreProcessor, Logger
+from ..helpers import EnglishPreProcessor, Logger, parse_augmentors
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, TextClassificationDataModule
@@ -135,6 +135,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser = ArgumentParser()
 
     # add PROGRAM level args
+    parser.add_argument("--")
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)
@@ -143,6 +144,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+    augmentors = parse_augmentors(args)
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         augmentation_percentage = augmentation_percentage,

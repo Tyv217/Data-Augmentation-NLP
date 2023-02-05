@@ -4,3 +4,4 @@ __pycache__/
 */fit
 runs/
 *.ps1
+anaconda3/

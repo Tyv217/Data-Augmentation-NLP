@@ -8,6 +8,7 @@ from datasets import load_metric
 class Seq2SeqTranslator(pl.LightningModule):
     def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch):
         super().__init__()
+
         self.learning_rate = 0.01
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
@@ -20,7 +21,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr = self.learning_rate)
+        optimizer = torch.optim.AdamW(self.parameters(), lr = self.learning_rate)
         lr_scheduler = {
             "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
@@ -61,6 +62,8 @@ class Seq2SeqTranslator(pl.LightningModule):
         logits = output.logits
         pred_output_ids = torch.argmax(logits, axis = 2)
         pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
+        import pdb
+        pdb.set_trace()
         label_ids[label_ids == -100] = 0
         labels = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
         references = [[label] for label in labels]
@@ -69,6 +72,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # second: target_ids - list of references (can be many, list)
         
         bleu_metric = evaluate.load("sacrebleu")
+        pdb.set_trace()
         bleu_score = bleu_metric.compute(predictions = pred_outputs, references = references)['score']
         loss = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label']).loss
         # torch.unsqueeze(trg_batchT,1).tolist())

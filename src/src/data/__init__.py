@@ -1,2 +1,0 @@
-from .translate_data import TranslationDataModule
-from .text_classify_data import TextClassificationDataModule

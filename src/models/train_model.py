@@ -135,7 +135,8 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser = ArgumentParser()
 
     # add PROGRAM level args
-    parser.add_argument("--")
+    parser.add_argument("--augmentors", type=str, default="")
+    parser.add_argument("--augmentation_params", type=str, default="")
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)

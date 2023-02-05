@@ -12,7 +12,7 @@ from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, TextClassificationDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
-from src.models import better_text_classify, text_classify, seq2seq_translate, Synonym_Replacer, Back_Translator, Insertor, Deletor
+from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
 
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
     model.train()

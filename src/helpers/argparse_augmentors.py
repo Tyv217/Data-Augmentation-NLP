@@ -1,6 +1,6 @@
 def parse_augmentors(args, augmentator_mapping):
-    augmentor_names = (args.augmentors.split(",")).filter(lambda x: x != "")
-    augmentation_params = (args.augmentation_params.split(",")).filter(lambda x: x != "")
+    augmentor_names = filter(lambda x: x != "", (args.augmentors.split(",")))
+    augmentation_params = filter(lambda x: x != "", (args.augmentation_params.split(",")))
 
     augmentors = []
     for a,p in zip(augmentor_names, augmentation_params):

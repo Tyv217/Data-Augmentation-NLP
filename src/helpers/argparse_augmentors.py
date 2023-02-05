@@ -9,7 +9,7 @@ def parse_augmentors(args):
     augmentors = []
     for a,p in zip(augmentor_names, augmentation_params):
         augmentor = augmentator_mapping[a]
-        augmentor.set_augmentation_percentage(int(p))
+        augmentor.set_augmentation_percentage(int(p) / 100)
         augmentors.append(augmentor)
 
     return augmentors

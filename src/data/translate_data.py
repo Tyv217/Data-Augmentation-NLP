@@ -31,8 +31,9 @@ class TranslationDataModule(pl.LightningDataModule):
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, output_lines = self.format_data(data)
-        for augmentor in self.augmentors:
-            input_lines = self.augmentor.augment_dataset(input_lines, has_label = False)
+        if augment:
+            for augmentor in self.augmentors:
+                input_lines = augmentor.augment_dataset(input_lines, has_label = False)
 
         input_encoding = self.tokenizer(
             [self.task_prefix + sequence for sequence in input_lines],

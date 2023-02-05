@@ -103,9 +103,8 @@ class Synonym_Replacer():
 #         return IterableWrapper(translated_data)
 
 class Back_Translator():
-    def __init__(self, src, dest):
+    def __init__(self, src):
         self.src = src
-        self.dest = dest
         # self.device = torch.device("cpu")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
@@ -127,9 +126,23 @@ class Back_Translator():
         result = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
         return result
 
-    def bulk_back_translate(self, sentences, model, tokenizer):
-        intermediate = self.bulk_translate(sentences, model, tokenizer)
-        return self.bulk_translate(intermediate, model, tokenizer)
+    def bulk_back_translate(self, sentences, model1, model2, tokenizer1, tokenizer2):
+        intermediate = self.bulk_translate(sentences, model1, tokenizer1)
+        return self.bulk_translate(intermediate, model2, tokenizer2)
+
+    def get_translators(self):
+        models = []
+        target_languages = ["de", "fr", "es"]
+        for language in target_languages:
+            model1_name = "Helsinki-NLP/opus-mt-" + self.src + "_" + language
+            model2_name = "Helsinki-NLP/opus-mt-" + language + "_" + self.src
+            tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
+            tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
+            model1 = AutoModelForSeq2SeqLM.from_pretrained(model1_name)
+            model2 = AutoModelForSeq2SeqLM.from_pretrained(model2_name)
+            models.append((model1, model2, tokenizer1, tokenizer2))
+        return models
+
 
     def augment_dataset(self, data_iter, has_label = False):
         data_list = list(data_iter)
@@ -143,18 +156,15 @@ class Back_Translator():
         
         if(has_label):
             label, to_augment = zip(*to_augment)
-
-        model_name = "google/bert2bert_L-24_wmt_" + self.src + "_" + self.dest
-        tokenizer = AutoTokenizer.from_pretrained(model_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        
+        translators = self.get_translators()
         count = 0
         translated_data = []
         BATCH_SIZE = 8
         print("Start augmenting!")
         while(count < len(to_augment)):
             # torch.cuda.empty_cache()
-            translated_data.append(self.bulk_back_translate(to_augment[count:min(count + BATCH_SIZE, len(to_augment))], model, tokenizer))
+            (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)
+            translated_data.append(self.bulk_back_translate(to_augment[count:min(count + BATCH_SIZE, len(to_augment))], model1, model2, tokenizer1, tokenizer2))
             count += BATCH_SIZE
             print("8 Done!")
 

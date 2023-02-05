@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--augmentation_percentage", type = int)
     parser.add_argument("--dataset_percentage", type = int)
     args = parser.parse_args()
-    augmentor_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en", "de"), "in": Insertor("english"), "de": Deletor()}
+    augmentor_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentors = [augmentor_mapping[i] for i in args.data_augmentors if i != '']
     augmentation_percentage = args.augmentation_percentage / 10
     dataset_percentage = args.dataset_percentage / 100

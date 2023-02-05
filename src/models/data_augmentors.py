@@ -106,8 +106,8 @@ class Back_Translator():
     def __init__(self, src, dest):
         self.src = src
         self.dest = dest
-        self.device = torch.device("cpu")
-        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
 
     def set_augmentation_percentage(self, augmentation_percentage):
@@ -159,9 +159,9 @@ class Back_Translator():
             print("8 Done!")
 
         if has_label:
-            to_augment = zip(label, to_augment)
+            translated_data = zip(label, translated_data)
 
-        data_list = to_augment + no_augment
+        data_list = translated_data + no_augment
         random.shuffle(data_list)
         
         return IterableWrapper(data_list)

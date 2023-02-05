@@ -12,6 +12,7 @@ from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, TextClassificationDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
+from src.models import better_text_classify, text_classify, seq2seq_translate, Synonym_Replacer, Back_Translator, Insertor, Deletor
 
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
     model.train()
@@ -145,11 +146,11 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    augmentors = parse_augmentors(args)
+    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en", "de"), "in": Insertor("english"), "de": Deletor()}
+    augmentors = parse_augmentors(args, augmentator_mapping)
     data = TranslationDataModule(
         model_name = MODEL_NAME,
-        augmentation_percentage = augmentation_percentage,
-        augmentor = augmentor,
+        augmentors = augmentors,
         batch_size=args.batch_size
     )
     data.prepare_data()

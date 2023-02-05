@@ -6,7 +6,7 @@ from transformers import T5Tokenizer
 
 
 class TranslationDataModule(pl.LightningDataModule):
-    def __init__(self, model_name, augmentors, batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
+    def __init__(self, model_name, augmentors = [], batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
         super().__init__()
 
         self.dataset = load_dataset("iwslt2017", "iwslt2017-" + input_language + "-" + output_language)
@@ -31,8 +31,8 @@ class TranslationDataModule(pl.LightningDataModule):
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, output_lines = self.format_data(data)
-        if self.augmentor is not None and self.augmentation_percentage is not None:
-            input_lines = self.augmentor.augment_dataset_without_label(input_lines, self.augmentation_percentage)
+        for augmentor in self.augmentors:
+            input_lines = self.augmentor.augment_dataset(input_lines, has_label = False)
 
         input_encoding = self.tokenizer(
             [self.task_prefix + sequence for sequence in input_lines],

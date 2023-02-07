@@ -1,2 +1,3 @@
-from .translate_data import TranslationDataModule
-from .text_classify_data import TextClassificationDataModule
+from .iwslt17_data import TranslationDataModule
+from .agnews_data import AGNewsDataModule
+from .glue_data import GlueDataModule

@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 
-class TextClassificationDataModule(pl.LightningDataModule):
+class AGNewsDataModule(pl.LightningDataModule):
     def __init__(self, augmentation_percentage, dataset_percentage, augmentors, batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size

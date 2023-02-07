@@ -6,7 +6,7 @@ from transformers import T5Tokenizer
 
 
 class TranslationDataModule(pl.LightningDataModule):
-    def __init__(self, model_name, augmentors = [], batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
+    def __init__(self, model_name, dataset_percentage = 1, augmentors = [], batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
         super().__init__()
 
         self.dataset = load_dataset("iwslt2017", "iwslt2017-" + input_language + "-" + output_language)
@@ -36,7 +36,8 @@ class TranslationDataModule(pl.LightningDataModule):
                 input_lines = augmentor.augment_dataset(input_lines, has_label = False)
 
         input_encoding = self.tokenizer(
-            [self.task_prefix + sequence for sequence in input_lines],
+            # [self.task_prefix + sequence for sequence in input_lines],
+            input_lines,
             padding = "longest",
             truncation = True,
             return_tensors = "pt",
@@ -66,16 +67,16 @@ class TranslationDataModule(pl.LightningDataModule):
         self.test_iterator = self.split_and_pad_data(self.dataset['test'])[:50]
 
     def train_dataloader(self):
-        return DataLoader(self.train_iterator, batch_size=self.batch_size)
+        return DataLoader(self.train_iterator, batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.valid_iterator, batch_size=self.batch_size)
+        return DataLoader(self.valid_iterator, batch_size=self.batch_size, shuffle = True)
 
     def test_dataloader(self):
-        return DataLoader(self.test_iterator, batch_size=self.batch_size)
+        return DataLoader(self.test_iterator, batch_size=self.batch_size, shuffle = True)
 
     def predict_dataloader(self):
-        return DataLoader(self.test_iterator, batch_size=self.batch_size)
+        return DataLoader(self.test_iterator, batch_size=self.batch_size, shuffle = True)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

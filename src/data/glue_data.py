@@ -12,12 +12,11 @@ import random
 
 
 class GlueDataModule(pl.LightningDataModule):
-    def __init__(self, augmentation_percentage, dataset_percentage, augmentors, batch_size: int = 32):
+    def __init__(self, dataset_percentage, augmentors = [], glue_task = "cola", batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
-        self.glue_task = "cola"
+        self.glue_task = glue_task
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
-        self.augmentation_percentage = augmentation_percentage
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
 
@@ -29,9 +28,9 @@ class GlueDataModule(pl.LightningDataModule):
             labels.append(i['label'])
         return input_lines, labels
 
-    def split_and_pad_data(self, data):
+    def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
-        if self.augmentors is not None and self.augmentation_percentage is not None:
+        if augment:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, self.augmentation_percentage, has_label = False)
         input_encoding = self.tokenizer.batch_encode_plus(
@@ -48,13 +47,7 @@ class GlueDataModule(pl.LightningDataModule):
         data_seq = []
         for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
-        import pdb
-        pdb.set_trace()
         return data_seq
-
-    def shuffle_train_valid_iters(self):
-        num_train = int(len(self.train_dataset) * 0.95)
-        self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
 
     def setup(self, stage: str):
         dataset = load_dataset("glue", self.glue_task)
@@ -63,14 +56,13 @@ class GlueDataModule(pl.LightningDataModule):
         self.test_dataset = dataset['test']
 
     def train_dataloader(self):
-        self.shuffle_train_valid_iters()
-        return DataLoader(self.split_and_pad_data(self.train_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.validation_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.validation_dataset), batch_size=self.batch_size, shuffle = True)
 
     def test_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size, shuffle = True)
 
     def predict_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)

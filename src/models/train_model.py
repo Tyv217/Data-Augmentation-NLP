@@ -218,8 +218,15 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
     #     input_, output = batch
-    #     print(input_['src_len'])
+    #     print(input_['src_len'])    
+
+    # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
+    # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
+
     
+    id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
+    label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
+
     model = Better_Text_Classifier(
         max_epochs = args.max_epochs,
         steps_per_epoch = int(len(data.train_dataloader()))

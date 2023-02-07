@@ -8,7 +8,7 @@ from datasets import load_metric
 class Seq2SeqTranslator(pl.LightningModule):
     def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch):
         super().__init__()
-        self.learning_rate = 0.01
+        self.learning_rate = 1e-4
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
         self.config = AutoConfig.from_pretrained(model_name)

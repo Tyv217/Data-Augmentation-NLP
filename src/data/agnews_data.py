@@ -12,11 +12,10 @@ import random
 
 
 class AGNewsDataModule(pl.LightningDataModule):
-    def __init__(self, augmentation_percentage, dataset_percentage, augmentors, batch_size: int = 32):
+    def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
-        self.augmentation_percentage = augmentation_percentage
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
 
@@ -24,13 +23,13 @@ class AGNewsDataModule(pl.LightningDataModule):
         labels, inputs = zip(*data)
         return list(inputs), list(labels)
 
-    def split_and_pad_data(self, data):
+    def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
         labels = np.array(labels)
         for x in range(1,5):
             labels[labels == x] = x-1
         labels = list(labels)
-        if self.augmentors is not None and self.augmentation_percentage is not None:
+        if augment:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, self.augmentation_percentage, has_label = False)
         input_encoding = self.tokenizer.batch_encode_plus(
@@ -62,16 +61,16 @@ class AGNewsDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         self.shuffle_train_valid_iters()
-        return DataLoader(self.split_and_pad_data(self.split_train), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.split_train, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.split_valid), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.split_valid), batch_size=self.batch_size, shuffle = True)
 
     def test_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size, shuffle = True)
 
     def predict_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size, shuffle = True)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

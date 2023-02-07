@@ -146,7 +146,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en", "de"), "in": Insertor("english"), "de": Deletor()}
+    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentors = parse_augmentors(args, augmentator_mapping)
     data = TranslationDataModule(
         model_name = MODEL_NAME,
@@ -223,13 +223,11 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    
-    id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
-    label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
-
     model = Better_Text_Classifier(
         max_epochs = args.max_epochs,
-        steps_per_epoch = int(len(data.train_dataloader()))
+        steps_per_epoch = int(len(data.train_dataloader())),
+        id2label = data.id2label,
+        label2id = data.label2id
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # most basic trainer, uses good defaults (1 gpu)

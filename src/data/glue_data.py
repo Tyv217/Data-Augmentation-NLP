@@ -19,6 +19,9 @@ class GlueDataModule(pl.LightningDataModule):
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
+        self.id2label =  {0: "unacceptable", 1: "acceptable"}
+        self.label2id = {"unacceptable": 0, "acceptable": 1}
+
 
     def format_data(self, data):
         input_lines = []

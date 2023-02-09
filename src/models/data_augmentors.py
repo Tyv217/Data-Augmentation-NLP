@@ -60,7 +60,7 @@ class Synonym_Replacer():
                     replaced += 1
                 word_list.remove((word, pos))
                 sentence = curr_sentence
-            return sentence
+        return sentence
 
     def augment_dataset(self, data_iter, preprocessor = None, has_label = False):
         self.preprocessor = preprocessor
@@ -70,7 +70,7 @@ class Synonym_Replacer():
         augmented_sentences = [self.replace_with_synonyms(sentence) for sentence in list(data_iter)]
         if has_label:
             augmented_sentences = zip(label, augmented_sentences)
-        return IterableWrapper(augmented_sentences)
+        return list(augmented_sentences)
 
 # class Back_Translator():
 #     def __init__(self, src, dest):
@@ -175,7 +175,7 @@ class Back_Translator():
         data_list = translated_data + no_augment
         random.shuffle(data_list)
         
-        return IterableWrapper(data_list)
+        return list(data_list)
             
 
 class Insertor():
@@ -225,7 +225,7 @@ class Insertor():
         augmented_sentences = [self.insert_synonyms(sentence)for sentence in list(data_iter)]
         if has_label:
             augmented_sentences = zip(label, augmented_sentences)
-        return IterableWrapper(augmented_sentences)
+        return list(augmented_sentences)
 
 class Deletor():
 
@@ -252,6 +252,6 @@ class Deletor():
         augmented_sentences = [self.delete_randomly(sentence) for sentence in list(data_iter)]
         if has_label:
             augmented_sentences = zip(label, augmented_sentences)
-        return IterableWrapper(augmented_sentences)
+        return list(augmented_sentences)
 
 

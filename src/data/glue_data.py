@@ -65,7 +65,7 @@ class GlueDataModule(pl.LightningDataModule):
         return DataLoader(self.split_and_pad_data(self.validation_dataset), batch_size=self.batch_size, shuffle = True)
 
     def test_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
 
     def predict_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)

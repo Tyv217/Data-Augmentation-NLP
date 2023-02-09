@@ -52,7 +52,8 @@ class Synonym_Replacer():
                 curr_sentence = sentence
                 synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
-                synonyms = list(filter(lambda x: self.preprocessor.get_text_indices(x)[0] != 0, synonyms))
+                if self.preprocessor is not None:
+                    synonyms = list(filter(lambda x: self.preprocessor.get_text_indices(x)[0] != 0, synonyms))
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = re.sub(word, synonym, curr_sentence)

@@ -198,7 +198,6 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     args = parser.parse_args()
 
     data = GlueDataModule(
-        augmentation_percentage = augmentation_percentage,
         dataset_percentage = dataset_percentage,
         augmentors = augmentors,
         batch_size=args.batch_size

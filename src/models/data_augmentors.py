@@ -61,7 +61,7 @@ class Synonym_Replacer():
                 sentence = curr_sentence
             return sentence
 
-    def augment_dataset(self, data_iter, preprocessor, has_label = False):
+    def augment_dataset(self, data_iter, preprocessor = None, has_label = False):
         self.preprocessor = preprocessor
         self.start_time = time.time()
         if has_label:

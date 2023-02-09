@@ -225,6 +225,7 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     model = Better_Text_Classifier(
         max_epochs = args.max_epochs,
         steps_per_epoch = int(len(data.train_dataloader())),
+        num_labels = len(data.id2label),
         id2label = data.id2label,
         label2id = data.label2id
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))

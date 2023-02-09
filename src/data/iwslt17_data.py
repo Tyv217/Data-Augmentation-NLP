@@ -1,3 +1,4 @@
+import pdb
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from datasets import load_dataset
@@ -34,14 +35,17 @@ class TranslationDataModule(pl.LightningDataModule):
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, has_label = False)
-
-        input_encoding = self.tokenizer(
-            # [self.task_prefix + sequence for sequence in input_lines],
-            input_lines,
-            padding = "longest",
-            truncation = True,
-            return_tensors = "pt",
-        )
+        try:
+            input_encoding = self.tokenizer(
+                # [self.task_prefix + sequence for sequence in input_lines],
+                input_lines,
+                padding = "longest",
+                truncation = True,
+                return_tensors = "pt",
+            )
+        except:
+            import pdb
+            pdb.set_trace()
         input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
 
         output_encoding = self.tokenizer(

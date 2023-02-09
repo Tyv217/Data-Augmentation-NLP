@@ -19,6 +19,7 @@ class Seq2SeqTranslator(pl.LightningModule):
     def forward(self, input_id, attention_mask, label):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)
 
+
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr = self.learning_rate)
         lr_scheduler = {

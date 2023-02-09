@@ -29,7 +29,7 @@ class AGNewsDataModule(pl.LightningDataModule):
         for x in range(1,5):
             labels[labels == x] = x-1
         labels = list(labels)
-        if augment:
+        if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, has_label = False)
         input_encoding = self.tokenizer.batch_encode_plus(

@@ -31,7 +31,7 @@ class TranslationDataModule(pl.LightningDataModule):
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, output_lines = self.format_data(data)
-        if augment:
+        if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, has_label = False)
 

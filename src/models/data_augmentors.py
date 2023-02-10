@@ -43,12 +43,9 @@ class Synonym_Replacer():
         return word_list
 
     def replace_with_synonyms(self, sentence):
-        if(random.random() < self.augmentation_percentage):
-            word_list = self.get_word_list(sentence)
-            N = min(self.word_to_replace_per_sentence, len(word_list))
-            replaced = 0
-            while(replaced < N and len(word_list) > 0):
-                word, pos = random.choice(word_list)
+        word_list = self.get_word_list(sentence)
+        for word,pos in word_list:
+            if(random.random() < self.augmentation_percentage):
                 curr_sentence = sentence
                 synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
@@ -57,8 +54,6 @@ class Synonym_Replacer():
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = re.sub(word, synonym, curr_sentence)
-                    replaced += 1
-                word_list.remove((word, pos))
                 sentence = curr_sentence
         return sentence
 
@@ -187,41 +182,57 @@ class Insertor():
         nltk.download('stopwords')
         self.stopwords = stopwords.words(stopword_language)
         self.augmentation_percentage = 0
+        self.preprocessor = None
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
-    
-    def get_synonym(self, word):
-        synset = wn.synsets(word)
+
+    def get_synonym(self, word, pos = None):
+        if (pos):
+            synset = wn.synsets(word, pos=pos)
+        else:
+            synset = wn.synsets(word)
         synonym_deeplist = [syn.lemma_names() for syn in synset]
         synonyms = [synonym for sublist in synonym_deeplist for synonym in sublist if synonym != word]
+        lemma = self.lemmatizer.lemmatize(word)
+        synonyms = filter(lambda x: self.lemmatizer.lemmatize(x) != lemma, synonyms)
         return synonyms
+        
+    def get_word_list(self, sentence):
+        word_list = []
+        doc = self.nlp(sentence)
+        for token in doc:
+            word = token.text
+            if word not in self.stopwords and any(map(str.isupper, word)) is False and not any(char.isdigit() for char in word):
+                if token.pos_ in self.pos_mapper:
+                    word_list.append((word, self.pos_mapper[token.pos_]))
+                    # word_list.append(word)
+        return word_list
 
     def insert_randomly(self, word, sentence):
         space_indices = [m.start() for m in re.finditer(' ', sentence)]
         index = random.choice(space_indices)
         sentence = sentence[:index] + " " + word +  sentence[index:]
         return sentence
-
-    def insert_synonyms(self, sentence):
-        word_list = sentence.split(" ")
-        word_list = [i for i in word_list if i not in self.stopwords
-                and any(map(str.isupper, i)) is False
-                and not any(char.isdigit() for char in i)]
-        N = min(2, len(word_list))
-        if(N > 0) and (random.random() < self.augmentation_percentage):
-            words_to_insert = random.sample(word_list, N)
-            curr_sentence = sentence
-            for word in words_to_insert:
-                synonyms = self.get_synonym(word)
+    
+    def replace_with_synonyms(self, sentence):
+        word_list = self.get_word_list(sentence)
+        for word,pos in word_list:
+            if(random.random() < self.augmentation_percentage):
+                curr_sentence = sentence
+                synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
+                if self.preprocessor is not None:
+                    synonyms = list(filter(lambda x: self.preprocessor.get_text_indices(x)[0] != 0, synonyms))
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = self.insert_randomly(synonym, curr_sentence)
-            sentence = curr_sentence
+                sentence = curr_sentence
         return sentence
 
-    def augment_dataset(self, data_iter, has_label = False):
+
+    def augment_dataset(self, data_iter, preprocessor = None, has_label = False):
+        self.preprocessor = preprocessor
         if has_label:
             label, data_iter = zip(*data_iter)
         augmented_sentences = [self.insert_synonyms(sentence)for sentence in list(data_iter)]

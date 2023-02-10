@@ -236,15 +236,16 @@ class Deletor():
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def delete_randomly(self, label, sentence):
-        N = 2
-        if(N > 0 and random.random() < self.augmentation_percentage):
-            word_list = sentence.split(" ")
-            for i in range(N):
-                index = random.randint(0, len(word_list) - 1)
-                word_list.pop(index)
-            sentence = " ".join(word_list)
-        return (label, sentence)
+    def delete_randomly(self, sentence):
+        word_list = sentence.split(" ")
+        to_delete = []
+        for word in word_list:
+            if (random.random() < self.augmentation_percentage):
+                to_delete.append(word)
+        for word in to_delete:
+            word_list.delete(word)
+        sentence = " ".join(word_list)
+        return sentence
 
     def augment_dataset(self, data_iter, has_label = False):
         if has_label:

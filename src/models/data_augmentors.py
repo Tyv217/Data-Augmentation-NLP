@@ -120,10 +120,10 @@ class Back_Translator():
                 truncation = True,
                 return_tensors = "pt",  
         )
-        input_ids = input_encoding.input_ids
-        attention_mask = input_encoding.attention_mask
+        input_ids = input_encoding.input_ids.to(self.device)
+        attention_mask = input_encoding.attention_mask.to(self.device)
         with torch.no_grad():
-            output_ids = model.generate(input_ids, attention_mask = attention_mask, max_new_tokens = 256)
+            output_ids = model.generate(input_ids, attention_mask = attention_mask, max_new_tokens = 256).to(self.device)
         result = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
         return result
 
@@ -139,8 +139,8 @@ class Back_Translator():
             model2_name = "Helsinki-NLP/opus-mt-" + language + "_" + self.src
             tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
             tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
-            model1 = AutoModelForSeq2SeqLM.from_pretrained(model1_name)
-            model2 = AutoModelForSeq2SeqLM.from_pretrained(model2_name)
+            model1 = AutoModelForSeq2SeqLM.from_pretrained(model1_name).to(self.device)
+            model2 = AutoModelForSeq2SeqLM.from_pretrained(model2_name).to(self.device)
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
 

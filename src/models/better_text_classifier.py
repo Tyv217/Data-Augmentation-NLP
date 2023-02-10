@@ -82,8 +82,6 @@ class Better_Text_Classifier(pl.LightningModule):
     
     def test_step(self, batch, batch_idx):
         with torch.no_grad():
-            import pdb
-            pdb.set_trace()
             output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()

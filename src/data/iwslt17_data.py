@@ -22,30 +22,22 @@ class TranslationDataModule(pl.LightningDataModule):
         input_lines = []
         output_lines = []
         for line in data:
-            import pdb
-            try:
-                input_lines.append(line['translation'][self.input_language])
-                output_lines.append(line['translation'][self.output_language])
-            except:
-                pdb.set_trace()
+            input_lines.append(line['translation'][self.input_language])
+            output_lines.append(line['translation'][self.output_language])
         return input_lines, output_lines
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, output_lines = self.format_data(data)
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
-                input_lines = augmentor.augment_dataset(input_lines, has_label = False)
-        try:
-            input_encoding = self.tokenizer(
-                # [self.task_prefix + sequence for sequence in input_lines],
-                input_lines,
-                padding = "longest",
-                truncation = True,
-                return_tensors = "pt",
-            )
-        except:
-            import pdb
-            pdb.set_trace()
+                input_lines = list(augmentor.augment_dataset(input_lines, has_label = False))
+        input_encoding = self.tokenizer(
+            # [self.task_prefix + sequence for sequence in input_lines],
+            input_lines,
+            padding = "longest",
+            truncation = True,
+            return_tensors = "pt",
+        )
         input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
 
         output_encoding = self.tokenizer(

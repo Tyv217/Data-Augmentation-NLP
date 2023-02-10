@@ -183,6 +183,9 @@ class Insertor():
         self.stopwords = stopwords.words(stopword_language)
         self.augmentation_percentage = 0
         self.preprocessor = None
+        self.nlp = spacy.load("en_core_web_sm")
+        self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
+        self.lemmatizer = WordNetLemmatizer()
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -215,7 +218,7 @@ class Insertor():
         sentence = sentence[:index] + " " + word +  sentence[index:]
         return sentence
     
-    def replace_with_synonyms(self, sentence):
+    def insert_synonyms(self, sentence):
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
             if(random.random() < self.augmentation_percentage):
@@ -256,7 +259,7 @@ class Deletor():
             if (random.random() < self.augmentation_percentage):
                 to_delete.append(word)
         for word in to_delete:
-            word_list.delete(word)
+            word_list.remove(word)
         sentence = " ".join(word_list)
         return sentence
 

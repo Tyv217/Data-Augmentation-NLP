@@ -137,8 +137,10 @@ class Back_Translator():
         for language in target_languages:
             model1_name = "Helsinki-NLP/opus-mt-" + self.src + "-" + language
             model2_name = "Helsinki-NLP/opus-mt-" + language + "-" + self.src
-            tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
-            tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
+            # tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
+            # tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
+            tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024)
+            tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024)
             model1 = AutoModelForSeq2SeqLM.from_pretrained(model1_name).to(self.device)
             model2 = AutoModelForSeq2SeqLM.from_pretrained(model2_name).to(self.device)
             models.append((model1, model2, tokenizer1, tokenizer2))

@@ -4,9 +4,9 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class Better_Text_Classifier(pl.LightningModule):
-    def __init__(self, max_epochs, steps_per_epoch, num_labels, id2label, label2id):
+    def __init__(self, learning_rate, max_epochs, steps_per_epoch, num_labels, id2label, label2id):
         super().__init__()
-        self.learning_rate = 5e-5
+        self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         self.id2label = id2label
         self.label2id = label2id

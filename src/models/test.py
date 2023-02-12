@@ -73,7 +73,8 @@ def main():
 
 if __name__ == "__main__":
     import pytorch_lightning as pl
-    import argparse
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     print(args)

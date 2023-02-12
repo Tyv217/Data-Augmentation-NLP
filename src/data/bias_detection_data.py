@@ -53,9 +53,20 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         df_sg2 = pd.read_excel(PATH_sg2)
         df_sg1 = df_sg1[["text", "label_bias"]]
         df_sg2 = df_sg2[["text", "label_bias"]]
+
         df = pd.concat([df_sg1, df_sg2])
-        import pdb
-        pdb.set_trace()
+        df = df.sample(frac=1).reset_index() # Shuffles df
+
+        df['label_bias'] = df['label_bias'].map(self.label2id)
+        
+        train_size = 0.9
+        valid_size = 0.05
+
+        train_index = int(len(df) * train_size)
+        valid_index = int(len(df) * valid_size)
+        self.train_dataset = df[0 : train_index]
+        self.validation_dataset = df[train_index : train_index + valid_index]
+        self.test_dataset = df[train_index + valid_index : ]
 
         # self.train_dataset = dataset['train']
         # self.validation_dataset = dataset['validation']

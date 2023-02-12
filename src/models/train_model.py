@@ -182,10 +182,12 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
 
-def better_text_classify(augmentors = None, dataset_percentage = 100, augmentation_percentage = 0):
+def better_text_classify(augmentors = None, dataset_percentage = 100):
     parser = ArgumentParser()
 
     # add PROGRAM level args
+    parser.add_argument("--learning_rate", type=float, default=5e-5)
+    parser.add_argument("--task", type=str, default="bias_detection")
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--augmentation_params", type=str, default="")
     parser.add_argument("--N_samples", type=int, default=256 * 10)
@@ -197,11 +199,14 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
 
-    data = BiasDetectionDataModule(
+    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
+
+    data = data_modules[args.task](
         dataset_percentage = dataset_percentage,
         augmentors = augmentors,
         batch_size = args.batch_size
     )
+
     data.prepare_data()
     data.setup("fit")
 
@@ -223,6 +228,7 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
     model = Better_Text_Classifier(
+        learning_rate = args.learning_rate,
         max_epochs = args.max_epochs,
         steps_per_epoch = int(len(data.train_dataloader())),
         num_labels = len(data.id2label),

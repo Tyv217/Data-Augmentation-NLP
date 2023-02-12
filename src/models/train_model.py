@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule
+from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
@@ -197,10 +197,10 @@ def better_text_classify(augmentors = None, dataset_percentage = 100, augmentati
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
 
-    data = GlueDataModule(
+    data = TwitterDataModule(
         dataset_percentage = dataset_percentage,
         augmentors = augmentors,
-        batch_size=args.batch_size
+        batch_size = args.batch_size
     )
     data.prepare_data()
     data.setup("fit")

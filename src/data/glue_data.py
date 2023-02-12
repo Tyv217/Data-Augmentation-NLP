@@ -27,7 +27,7 @@ class GlueDataModule(pl.LightningDataModule):
         input_lines = []
         labels = []
         for i in data:
-            input_lines.append(i['text'])
+            input_lines.append(i['sentence'])
             labels.append(i['label'])
         return input_lines, labels
 

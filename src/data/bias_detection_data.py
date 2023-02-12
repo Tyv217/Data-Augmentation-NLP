@@ -7,29 +7,23 @@ from transformers import DistilBertTokenizer
 from torchtext.datasets import AG_NEWS as agnews
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
-import numpy as np
+import numpy as np, pandas as pd
 import random
 
 
-class TwitterDataModule(pl.LightningDataModule):
-    def __init__(self, dataset_percentage, augmentors = [], twitter_task = "sentiment", batch_size: int = 32):
+class BiasDetectionDataModule(pl.LightningDataModule):
+    def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
-        self.twitter_task = twitter_task
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
-        self.id2label =  {0: "negative", 1: "neutral", 2: "positive"}
-        self.label2id = {"negative": 0, "neutral": 1, "positive": 2}
+        self.id2label =  {0: "Non-biased", 1: "No agreement", 2: "Biased"}
+        self.label2id = {"Non-biased": 0, "No agreement": 1, "Biased": 2}
 
 
     def format_data(self, data):
-        input_lines = []
-        labels = []
-        for i in data:
-            input_lines.append(i['text'])
-            labels.append(i['label'])
-        return input_lines, labels
+        return data['text'], data['label_bias']
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
@@ -53,10 +47,19 @@ class TwitterDataModule(pl.LightningDataModule):
         return data_seq
 
     def setup(self, stage: str):
-        dataset = load_dataset("tweet_eval", self.twitter_task)
-        self.train_dataset = dataset['train']
-        self.validation_dataset = dataset['validation']
-        self.test_dataset = dataset['test']
+        PATH_sg1 = "src/data/bias_detection_data_files/final_labels_SG1.xlsx"
+        PATH_sg2 = "src/data/bias_detection_data_files/final_labels_SG2.xlsx"
+        df_sg1 = pd.read_excel(PATH_sg1)
+        df_sg2 = pd.read_excel(PATH_sg2)
+        df_sg1 = df_sg1[["text", "label_bias"]]
+        df_sg2 = df_sg2[["text", "label_bias"]]
+        df = pd.concat([df_sg1, df_sg2])
+        import pdb
+        pdb.set_trace()
+
+        # self.train_dataset = dataset['train']
+        # self.validation_dataset = dataset['validation']
+        # self.test_dataset = dataset['test']
 
     def train_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)

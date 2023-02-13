@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from argparse import ArgumentParser
-from ..helpers import EnglishPreProcessor, Logger, parse_augmentors
+from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule
@@ -136,6 +136,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser = ArgumentParser()
 
     # add PROGRAM level args
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--augmentation_params", type=str, default="")
     parser.add_argument("--N_samples", type=int, default=256 * 10)
@@ -146,8 +147,10 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+    set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentors = parse_augmentors(args, augmentator_mapping)
+
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         augmentors = augmentors,
@@ -186,6 +189,7 @@ def better_text_classify(augmentors = None, dataset_percentage = 100):
     parser = ArgumentParser()
 
     # add PROGRAM level args
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--learning_rate", type=float, default=5e-5)
     parser.add_argument("--task", type=str, default="bias_detection")
     parser.add_argument("--augmentors", type=str, default="")
@@ -198,6 +202,7 @@ def better_text_classify(augmentors = None, dataset_percentage = 100):
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+    set_seed(args.seed)
 
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
 

@@ -22,6 +22,16 @@ class TwitterDataModule(pl.LightningDataModule):
         self.id2label =  {0: "negative", 1: "neutral", 2: "positive"}
         self.label2id = {"negative": 0, "neutral": 1, "positive": 2}
 
+    def preprocess(self, text):
+        data = []
+        for t in text.split(" "):
+            if(t.startswith('@') and len(t) > 1):
+                data.append("@user")
+            elif t.startswith('http'):
+                data.append("http")
+            else:
+                data.append(t)
+        return " ".join(data)
 
     def format_data(self, data):
         input_lines = []
@@ -29,7 +39,7 @@ class TwitterDataModule(pl.LightningDataModule):
         for i in data:
             input_lines.append(i['text'])
             labels.append(i['label'])
-        return input_lines, labels
+        return self.preprocess(input_lines), labels
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)

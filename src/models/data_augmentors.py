@@ -214,8 +214,9 @@ class Insertor():
 
     def insert_randomly(self, word, sentence):
         space_indices = [m.start() for m in re.finditer(' ', sentence)]
-        index = random.choice(space_indices)
-        sentence = sentence[:index] + " " + word +  sentence[index:]
+        if(space_indices is not None):
+            index = random.choice(space_indices)
+            sentence = sentence[:index] + " " + word +  sentence[index:]
         return sentence
     
     def insert_synonyms(self, sentence):

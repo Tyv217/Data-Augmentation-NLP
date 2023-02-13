@@ -64,7 +64,9 @@ class TwitterDataModule(pl.LightningDataModule):
 
     def setup(self, stage: str):
         dataset = load_dataset("tweet_eval", self.twitter_task)
-        self.train_dataset = dataset['train']
+        train = list(dataset['train'])
+        random.shuffle(train)
+        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
         self.validation_dataset = dataset['validation']
         self.test_dataset = dataset['test']
 

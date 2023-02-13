@@ -70,9 +70,11 @@ class BiasDetectionDataModule(pl.LightningDataModule):
 
         train_index = int(len(df) * train_size)
         valid_index = int(len(df) * valid_size)
-        self.train_dataset = df[0 : train_index]
+        train = df[0 : train_index]
+        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
         self.validation_dataset = df[train_index : train_index + valid_index]
         self.test_dataset = df[train_index + valid_index : ]
+        
 
         # self.train_dataset = dataset['train']
         # self.validation_dataset = dataset['validation']

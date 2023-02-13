@@ -1,4 +1,4 @@
-import pdb
+import random
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from datasets import load_dataset
@@ -17,6 +17,9 @@ class TranslationDataModule(pl.LightningDataModule):
         self.input_language = input_language
         self.output_language = output_language
         self.augmentors = augmentors
+        train = self.dataset['train']
+        random.shuffle(train)
+        self.dataset['train'] = train[:int(len(train) * dataset_percentage)]
 
     def format_data(self, data):
         input_lines = []

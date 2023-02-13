@@ -50,11 +50,13 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         try:
             PATH_sg1 = "src/data/bias_detection_data_files/final_labels_SG1.xlsx"
             PATH_sg2 = "src/data/bias_detection_data_files/final_labels_SG2.xlsx"
+            df_sg1 = pd.read_excel(PATH_sg1)
+            df_sg2 = pd.read_excel(PATH_sg2)
         except FileNotFoundError:
             PATH_sg1 = "project/src/data/bias_detection_data_files/final_labels_SG1.xlsx"
             PATH_sg2 = "project/src/data/bias_detection_data_files/final_labels_SG2.xlsx"
-        df_sg1 = pd.read_excel(PATH_sg1)
-        df_sg2 = pd.read_excel(PATH_sg2)
+            df_sg1 = pd.read_excel(PATH_sg1)
+            df_sg2 = pd.read_excel(PATH_sg2)
         df_sg1 = df_sg1[["text", "label_bias"]]
         df_sg2 = df_sg2[["text", "label_bias"]]
 

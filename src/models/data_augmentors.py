@@ -141,7 +141,6 @@ class Back_Translator():
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
 
-
     def augment_dataset(self, data_iter, has_label = False):
         data_list = list(data_iter)
         to_augment = []

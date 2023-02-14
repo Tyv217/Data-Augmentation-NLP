@@ -69,13 +69,13 @@ class TranslationDataModule(pl.LightningDataModule):
         return DataLoader(self.train_iterator, batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.valid_iterator, batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.valid_iterator, batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_iterator, batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.test_iterator, batch_size=self.batch_size)
 
     def predict_dataloader(self):
-        return DataLoader(self.test_iterator, batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.test_iterator, batch_size=self.batch_size)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

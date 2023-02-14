@@ -126,7 +126,8 @@ class Back_Translator():
         intermediate = self.bulk_translate(sentences, model1, tokenizer1)
         back_translated = self.bulk_translate(intermediate, model2, tokenizer2)
         with open("translated_data.txt", 'a') as file:
-            file.write("Original: " + intermediate + "\nTranslated: " + back_translated + "\n\n")
+            for s,b in zip(sentences, back_translated):
+                file.write("Original: " + s + "\nTranslated: " + b + "\n\n")
         return 
 
     def get_translators(self):

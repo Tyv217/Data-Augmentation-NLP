@@ -214,7 +214,7 @@ class Insertor():
 
     def insert_randomly(self, word, sentence):
         space_indices = [m.start() for m in re.finditer(' ', sentence)]
-        if(space_indices is not None):
+        if((space_indices is not None) and len(space_indices) > 0):
             index = random.choice(space_indices)
             sentence = sentence[:index] + " " + word +  sentence[index:]
         return sentence

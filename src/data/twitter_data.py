@@ -37,9 +37,9 @@ class TwitterDataModule(pl.LightningDataModule):
         input_lines = []
         labels = []
         for i in data:
-            input_lines.append(i['text'])
+            input_lines.append(self.preprocess(i['text']))
             labels.append(i['label'])
-        return self.preprocess(input_lines), labels
+        return input_lines, labels
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)

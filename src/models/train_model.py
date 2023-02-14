@@ -185,7 +185,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
 
-def better_text_classify(augmentors = None, dataset_percentage = 100):
+def better_text_classify(dataset_percentage = 100):
     parser = ArgumentParser()
 
     # add PROGRAM level args
@@ -203,6 +203,8 @@ def better_text_classify(augmentors = None, dataset_percentage = 100):
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
+    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
+    augmentors = parse_augmentors(args, augmentator_mapping)
 
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
 

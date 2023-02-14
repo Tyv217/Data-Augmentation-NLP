@@ -27,6 +27,8 @@ class BiasDetectionDataModule(pl.LightningDataModule):
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
+        import pdb
+        pdb.set_trace()
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, self.augmentation_percentage, has_label = False)
@@ -75,7 +77,6 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         self.validation_dataset = df[train_index : train_index + valid_index]
         self.test_dataset = df[train_index + valid_index : ]
         
-
         # self.train_dataset = dataset['train']
         # self.validation_dataset = dataset['validation']
         # self.test_dataset = dataset['test']

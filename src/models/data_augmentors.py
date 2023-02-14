@@ -168,14 +168,14 @@ class Back_Translator():
             translated_data += self.bulk_back_translate(to_augment[count:min(count + BATCH_SIZE, len(to_augment))], model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
             print("64 Done!")
+            import pdb
+            pdb.set_trace()
         print("Augmentation took :", time.time() - start_time)
         if has_label:
             translated_data = zip(label, translated_data)
 
         data_list = translated_data + no_augment
         random.shuffle(data_list)
-        import pdb
-        pdb.set_trace()
         return list(data_list)
             
 

@@ -17,7 +17,7 @@ class TranslationDataModule(pl.LightningDataModule):
         self.input_language = input_language
         self.output_language = output_language
         self.augmentors = augmentors
-        train = self.dataset['train']
+        train = list(self.dataset['train'])
         random.shuffle(train)
         self.dataset['train'] = train[:int(len(train) * dataset_percentage)]
 
@@ -54,7 +54,7 @@ class TranslationDataModule(pl.LightningDataModule):
 
         labels[labels == self.tokenizer.pad_token_id] = -100
 
-        data_seq = []
+        data_seq = []   
         for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": label})
         return data_seq

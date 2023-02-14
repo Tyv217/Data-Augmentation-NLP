@@ -3,7 +3,7 @@ from nltk.corpus import wordnet as wn, stopwords
 from nltk.stem import WordNetLemmatizer
 from torchdata.datapipes.iter import IterableWrapper
 import random, re, spacy
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import MarianMTModel, MarianTokenizer
 
 class Synonym_Replacer():
     def __init__(self, stopword_language, word_to_replace_per_sentence = 2):
@@ -124,7 +124,10 @@ class Back_Translator():
 
     def bulk_back_translate(self, sentences, model1, model2, tokenizer1, tokenizer2):
         intermediate = self.bulk_translate(sentences, model1, tokenizer1)
-        return self.bulk_translate(intermediate, model2, tokenizer2)
+        back_translated = self.bulk_translate(intermediate, model2, tokenizer2)
+        with open("translated_data.txt", 'a') as file:
+            file.write("Original: " + intermediate + "\nTranslated: " + back_translated + "\n\n")
+        return 
 
     def get_translators(self):
         models = []
@@ -134,10 +137,10 @@ class Back_Translator():
             model2_name = "Helsinki-NLP/opus-mt-" + language + "-" + self.src
             # tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
             # tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
-            tokenizer1 = AutoTokenizer.from_pretrained(model1_name, model_max_length = 1024)
-            tokenizer2 = AutoTokenizer.from_pretrained(model2_name, model_max_length = 1024)
-            model1 = AutoModelForSeq2SeqLM.from_pretrained(model1_name).to(self.device)
-            model2 = AutoModelForSeq2SeqLM.from_pretrained(model2_name).to(self.device)
+            tokenizer1 = MarianTokenizer.from_pretrained(model1_name, model_max_length = 1024)
+            tokenizer2 = MarianTokenizer.from_pretrained(model2_name, model_max_length = 1024)
+            model1 = MarianMTModel.from_pretrained(model1_name).to(self.device)
+            model2 = MarianMTModel.from_pretrained(model2_name).to(self.device)
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
 
@@ -171,7 +174,8 @@ class Back_Translator():
 
         data_list = translated_data + no_augment
         random.shuffle(data_list)
-        
+        import pdb
+        pdb.set_trace()
         return list(data_list)
             
 

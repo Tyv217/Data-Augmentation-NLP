@@ -125,10 +125,10 @@ class Back_Translator():
     def bulk_back_translate(self, sentences, model1, model2, tokenizer1, tokenizer2):
         intermediate = self.bulk_translate(sentences, model1, tokenizer1)
         back_translated = self.bulk_translate(intermediate, model2, tokenizer2)
-        with open("translated_data.txt", 'a') as file:
+        with open("translated_data.txt", 'a') as f:
             for s,b in zip(sentences, back_translated):
-                file.write("Original: " + s + "\nTranslated: " + b + "\n\n")
-        return 
+                f.write("Original: " + s + "\nTranslated: " + b + "\n\n")
+        return back_translated
 
     def get_translators(self):
         models = []
@@ -166,16 +166,17 @@ class Back_Translator():
         while(count < len(to_augment)):
             # torch.cuda.empty_cache()
             (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)
-            translated_data += self.bulk_back_translate(to_augment[count:min(count + BATCH_SIZE, len(to_augment))], model1, model2, tokenizer1, tokenizer2)
+            text = to_augment[count:min(count + BATCH_SIZE, len(to_augment))]
+            translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
             print("64 Done!")
-            import pdb
-            pdb.set_trace()
         print("Augmentation took :", time.time() - start_time)
         if has_label:
             translated_data = zip(label, translated_data)
 
         data_list = translated_data + no_augment
+        import pdb
+        pdb.set_trace()
         random.shuffle(data_list)
         return list(data_list)
             

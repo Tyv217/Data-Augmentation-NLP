@@ -148,12 +148,9 @@ class Back_Translator():
     def augment_dataset(self, data_iter, has_label = False):
         data_list = list(data_iter)
         to_augment = []
-        no_augment = []
         for data in data_list:
             if(random.random() < self.augmentation_percentage):
                 to_augment.append(data)
-            else:
-                no_augment.append(data)
         
         if(has_label):
             label, to_augment = zip(*to_augment)
@@ -170,13 +167,18 @@ class Back_Translator():
             translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
             print("64 Done!")
-        print("Augmentation took :", time.time() - start_time)
+        augmentation_time = time.time() - start_time
         if has_label:
             translated_data = zip(label, translated_data)
+        
+        for i1 in range(len(translated_data)):
+            i2 = data_list.index(to_augment[i1])
+            data_list[i2] = translated_data[i1] 
 
-        data_list = translated_data + no_augment
+        print("Augmentation took :", time.time() - start_time)
+        import pdb
+        pdb.set_trace()
         return list(data_list)
-            
 
 class Insertor():
     def __init__(self, stopword_language):

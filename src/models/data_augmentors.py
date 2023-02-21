@@ -167,17 +167,14 @@ class Back_Translator():
             translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
             print("64 Done!")
-        augmentation_time = time.time() - start_time
         if has_label:
             translated_data = zip(label, translated_data)
         
         for i1 in range(len(translated_data)):
             i2 = data_list.index(to_augment[i1])
-            data_list[i2] = translated_data[i1] 
+            data_list[i2] = translated_data[i1]
 
         print("Augmentation took :", time.time() - start_time)
-        import pdb
-        pdb.set_trace()
         return list(data_list)
 
 class Insertor():

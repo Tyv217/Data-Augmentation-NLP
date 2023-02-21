@@ -175,7 +175,6 @@ class Back_Translator():
             translated_data = zip(label, translated_data)
 
         data_list = translated_data + no_augment
-        random.shuffle(data_list)
         return list(data_list)
             
 

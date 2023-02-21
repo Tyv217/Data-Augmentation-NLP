@@ -106,7 +106,7 @@ class Back_Translator():
         self.augmentation_percentage = 0
 
     def set_augmentation_percentage(self, augmentation_percentage):
-        self.augmentation_percentage = augmentation_percentage
+        self.augmentation_percentage = augmentation_percentage / 100
 
     def bulk_translate(self, sentences, model, tokenizer):
         input_encoding = tokenizer(

@@ -29,9 +29,12 @@ class TranslationDataModule(pl.LightningDataModule):
             output_lines.append(line['translation'][self.output_language])
         return input_lines, output_lines
 
-    def split_and_pad_data(self, data, augment = False):
+    def split_and_pad_data(self, data, augment = False, augment_target = False):
         input_lines, output_lines = self.format_data(data)
         if augment and self.augmentors is not None:
+            for augmentor in self.augmentors:
+                input_lines = list(augmentor.augment_dataset(input_lines, has_label = False))
+        if augment and augment_target and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines = list(augmentor.augment_dataset(input_lines, has_label = False))
         input_encoding = self.tokenizer(

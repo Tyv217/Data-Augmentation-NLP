@@ -140,6 +140,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--augmentation_params", type=str, default="")
+    parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)
@@ -155,7 +156,7 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
 
     data = TranslationDataModule(
         model_name = MODEL_NAME,
-        dataset_percentage = args.dataset_percentage,
+        dataset_percentage = args.dataset_percentage / 100,
         augmentors = augmentors,
         batch_size=args.batch_size
     )
@@ -214,7 +215,7 @@ def better_text_classify():
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
 
     data = data_modules[args.task](
-        dataset_percentage = args.dataset_percentage,
+        dataset_percentage = args.dataset_percentage / 100,
         augmentors = augmentors,
         batch_size = args.batch_size
     )
@@ -227,7 +228,6 @@ def better_text_classify():
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
-    print(args)
     trainer = pl.Trainer.from_argparse_args(
         args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
     )  # , distributed_backend='ddp_cpu')

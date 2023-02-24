@@ -23,7 +23,7 @@ class BiasDetectionDataModule(pl.LightningDataModule):
 
 
     def format_data(self, data):
-        return data['text'], data['label_bias']
+        return data['text'], np.identity(len(self.id2label))[data['label_bias']]
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)

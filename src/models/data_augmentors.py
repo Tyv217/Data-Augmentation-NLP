@@ -274,4 +274,89 @@ class Deletor():
             augmented_sentences = zip(label, augmented_sentences)
         return list(augmented_sentences)
 
+class CutOut():
+    def __init__(self):
+        super().__init__()
+        self.augmentation_percentage = 0
+        self.cutout_percentage = 0.1
 
+    def set_augmentation_percentage(self, augmentation_percentage):
+        self.augmentation_percentage = augmentation_percentage
+
+    def cutout_randomly(self, sentence):
+        if(random.random() < self.augmentation_percentage):
+            word_list = sentence.split(" ")
+            l = len(word_list)
+            words_to_delete = int(l * self.cutout_percentage)
+            i = random.randrange(0 - words_to_delete, l + 1)
+            start_index = max(0, i)
+            end_index = min(l, i + words_to_delete)
+            word_list = word_list[:start_index] + word_list[end_index:l]
+            sentence = " ".join(word_list)
+        return sentence
+
+    def augment_dataset(self, data_iter, has_label = False):
+        if has_label:
+            label, data_iter = zip(*data_iter)
+        augmented_sentences = [self.delete_randomly(sentence) for sentence in list(data_iter)]
+        if has_label:
+            augmented_sentences = zip(label, augmented_sentences)
+        return list(augmented_sentences)
+class CutMix():
+    def __init__(self):
+        super().__init__()
+        self.augmentation_percentage = 0
+        self.cutmix_percentage = 1
+
+    def set_augmentation_percentage(self, augmentation_percentage):
+        self.augmentation_percentage = augmentation_percentage
+
+    def approach_1(self, sentence1, sentence2, label1, label2):
+        lam = random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        if(len(sentence2) < len(sentence1)):
+            sentence1, sentence2 = sentence2, sentence1
+            label1, label2 = label2, label1
+        
+        l1 = len(sentence1)
+        l2 = len(sentence2)
+        words_to_cutout = int(l1 * lam)
+        start_index1 = random.randrange(0, l1 - words_to_cutout)
+        mid_index1 = start_index1 + words_to_cutout / 2
+        mid_index2 = mid_index1 * l2 / l1
+        start_index2 = int(mid_index2 - words_to_cutout / 2)
+
+        end_index1 = start_index1 + words_to_cutout
+        end_index2 = start_index2 + words_to_cutout
+        
+        sentence = sentence1[:start_index1] + sentence2[start_index2:end_index2] + sentence1[end_index1:l1]
+        label = label1 * lam + label2 * (1-lam)
+        return sentence, label
+
+    def approach_2(self, sentence1, sentence2, label1, label2):
+        # Difference to approach 1 is how it selects where in sentence 2 to take out the sentence.
+        # Just takes out same index as sentence 1
+        lam = random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        if(len(sentence2) < len(sentence1)):
+            sentence1, sentence2 = sentence2, sentence1
+            label1, label2 = label2, label1
+        
+        l1 = len(sentence1)
+        l2 = len(sentence2)
+        words_to_cutout = int(l1 * lam)
+        start_index = random.randrange(0, l1 - words_to_cutout)
+        end_index = start_index + words_to_cutout
+        sentence = sentence1[:start_index] + sentence2[start_index:end_index] + sentence1[end_index:l1]
+        label = label1 * lam + label2 * (1-lam)
+
+        import pdb
+        pdb.set_trace()
+
+        return sentence, label
+
+    def augment_dataset(self, data_iter, has_label = False):
+        if has_label:
+            label, data_iter = zip(*data_iter)
+        augmented_sentences = [self.approach_1(sentence) for sentence in list(data_iter)]
+        if has_label:
+            augmented_sentences = zip(label, augmented_sentences)
+        return list(augmented_sentences)

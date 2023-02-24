@@ -1,4 +1,4 @@
-import torch
+import torch, time
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 from ..helpers import set_seed, plot_and_compare_emb
@@ -37,7 +37,10 @@ def visualize_back_translation_embedding():
     train_data2 = train_data1.copy()
 
     augmentor.set_augmentation_percentage(1000) # So guaranteed augmentation
+    print("Start augmenting!")
+    start_time = time.time()
     train_data2 = augmentor.augment_dataset(train_data2).to(device)
+    print("Finish augmenting! Time taken: " + str(time.time() - start_time))
 
     model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
 

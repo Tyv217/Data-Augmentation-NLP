@@ -1,3 +1,4 @@
+import torch
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 from ..helpers import set_seed, plot_and_compare_emb
@@ -30,17 +31,19 @@ def visualize_back_translation_embedding():
     data.prepare_data()
     data.setup("fit")
 
-    train_data1 = list(data.get_dataset_text())
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    train_data1 = list(data.get_dataset_text()).to(device)
     train_data2 = train_data1.copy()
 
     augmentor.set_augmentation_percentage(1000) # So guaranteed augmentation
-    train_data2 = augmentor.augment_dataset(train_data2)
-    
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    train_data2 = augmentor.augment_dataset(train_data2).to(device)
+
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
 
     embeddings1 = model.encode(train_data1)
     embeddings2 = model.encode(train_data2)
-    
+
     plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 
 

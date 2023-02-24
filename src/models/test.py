@@ -72,6 +72,12 @@ def main():
     loss.item()
 
 if __name__ == "__main__":
-    import numpy as np
-    l = np.array([0,2,3,1,2,0])
-    print(np.identity(4)[l])
+    from src.helpers import plot_and_compare_emb
+    from sentence_transformers import SentenceTransformer
+    sentences1 = ["This is an example sentence", "Each sentence is converted"]
+    sentences2 = ["This is not an example sentence", "Each sentence is not converted"]
+
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    embeddings1 = model.encode(sentences1)
+    embeddings2 = model.encode(sentences2)
+    plot_and_compare_emb(embeddings1, embeddings2)

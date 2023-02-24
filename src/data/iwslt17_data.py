@@ -64,11 +64,14 @@ class TranslationDataModule(pl.LightningDataModule):
 
 
     def setup(self, stage: str):
+        train = list(self.dataset['train'])
+        random.shuffle(train)
+        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
         self.valid_iterator = self.split_and_pad_data(self.dataset['validation'])
         self.test_iterator = self.split_and_pad_data(self.dataset['test'])
 
     def train_dataloader(self):
-        self.train_iterator = self.split_and_pad_data(self.dataset['train'], augment = True)
+        self.train_iterator = self.split_and_pad_data(self.train_dataset, augment = True)
         return DataLoader(self.train_iterator, batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):

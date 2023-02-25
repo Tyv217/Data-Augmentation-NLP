@@ -33,13 +33,13 @@ def visualize_back_translation_embedding():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    train_data1 = list(data.get_dataset_text()).to(device)
+    train_data1 = list(data.get_dataset_text())
     train_data2 = train_data1.copy()
 
     augmentor.set_augmentation_percentage(1000) # So guaranteed augmentation
     print("Start augmenting!")
     start_time = time.time()
-    train_data2 = augmentor.augment_dataset(train_data2).to(device)
+    train_data2 = augmentor.augment_dataset(train_data2)
     print("Finish augmenting! Time taken: " + str(time.time() - start_time))
 
     model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)

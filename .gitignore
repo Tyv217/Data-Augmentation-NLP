@@ -6,3 +6,4 @@ runs*/
 *.ps1
 anaconda3/
 *.sh
+logs/

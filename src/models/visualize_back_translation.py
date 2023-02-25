@@ -34,6 +34,8 @@ def visualize_back_translation_embedding():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_data1 = list(data.get_dataset_text())
+    random.shuffle(train_data1)
+    train_data1 = train_data1[:1000]
     train_data2 = train_data1.copy()
 
     augmentor.set_augmentation_percentage(1000) # So guaranteed augmentation

@@ -158,7 +158,6 @@ class Back_Translator():
         count = 0
         translated_data = []
         BATCH_SIZE = 64
-        print("Start augmenting!")
         start_time = time.time()
         while(count < len(to_augment)):
             # torch.cuda.empty_cache()
@@ -166,7 +165,6 @@ class Back_Translator():
             text = to_augment[count:min(count + BATCH_SIZE, len(to_augment))]
             translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
-            print("64 Done!")
         if has_label:
             translated_data = zip(label, translated_data)
         

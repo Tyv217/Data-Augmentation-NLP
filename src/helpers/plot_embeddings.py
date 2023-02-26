@@ -38,7 +38,7 @@ def plot_emb(embeddings, fig_name):
     ax.set_ylim(ymin=-abs_max, ymax=abs_max)
     ax.set_xlim(xmin=-abs_max, xmax=abs_max)
     
-    plt.text(0.5,0.5,text,
+    plt.text(0.49,0.49,text,
         horizontalalignment='right',
         verticalalignment='top')
     plt.savefig(fig_name)

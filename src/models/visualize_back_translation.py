@@ -15,7 +15,7 @@ def visualize_back_translation_embedding():
     parser.add_argument("--task", type=str, default="bias_detection")
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--augmentor", type=str, default="")
+    parser.add_argument("--augmentor", type=str, default="bt")
 
     args = parser.parse_args()
     set_seed(args.seed)

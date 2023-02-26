@@ -29,18 +29,18 @@ def plot_emb(embeddings, fig_name):
     y_std = np.std(reduced[1])
     plt.scatter(reduced[0], reduced[1], s=5, c='green')
     plt.scatter(x_mean, y_mean, s = 10, c='red')
-    plt.errorbar(x_mean, y_mean, x_err = x_std, y_err = y_std, fmt = 'o', color = 'red')
+    plt.errorbar(x_mean, y_mean, xerr = x_std, yerr = y_std, fmt = 'o', color = 'red')
     text = "Mean: ({x_mean:.2f},{y_mean:.2f}), std: ({x_std:.2f},{y_std:.2f})"\
         .format(x_mean = x_mean, y_mean = y_mean, x_std = x_std, y_std = y_std)
 
+    ax = plt.gca()
+    abs_max = 0.5
+    ax.set_ylim(ymin=-abs_max, ymax=abs_max)
+    ax.set_xlim(xmin=-abs_max, xmax=abs_max)
+    
     plt.text(1,1,text,
         horizontalalignment='center',
         verticalalignment='center')
-
-    ax = plt.gca()
-    abs_max = max(abs(max(ax.get_ylim(), key=abs)), abs(max(ax.get_xlim(), key=abs)))
-    ax.set_ylim(ymin=-abs_max, ymax=abs_max)
-    ax.set_xlim(xmin=-abs_max, xmax=abs_max)
     plt.savefig(fig_name)
     plt.show()
     

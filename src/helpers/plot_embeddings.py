@@ -1,5 +1,6 @@
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_and_compare_emb(embeddings1, embeddings2, fig_name):
     pca = PCA(n_components=2)
@@ -22,7 +23,20 @@ def plot_emb(embeddings, fig_name):
     pca = PCA(n_components=2)
     reduced = pca.fit_transform(embeddings)
     reduced = reduced.transpose()
-    plt.scatter(reduced[0], reduced[1], s=5, c='blue')
+    x_mean = np.mean(reduced[0])
+    y_mean = np.mean(reduced[1])
+    x_std = np.std(reduced[0])
+    y_std = np.std(reduced[1])
+    plt.scatter(reduced[0], reduced[1], s=5, c='green')
+    plt.scatter(x_mean, y_mean, s = 10, c='red')
+    plt.errorbar(x_mean, y_mean, x_err = x_std, y_err = y_std, fmt = 'o', color = 'red')
+    text = "Mean: ({x_mean:.2f},{y_mean:.2f}), std: ({x_std:.2f},{y_std:.2f})"\
+        .format(x_mean = x_mean, y_mean = y_mean, x_std = x_std, y_std = y_std)
+
+    plt.text(1,1,text,
+        horizontalalignment='center',
+        verticalalignment='center')
+
     ax = plt.gca()
     abs_max = max(abs(max(ax.get_ylim(), key=abs)), abs(max(ax.get_xlim(), key=abs)))
     ax.set_ylim(ymin=-abs_max, ymax=abs_max)

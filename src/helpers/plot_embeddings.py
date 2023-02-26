@@ -12,3 +12,11 @@ def plot_and_compare_emb(embeddings1, embeddings2, fig_name):
     plt.savefig(fig_name)
     plt.show()
     
+def plot_emb(embeddings, fig_name):
+    pca = PCA(n_components=2)
+    reduced = pca.fit_transform(embeddings1)
+    reduced = reduced.transpose()
+    plt.scatter(reduced[0], reduced[1], s=5, c='blue')
+    plt.savefig(fig_name)
+    plt.show()
+    

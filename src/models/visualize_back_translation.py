@@ -1,7 +1,7 @@
-import torch, time
+import torch, time, random
 import pytorch_lightning as pl
 from argparse import ArgumentParser
-from ..helpers import set_seed, plot_and_compare_emb
+from ..helpers import set_seed, plot_and_compare_emb, plot_emb
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule
 from .data_augmentors import Back_Translator
 from sentence_transformers import SentenceTransformer
@@ -34,8 +34,8 @@ def visualize_back_translation_embedding():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_data1 = list(data.get_dataset_text())
-    random.shuffle(train_data1)
-    train_data1 = train_data1[:1000]
+    # random.shuffle(train_data1)
+    # train_data1 = train_data1[:1000]
     train_data2 = train_data1.copy()
 
     augmentor.set_augmentation_percentage(1000) # So guaranteed augmentation
@@ -49,7 +49,16 @@ def visualize_back_translation_embedding():
     embeddings1 = model.encode(train_data1)
     embeddings2 = model.encode(train_data2)
 
-    plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
+    difference = []
+    
+    for e1, e2 in zip(embeddings1, embeddings2):
+        difference.append(e2 - e1)
+
+    # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
+
+    plot_emb(difference, args.task + '.png')
+
+    
 
 
 

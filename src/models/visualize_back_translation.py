@@ -1,9 +1,9 @@
 import torch, time, random
 import pytorch_lightning as pl
 from argparse import ArgumentParser
-from ..helpers import set_seed, plot_and_compare_emb, plot_emb
+from ..helpers import set_seed, parse_augmentors, plot_and_compare_emb, plot_emb
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule
-from .data_augmentors import Back_Translator
+from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
 from sentence_transformers import SentenceTransformer
 
 def visualize_back_translation_embedding():
@@ -15,10 +15,13 @@ def visualize_back_translation_embedding():
     parser.add_argument("--task", type=str, default="bias_detection")
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--augmentor", type=str, default="")
+
     args = parser.parse_args()
     set_seed(args.seed)
 
-    augmentor = Back_Translator("en")
+    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
+    augmentor = augmentator_mapping[args.augmentor]
 
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
 
@@ -56,7 +59,7 @@ def visualize_back_translation_embedding():
 
     # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 
-    plot_emb(difference, args.task + '.png')
+    plot_emb(difference, args.task + '_' + args.augmentor + '.png')
 
     
 

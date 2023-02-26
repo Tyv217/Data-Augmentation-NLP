@@ -30,7 +30,7 @@ def plot_emb(embeddings, fig_name):
     plt.scatter(reduced[0], reduced[1], s=5, c='green')
     plt.scatter(x_mean, y_mean, s = 10, c='red')
     plt.errorbar(x_mean, y_mean, xerr = x_std, yerr = y_std, fmt = 'o', color = 'red')
-    text = "Mean: ({x_mean:.2f},{y_mean:.2f}), std: ({x_std:.2f},{y_std:.2f})"\
+    text = "Mean: ({x_mean:.2f},{y_mean:.2f})\nstd: ({x_std:.2f},{y_std:.2f})"\
         .format(x_mean = x_mean, y_mean = y_mean, x_std = x_std, y_std = y_std)
 
     ax = plt.gca()
@@ -40,7 +40,7 @@ def plot_emb(embeddings, fig_name):
     
     plt.text(0.45,0.45,text,
         horizontalalignment='right',
-        verticalalignment='center')
+        verticalalignment='top')
     plt.savefig(fig_name)
     plt.show()
     

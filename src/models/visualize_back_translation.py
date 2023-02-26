@@ -16,6 +16,7 @@ def visualize_back_translation_embedding():
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--augmentor", type=str, default="bt")
+    parser.add_argument("--augmentation_params", type=int, default=0)
 
     args = parser.parse_args()
     set_seed(args.seed)
@@ -41,7 +42,7 @@ def visualize_back_translation_embedding():
     # train_data1 = train_data1[:1000]
     train_data2 = train_data1.copy()
 
-    augmentor.set_augmentation_percentage(1000) # So guaranteed augmentation
+    augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
     print("Start augmenting!")
     start_time = time.time()
     train_data2 = augmentor.augment_dataset(train_data2)

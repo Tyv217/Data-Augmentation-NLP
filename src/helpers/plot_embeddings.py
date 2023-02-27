@@ -1,6 +1,7 @@
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 def plot_and_compare_emb(embeddings1, embeddings2, fig_name):
     pca = PCA(n_components=2)
@@ -25,9 +26,17 @@ def plot_emb(embeddings, fig_name):
     reduced = reduced.transpose()
     x_mean = np.mean(reduced[0])
     y_mean = np.mean(reduced[1])
-    x_std = np.std(reduced[0])
-    y_std = np.std(reduced[1])
-    plt.scatter(reduced[0], reduced[1], s=5, c='green')
+
+    dist = np.sqrt(np.square(reduced[0] - x_mean) + np.square(reduced[1] - y_mean))
+    q_high = np.quantile(dist, 0.75)
+
+    x_coords = np.array(reduced[0])[dist > q_high]
+    y_coords = np.array(reduced[1])[dist > q_high]
+
+    x_mean = np.mean(x_coords)
+    y_mean = np.mean(y_coords)
+
+    plt.scatter(x_coords, y_coords, s=5, c='green')
     plt.scatter(x_mean, y_mean, s = 10, c='red')
     plt.errorbar(x_mean, y_mean, xerr = x_std, yerr = y_std, fmt = 'o', color = 'red')
     text = "Mean: ({x_mean:.2f},{y_mean:.2f})\nstd: ({x_std:.2f},{y_std:.2f})"\

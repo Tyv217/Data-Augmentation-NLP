@@ -10,7 +10,7 @@ class Better_Text_Classifier(pl.LightningModule):
         self.max_epochs = max_epochs
         self.id2label = id2label
         self.label2id = label2id
-        self.model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = num_labels, id2label = id2label, label2id = label2id, , problem_type="multi_label_classification")
+        self.model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = num_labels, id2label = id2label, label2id = label2id, problem_type="multi_label_classification")
         self.steps_per_epoch = steps_per_epoch
 
     def forward(self, input_id, attention_mask, label):

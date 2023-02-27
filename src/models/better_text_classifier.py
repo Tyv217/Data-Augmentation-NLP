@@ -14,6 +14,7 @@ class Better_Text_Classifier(pl.LightningModule):
         self.steps_per_epoch = steps_per_epoch
 
     def forward(self, input_id, attention_mask, label):
+        label = label.to(torch.float)
         return self.model(input_id, attention_mask = attention_mask, labels = label)
 
     def configure_optimizers(self):
@@ -57,7 +58,7 @@ class Better_Text_Classifier(pl.LightningModule):
         loss = output.loss
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()
-        labels_flat = batch['label'].flatten()
+        labels_flat = torch.argmax(batch['label'], axis=1).flatten()
         acc = torch.sum(pred_flat == labels_flat) / len(labels_flat)
 
         self.log(
@@ -87,7 +88,7 @@ class Better_Text_Classifier(pl.LightningModule):
             output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()
-        labels_flat = batch['label'].flatten()
+        labels_flat = torch.argmax(batch['label'], axis=1).flatten()
         acc = torch.sum(pred_flat == labels_flat) / len(labels_flat)
 
         self.log(

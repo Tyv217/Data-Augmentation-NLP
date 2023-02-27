@@ -212,7 +212,7 @@ def better_text_classify():
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentors = parse_augmentors(args, augmentator_mapping)
 
-    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
+    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule}
 
     data = data_modules[args.task](
         dataset_percentage = args.dataset_percentage / 100,

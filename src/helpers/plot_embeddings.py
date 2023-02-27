@@ -1,3 +1,5 @@
+from dis import dis
+from winreg import DisableReflectionKey
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,10 +30,12 @@ def plot_emb(embeddings, fig_name):
     y_mean = np.mean(reduced[1])
 
     dist = np.sqrt(np.square(reduced[0] - x_mean) + np.square(reduced[1] - y_mean))
-    q_high = np.quantile(dist, 0.95)
+    dist1 = np.copy(dist)
+    np.sort(dist1)
+    cutoff = dist1[len(dist1) - 1000]
 
-    x_coords = np.array(reduced[0])[dist > q_high]
-    y_coords = np.array(reduced[1])[dist > q_high]
+    x_coords = np.array(reduced[0])[dist >= cutoff]
+    y_coords = np.array(reduced[1])[dist >= cutoff]
 
     x_mean = np.mean(x_coords)
     y_mean = np.mean(y_coords)

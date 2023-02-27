@@ -30,7 +30,7 @@ def plot_emb(embeddings, fig_name):
     dist = np.sqrt(np.square(reduced[0] - x_mean) + np.square(reduced[1] - y_mean))
     dist1 = np.copy(dist)
     dist1 = np.sort(dist1)
-    num_samples = min(100, len(dist1))
+    num_samples = min(250, len(dist1))
     cutoff = dist1[len(dist1) - num_samples]
 
     x_coords = np.array(reduced[0])[dist >= cutoff]

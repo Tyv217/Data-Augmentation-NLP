@@ -1,5 +1,3 @@
-from dis import dis
-from winreg import DisableReflectionKey
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np

@@ -5,6 +5,9 @@ from ..helpers import set_seed, parse_augmentors, plot_and_compare_emb, plot_emb
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
 from sentence_transformers import SentenceTransformer
+import pandas as pd
+import os
+import pathlib
 
 def visualize_back_translation_embedding():
     
@@ -40,13 +43,23 @@ def visualize_back_translation_embedding():
     train_data1 = list(data.get_dataset_text())
     # random.shuffle(train_data1)
     # train_data1 = train_data1[:1000]
-    train_data2 = train_data1.copy()
+    
+    dir = pathlib.Path(__file__).parent.resolve()
+    filename = '../data/augmented_data/' + args.task + '_' + args.augmentor + '.csv'
+    filepath = os.path.join(dir, filename)
 
-    augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
-    print("Start augmenting!")
-    start_time = time.time()
-    train_data2 = augmentor.augment_dataset(train_data2)
-    print("Finish augmenting! Time taken: " + str(time.time() - start_time))
+    try:
+        df = pd.read_csv(filepath)
+        train_data2 = list(df)
+    except:
+        train_data2 = train_data1.copy()
+        augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
+        print("Start augmenting!")
+        start_time = time.time()
+        train_data2 = augmentor.augment_dataset(train_data2)
+        print("Finish augmenting! Time taken: " + str(time.time() - start_time))
+        df = pd.DataFrame(train_data2)
+        df.to_csv(filepath, index = False) 
 
     model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
 

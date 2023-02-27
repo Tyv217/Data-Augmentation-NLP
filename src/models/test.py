@@ -74,9 +74,16 @@ def main():
 if __name__ == "__main__":
     import numpy as np
     import pandas as pd
+    from pathlib import Path
     a = np.array([0,1,2,3,4,5,6,7,8,9])
-    q_high = np.quantile(a, 0.75)
-    b = np.array([9,8,7,6,5,4,3,2,1,0])
-    x = np.std(b)
-    print(b[a > q_high])
+    df = pd.DataFrame(a)
+    import os
+    import pathlib
+    x = pathlib.Path(__file__).parent.resolve()
+    filepath = '../data/augmented_data/out.csv'
+    a = os.path.join(x, filepath)
+    df.to_csv(a, index = False) 
+
+    y = pd.read_csv(a)
+    print(y)
 

@@ -33,9 +33,6 @@ def plot_emb(embeddings, fig_name):
     num_samples = min(100, len(dist1))
     cutoff = dist1[len(dist1) - num_samples]
 
-    import pdb
-    pdb.set_trace()
-
     x_coords = np.array(reduced[0])[dist >= cutoff]
     y_coords = np.array(reduced[1])[dist >= cutoff]
 

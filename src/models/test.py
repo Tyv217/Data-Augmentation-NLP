@@ -1,89 +1,54 @@
 def main():
-    from transformers import T5Tokenizer, T5ForConditionalGeneration
-
     import torch
 
-    tokenizer = T5Tokenizer.from_pretrained("t5-small", model_max_length = 256)
+    from transformers import AutoTokenizer, DistilBertForSequenceClassification
 
-    model = T5ForConditionalGeneration.from_pretrained("t5-small")
+    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
-    # the following 2 hyperparameters are task-specific
+    model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", problem_type="multi_label_classification")
 
-    max_source_length = 256
+    inputs = tokenizer("Hello, my dog is cute", return_tensors="pt")
 
-    max_target_length = 128
+    with torch.no_grad():
 
-    # Suppose we have the following 2 training examples:
+        logits = model(**inputs).logits
 
-    input_sequence_1 = "Welcome to NYC"
+    predicted_class_ids = torch.arange(0, logits.shape[-1])[torch.sigmoid(logits).squeeze(dim=0) > 0.5]
 
-    output_sequence_1 = "Bienvenue à NYC"
+    # To train a model on `num_labels` classes, you can pass `num_labels=num_labels` to `.from_pretrained(...)`
 
-    input_sequence_2 = "HuggingFace is a company"
+    num_labels = len(model.config.id2label)
 
-    output_sequence_2 = "HuggingFace est une entreprise"
+    model = DistilBertForSequenceClassification.from_pretrained(
 
-    # encode the inputs
-
-    task_prefix = "translate English to French: "
-
-    input_sequences = [input_sequence_1, input_sequence_2]
-
-    encoding = tokenizer(
-
-        [task_prefix + sequence for sequence in input_sequences],
-
-        padding="longest",
-
-        truncation=True,
-
-        return_tensors="pt",
+        "distilbert-base-uncased", num_labels=num_labels, problem_type="multi_label_classification"
 
     )
 
-    input_ids, attention_mask = encoding.input_ids, encoding.attention_mask
+    import pdb
+    pdb.set_trace()
 
-    # encode the targets
+    labels = torch.sum(
 
-    target_encoding = tokenizer(
+        torch.nn.functional.one_hot(predicted_class_ids[None, :].clone(), num_classes=num_labels), dim=1
 
-        [output_sequence_1, output_sequence_2],
+    ).to(torch.float)
 
-        padding="longest",
-
-        truncation=True,
-
-        return_tensors="pt",
-
-    )
-
-    labels = target_encoding.input_ids
-
-    # replace padding token id's of the labels by -100 so it's ignored by the loss
-
-    labels[labels == tokenizer.pad_token_id] = -100
-
-    # forward pass
-
-    print(attention_mask)
-
-    loss = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels).loss
-
-    loss.item()
+    loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
     import numpy as np
     import pandas as pd
     from pathlib import Path
-    a = np.array([0,1,2,3,4,5,6,7,8,9])
-    df = pd.DataFrame(a)
-    import os
-    import pathlib
-    x = pathlib.Path(__file__).parent.resolve()
-    filepath = '../data/augmented_data/out.csv'
-    a = os.path.join(x, filepath)
-    df.to_csv(a, index = False) 
+    # a = np.array([0,1,2,3,4,5,6,7,8,9])
+    # df = pd.DataFrame(a)
+    # import os
+    # import pathlib
+    # x = pathlib.Path(__file__).parent.resolve()
+    # filepath = '../data/augmented_data/out.csv'
+    # a = os.path.join(x, filepath)
+    # df.to_csv(a, index = False) 
 
-    y = pd.read_csv(a)
-    print(y)
-
+    # y = pd.read_csv(a)
+    # print(y)
+    main()

@@ -50,7 +50,7 @@ def visualize_back_translation_embedding():
 
     try:
         df = pd.read_csv(filepath)
-        train_data2 = list(df)
+        train_data2 = list(df['0'])
     except:
         train_data2 = train_data1.copy()
         augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation

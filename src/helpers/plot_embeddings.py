@@ -35,6 +35,8 @@ def plot_emb(embeddings, fig_name):
 
     x_mean = np.mean(x_coords)
     y_mean = np.mean(y_coords)
+    x_mean = np.std(x_coords)
+    y_mean = np.std(y_coords)
 
     plt.scatter(x_coords, y_coords, s=5, c='green')
     plt.scatter(x_mean, y_mean, s = 10, c='red')

@@ -53,8 +53,6 @@ class Better_Text_Classifier(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
-        import pdb
-        pdb.set_trace()
         loss = output.loss
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()

@@ -17,9 +17,8 @@ class TranslationDataModule(pl.LightningDataModule):
         self.input_language = input_language
         self.output_language = output_language
         self.augmentors = augmentors
+        self.dataset_percentage = dataset_percentage
         train = list(self.dataset['train'])
-        random.shuffle(train)
-        self.dataset['train'] = train[:int(len(train) * dataset_percentage)]
 
     def format_data(self, data):
         input_lines = []
@@ -61,7 +60,6 @@ class TranslationDataModule(pl.LightningDataModule):
         for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": label})
         return data_seq
-
 
     def setup(self, stage: str):
         train = list(self.dataset['train'])

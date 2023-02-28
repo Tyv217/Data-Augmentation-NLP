@@ -31,7 +31,7 @@ class GlueDataModule(pl.LightningDataModule):
             label = i['label']
             
             labels.append(i['label'])
-        return input_lines, labels
+        return input_lines, np.identity(len(self.id2label))[labels]
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
@@ -54,17 +54,23 @@ class GlueDataModule(pl.LightningDataModule):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
         return data_seq
 
+    def shuffle_train_valid_iters(self):
+        num_train = int(len(self.train_dataset) * 0.95)
+        self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
+
     def setup(self, stage: str):
         dataset = load_dataset("glue", self.glue_task)
-        self.train_dataset = dataset['train']
-        self.validation_dataset = dataset['validation']
-        self.test_dataset = dataset['test']
-
+        train = list(dataset['train'])
+        random.shuffle(train)
+        self.train_dataset = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
+        self.test_dataset = dataset['validation']
+    
     def train_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
+        self.shuffle_train_valid_iters()
+        return DataLoader(self.split_and_pad_data(self.split_train, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.validation_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.split_valid), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)

@@ -131,7 +131,7 @@ def text_classify(augmentors, learning_rate, augmentation_percentage = 0, datase
     #     f.write("Percentage: " + str(augmentation_percentage * 100) + "%, accuracy: " + "{0:.3g}\n".format(accuracy))
     return accuracy
 
-def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
+def seq2seq_translate():
     MODEL_NAME = "t5-small"
     parser = ArgumentParser()
 
@@ -140,7 +140,6 @@ def seq2seq_translate(augmentor = None, augmentation_percentage = 0):
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--augmentation_params", type=str, default="")
-    parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)

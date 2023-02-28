@@ -18,10 +18,12 @@ class AGNewsDataModule(pl.LightningDataModule):
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
+        self.id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
+        self.label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
     def format_data(self, data):
         labels, inputs = zip(*data)
-        return list(inputs), list(labels)
+        return list(inputs), np.identity(len(self.id2label))[labels]
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)

@@ -1,0 +1,34 @@
+/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/utilities/seed.py:48: LightningDeprecationWarning: `pytorch_lightning.utilities.seed.seed_everything` has been deprecated in v1.8.0 and will be removed in v2.0.0. Please use `lightning_fabric.utilities.seed.seed_everything` instead.
+  rank_zero_deprecation(
+[rank: 0] Global seed set to 0
+[rank: 0] Global seed set to 0
+[nltk_data] Downloading package wordnet to /home/x/xty20/nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+[nltk_data] Downloading package omw-1.4 to /home/x/xty20/nltk_data...
+[nltk_data]   Package omw-1.4 is already up-to-date!
+[nltk_data] Downloading package stopwords to
+[nltk_data]     /home/x/xty20/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+[nltk_data] Downloading package wordnet to /home/x/xty20/nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+[nltk_data] Downloading package omw-1.4 to /home/x/xty20/nltk_data...
+[nltk_data]   Package omw-1.4 is already up-to-date!
+[nltk_data] Downloading package stopwords to
+[nltk_data]     /home/x/xty20/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+Found cached dataset glue (/home/x/xty20/.cache/huggingface/datasets/glue/cola/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
+  0%|          | 0/3 [00:00<?, ?it/s]100%|██████████| 3/3 [00:00<00:00, 696.61it/s]
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+Traceback (most recent call last):
+  File "/home/x/xty20/project/main3.py", line 30, in <module>
+    better_text_classify()
+  File "/gpfs/home/x/xty20/project/src/models/train_model.py", line 244, in better_text_classify
+    steps_per_epoch = int(len(data.train_dataloader())),
+  File "/gpfs/home/x/xty20/project/src/data/glue_data.py", line 70, in train_dataloader
+    return DataLoader(self.split_and_pad_data(self.split_train, augment = True), batch_size=self.batch_size, shuffle = True)
+  File "/gpfs/home/x/xty20/project/src/data/glue_data.py", line 40, in split_and_pad_data
+    input_lines = augmentor.augment_dataset(input_lines, self.augmentation_percentage, has_label = False)
+AttributeError: 'GlueDataModule' object has no attribute 'augmentation_percentage'

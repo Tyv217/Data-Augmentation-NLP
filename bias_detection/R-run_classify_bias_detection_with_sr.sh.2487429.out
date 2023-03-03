@@ -1,4 +1,0 @@
-Sanity Checking: 0it [00:00, ?it/s]Sanity Checking:   0%|          | 0/2 [00:00<?, ?it/s]Sanity Checking DataLoader 0:   0%|          | 0/2 [00:00<?, ?it/s]> /gpfs/home/x/xty20/project/src/models/better_text_classifier.py(58)validation_step()
--> loss = output.loss
-(Pdb) 
-                                                                   

@@ -20,33 +20,6 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         self.dataset_percentage = dataset_percentage
         self.id2label =  {0: "Non-biased", 1: "No agreement", 2: "Biased"}
         self.label2id = {"Non-biased": 0, "No agreement": 1, "Biased": 2}
-
-
-    def format_data(self, data):
-        return data['text'], np.identity(len(self.id2label))[data['label_bias']]
-
-    def split_and_pad_data(self, data, augment = False):
-        input_lines, labels = self.format_data(data)
-        if augment and self.augmentors is not None:
-            for augmentor in self.augmentors:
-                input_lines = augmentor.augment_dataset(input_lines, has_label = False)
-        input_encoding = self.tokenizer.batch_encode_plus(
-            input_lines,
-            add_special_tokens = True,
-            max_length = 400,
-            padding = "max_length",
-            truncation = True,
-            return_attention_mask = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
-
-        data_seq = []
-        for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
-            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
-        return data_seq
-
-    def setup(self, stage: str):
         try:
             PATH_sg1 = "src/data/bias_detection_data_files/final_labels_SG1.xlsx"
             PATH_sg2 = "src/data/bias_detection_data_files/final_labels_SG2.xlsx"
@@ -74,6 +47,34 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
         self.validation_dataset = df[train_index : train_index + valid_index]
         self.test_dataset = df[train_index + valid_index : ]
+
+
+    def format_data(self, data):
+        return data['text'], np.identity(len(self.id2label))[data['label_bias']]
+
+    def split_and_pad_data(self, data, augment = False):
+        input_lines, labels = self.format_data(data)
+        if augment and self.augmentors is not None:
+            for augmentor in self.augmentors:
+                input_lines = augmentor.augment_dataset(input_lines, has_label = False)
+        input_encoding = self.tokenizer.batch_encode_plus(
+            input_lines,
+            add_special_tokens = True,
+            max_length = 400,
+            padding = "max_length",
+            truncation = True,
+            return_attention_mask = True,
+            return_tensors = "pt",
+        )
+        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+
+        data_seq = []
+        for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
+            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
+        return data_seq
+
+    def setup(self, stage: str):
+        
         
         # self.train_dataset = dataset['train']
         # self.validation_dataset = dataset['validation']

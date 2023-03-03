@@ -1,0 +1,100 @@
+/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/utilities/seed.py:48: LightningDeprecationWarning: `pytorch_lightning.utilities.seed.seed_everything` has been deprecated in v1.8.0 and will be removed in v2.0.0. Please use `lightning_fabric.utilities.seed.seed_everything` instead.
+  rank_zero_deprecation(
+[rank: 0] Global seed set to 0
+[rank: 0] Global seed set to 0
+[nltk_data] Downloading package wordnet to /home/x/xty20/nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+[nltk_data] Downloading package omw-1.4 to /home/x/xty20/nltk_data...
+[nltk_data]   Package omw-1.4 is already up-to-date!
+[nltk_data] Downloading package stopwords to
+[nltk_data]     /home/x/xty20/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+[nltk_data] Downloading package wordnet to /home/x/xty20/nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+[nltk_data] Downloading package omw-1.4 to /home/x/xty20/nltk_data...
+[nltk_data]   Package omw-1.4 is already up-to-date!
+[nltk_data] Downloading package stopwords to
+[nltk_data]     /home/x/xty20/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertForSequenceClassification: ['vocab_transform.bias', 'vocab_transform.weight', 'vocab_layer_norm.bias', 'vocab_layer_norm.weight', 'vocab_projector.weight', 'vocab_projector.bias']
+- This IS expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['pre_classifier.weight', 'classifier.bias', 'classifier.weight', 'pre_classifier.bias']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+[rank: 0] Global seed set to 0
+Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/1
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 1 processes
+----------------------------------------------------------------------------------------------------
+
+You are using a CUDA device ('NVIDIA A100-PCIE-40GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2]
+
+  | Name  | Type                                | Params
+--------------------------------------------------------------
+0 | model | DistilBertForSequenceClassification | 67.0 M
+--------------------------------------------------------------
+67.0 M    Trainable params
+0         Non-trainable params
+67.0 M    Total params
+267.823   Total estimated model params size (MB)
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:224: PossibleUserWarning: The dataloader, val_dataloader 0, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 128 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
+  rank_zero_warn(
+Traceback (most recent call last):
+  File "/home/x/xty20/project/main3.py", line 30, in <module>
+    better_text_classify()
+  File "/gpfs/home/x/xty20/project/src/models/train_model.py", line 251, in better_text_classify
+    trainer.fit(model, data)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 608, in fit
+    call._call_and_handle_interrupt(
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/call.py", line 38, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 650, in _fit_impl
+    self._run(model, ckpt_path=self.ckpt_path)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1103, in _run
+    results = self._run_stage()
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1182, in _run_stage
+    self._run_train()
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1195, in _run_train
+    self._run_sanity_check()
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1267, in _run_sanity_check
+    val_loop.run()
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/loops/dataloader/evaluation_loop.py", line 152, in advance
+    dl_outputs = self.epoch_loop.run(self._data_fetcher, dl_max_batches, kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/loops/epoch/evaluation_epoch_loop.py", line 137, in advance
+    output = self._evaluation_step(**kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/loops/epoch/evaluation_epoch_loop.py", line 234, in _evaluation_step
+    output = self.trainer._call_strategy_hook(hook_name, *kwargs.values())
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1485, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/strategies/ddp.py", line 359, in validation_step
+    return self.model(*args, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/torch/nn/parallel/distributed.py", line 1008, in forward
+    output = self._run_ddp_forward(*inputs, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/torch/nn/parallel/distributed.py", line 969, in _run_ddp_forward
+    return module_to_run(*inputs[0], **kwargs[0])
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/x/xty20/venv/lib/python3.8/site-packages/pytorch_lightning/overrides/base.py", line 110, in forward
+    return self._forward_module.validation_step(*inputs, **kwargs)
+  File "/gpfs/home/x/xty20/project/src/models/better_text_classifier.py", line 58, in validation_step
+    loss = output.loss
+  File "/gpfs/home/x/xty20/project/src/models/better_text_classifier.py", line 58, in validation_step
+    loss = output.loss
+  File "/sulis/easybuild/software/Python/3.8.6-GCCcore-10.2.0/lib/python3.8/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/sulis/easybuild/software/Python/3.8.6-GCCcore-10.2.0/lib/python3.8/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit

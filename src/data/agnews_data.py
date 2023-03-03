@@ -23,6 +23,7 @@ class AGNewsDataModule(pl.LightningDataModule):
 
     def format_data(self, data):
         labels, inputs = zip(*data)
+        labels = np.array(labels) - 1
         return list(inputs), np.identity(len(self.id2label))[labels]
 
     def split_and_pad_data(self, data, augment = False):

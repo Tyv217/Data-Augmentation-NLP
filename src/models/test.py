@@ -1,11 +1,19 @@
+from re import L
+
+
 def main():
     import torch
 
     from transformers import AutoTokenizer, DistilBertForSequenceClassification
 
-    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+    from transformers import AutoConfig, T5ForConditionalGeneration
+    MODEL_NAME = "t5-small"
+    config = AutoConfig.from_pretrained(MODEL_NAME)
+    model = T5ForConditionalGeneration(config)
 
-    model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", problem_type="multi_label_classification")
+    print(model)
+
+    raise Exception
 
     inputs = tokenizer("Hello, my dog is cute", return_tensors="pt")
 
@@ -37,6 +45,7 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
+    import torch
     import numpy as np
     import pandas as pd
     from pathlib import Path
@@ -51,4 +60,9 @@ if __name__ == "__main__":
 
     # y = pd.read_csv(a)
     # print(y)
-    main()
+    # main()
+    a = np.arange(11)
+    l = 11
+    a = l/2 - (a - l/2) - 1
+    print(a)
+

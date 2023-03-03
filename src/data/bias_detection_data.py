@@ -74,7 +74,7 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         return data_seq
 
     def setup(self, stage: str):
-        
+        pass
         
         # self.train_dataset = dataset['train']
         # self.validation_dataset = dataset['validation']

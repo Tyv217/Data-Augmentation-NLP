@@ -236,6 +236,8 @@ def better_text_classify():
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
+    print(args)
+
     trainer = pl.Trainer.from_argparse_args(
         args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
     )  # , distributed_backend='ddp_cpu')

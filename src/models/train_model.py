@@ -133,7 +133,7 @@ def text_classify(augmentors, learning_rate, augmentation_percentage = 0, datase
 
 def seq2seq_translate():
     MODEL_NAME = "t5-small"
-    parser = ArgumentParser()
+    parser = ArgumentParser(conflict_handler = 'resolve')
 
     # add PROGRAM level args
     parser.add_argument("--seed", type=int, default=0)
@@ -146,14 +146,10 @@ def seq2seq_translate():
     parser.add_argument("--embed_size", type=int, default=32)
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
+    parser.add_argument("--deterministic", type=bool, default=True)
     # parser.add_argument("--deterministic", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    try:
-        x = args.deterministic
-    except AttributeError:
-        parser.add_argument("--deterministic", type=bool, default=True)
-        args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentors = parse_augmentors(args, augmentator_mapping)
@@ -194,7 +190,7 @@ def seq2seq_translate():
     trainer.test(model, dataloaders = data.test_dataloader())
 
 def better_text_classify():
-    parser = ArgumentParser()
+    parser = ArgumentParser(conflict_handler = 'resolve')
 
     # add PROGRAM level args
     parser.add_argument("--seed", type=int, default=0)
@@ -209,13 +205,9 @@ def better_text_classify():
     parser.add_argument("--embed_size", type=int, default=32)
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
+    parser.add_argument("--deterministic", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    try:
-        x = args.deterministic
-    except AttributeError:
-        parser.add_argument("--deterministic", type=bool, default=True)
-        args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentors = parse_augmentors(args, augmentator_mapping)

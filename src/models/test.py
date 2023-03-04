@@ -4,16 +4,43 @@ from re import L
 def main():
     import torch
 
-    from transformers import AutoTokenizer, DistilBertForSequenceClassification
+    from transformers import AutoTokenizer, DistilBertForSequenceClassification, T5Tokenizer
 
     from transformers import AutoConfig, T5ForConditionalGeneration
     MODEL_NAME = "t5-small"
     config = AutoConfig.from_pretrained(MODEL_NAME)
     model = T5ForConditionalGeneration(config)
+    tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, model_max_length = 512)
+
+    input_lines = ["I ate an apple.", "I fucked your mom."]
+
+    input_encoding = tokenizer(
+        # [self.task_prefix + sequence for sequence in input_lines],
+        input_lines,
+        padding = "longest",
+        truncation = True,
+        return_tensors = "pt",
+    )
+    input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+    def print_weights_hook(model, input, output):
+        print("\n\n\n\n")
+        print(model)
+        print(input)
+        print(input[0].size())
+        print(output)
+        print(output.size())
+        with open("file.txt", "a") as f:
+            f.write("1\n")
+
+    model.shared.register_forward_hook(print_weights_hook)
+    model.encoder.embed_tokens.register_forward_hook(print_weights_hook)
+    model.lm_head.register_forward_hook(print_weights_hook)
+    model(input_ids = input_ids, attention_mask = attention_masks, labels = input_ids)
 
     print(model)
+    # print(y)
 
-    raise Exception
+    return 0
 
     inputs = tokenizer("Hello, my dog is cute", return_tensors="pt")
 
@@ -61,8 +88,9 @@ if __name__ == "__main__":
     # y = pd.read_csv(a)
     # print(y)
     # main()
-    a = np.arange(11)
-    l = 11
-    a = l/2 - (a - l/2) - 1
-    print(a)
-
+    # main()
+    x = torch.tensor([True,True,True,False,False])
+    y = torch.tensor([True,True,True,False,False])
+    xy = torch.stack([x,y])
+    z = torch.range(0, 5)
+    print(z.repeat(2,3,1))

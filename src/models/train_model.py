@@ -168,7 +168,7 @@ def seq2seq_translate():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "runs", name="fit"
+        "runs_translate", name="fit"
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")

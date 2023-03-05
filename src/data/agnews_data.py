@@ -46,6 +46,8 @@ class AGNewsDataModule(pl.LightningDataModule):
 
         data_seq = []
         for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
+            import pdb
+            pdb.set_trace()
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
         return data_seq
 

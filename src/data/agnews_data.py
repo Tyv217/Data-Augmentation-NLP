@@ -24,8 +24,6 @@ class AGNewsDataModule(pl.LightningDataModule):
     def format_data(self, data):
         labels, inputs = zip(*data)
         labels = np.array(labels) - 1
-        import pdb
-        pdb.set_trace()
         return list(inputs), np.identity(len(self.id2label))[labels]
 
     def split_and_pad_data(self, data, augment = False):
@@ -46,9 +44,7 @@ class AGNewsDataModule(pl.LightningDataModule):
 
         data_seq = []
         for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
-            import pdb
-            pdb.set_trace()
-            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
+            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.float)})
         return data_seq
 
     def shuffle_train_valid_iters(self):

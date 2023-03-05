@@ -24,14 +24,12 @@ class AGNewsDataModule(pl.LightningDataModule):
     def format_data(self, data):
         labels, inputs = zip(*data)
         labels = np.array(labels) - 1
+        import pdb
+        pdb.set_trace()
         return list(inputs), np.identity(len(self.id2label))[labels]
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
-        labels = np.array(labels)
-        for x in range(1,5):
-            labels[labels == x] = x-1
-        labels = list(labels)
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines = augmentor.augment_dataset(input_lines, has_label = False)

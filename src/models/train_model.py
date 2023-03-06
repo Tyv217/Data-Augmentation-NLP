@@ -233,7 +233,7 @@ def better_text_classify():
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     early_stop_callback = early_stopping.EarlyStopping(
-        monitor='val_loss',
+        monitor='validation_loss',
         min_delta=0,
         patience=2,
         mode='min'

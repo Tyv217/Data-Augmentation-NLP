@@ -236,7 +236,7 @@ def better_text_classify():
         monitor='val_loss',
         min_delta=0,
         patience=2,
-        mode='auto'
+        mode='min'
     )
     print(args)
 

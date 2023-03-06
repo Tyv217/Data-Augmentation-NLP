@@ -30,7 +30,7 @@ def visualize_back_translation_embedding():
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
 
     data = data_modules[args.task](
-        dataset_percentage = 1,
+        dataset_percentage = 0,
         augmentors = [],
         batch_size = args.batch_size
     )
@@ -44,8 +44,10 @@ def visualize_back_translation_embedding():
     # random.shuffle(train_data1)
     # train_data1 = train_data1[:1000]
     
+    AUGMENT_LOOPS = 3
+
     dir = pathlib.Path(__file__).parent.resolve()
-    filename = '../data/augmented_data/' + args.task + '_' + args.augmentor + '.csv'
+    filename = '../data/augmented_data/' + args.task + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.csv'
     filepath = os.path.join(dir, filename)
 
     try:
@@ -56,7 +58,8 @@ def visualize_back_translation_embedding():
         augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
         print("Start augmenting!")
         start_time = time.time()
-        train_data2 = augmentor.augment_dataset(train_data2)
+        for i in range(AUGMENT_LOOPS):
+            train_data2 = augmentor.augment_dataset(train_data2)
         print("Finish augmenting! Time taken: " + str(time.time() - start_time))
         df = pd.DataFrame(train_data2)
         df.to_csv(filepath, index = False) 
@@ -73,7 +76,7 @@ def visualize_back_translation_embedding():
 
     # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 
-    plot_emb(difference, args.task + '_' + args.augmentor + '.png')
+    plot_emb(difference, args.task + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.png')
 
     
 

@@ -19,6 +19,8 @@ class TranslationDataModule(pl.LightningDataModule):
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
         train = list(self.dataset['train'])
+        random.shuffle(train)
+        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
 
     def format_data(self, data):
         input_lines = []
@@ -62,9 +64,6 @@ class TranslationDataModule(pl.LightningDataModule):
         return data_seq
 
     def setup(self, stage: str):
-        train = list(self.dataset['train'])
-        random.shuffle(train)
-        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
         self.valid_iterator = self.split_and_pad_data(self.dataset['validation'])
         self.test_iterator = self.split_and_pad_data(self.dataset['test'])
 

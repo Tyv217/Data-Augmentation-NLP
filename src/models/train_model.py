@@ -188,6 +188,10 @@ def seq2seq_translate():
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
+    
+    print("Seed:", args.seed)
+    print("Augmentors:", args.augmentors)
+    print("Dataset Percentage:", args.dataset_percentage)
 
 def better_text_classify():
     parser = ArgumentParser(conflict_handler = 'resolve')
@@ -249,7 +253,11 @@ def better_text_classify():
         id2label = data.id2label,
         label2id = data.label2id
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
+    
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
+
+    print("Seed:", args.seed)
+    print("Augmentors:", args.augmentors)
+    print("Dataset Percentage:", args.dataset_percentage)

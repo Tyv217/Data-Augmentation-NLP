@@ -20,6 +20,12 @@ class AGNewsDataModule(pl.LightningDataModule):
         self.dataset_percentage = dataset_percentage
         self.id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
         self.label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
+        
+        train_iter, test_iter = agnews()
+        train_dataset = list(train_iter)
+        random.shuffle(train_dataset)
+        self.train_dataset = to_map_style_dataset(train_dataset[:int(len(train_dataset) * self.dataset_percentage)])
+        self.test_dataset = to_map_style_dataset(test_iter)
 
     def format_data(self, data):
         labels, inputs = zip(*data)
@@ -52,11 +58,7 @@ class AGNewsDataModule(pl.LightningDataModule):
         self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
 
     def setup(self, stage: str):
-        train_iter, test_iter = agnews()
-        train_dataset = list(train_iter)
-        random.shuffle(train_dataset)
-        self.train_dataset = to_map_style_dataset(train_dataset[:int(len(train_dataset) * self.dataset_percentage)])
-        self.test_dataset = to_map_style_dataset(test_iter)
+        pass
 
     def train_dataloader(self):
         self.shuffle_train_valid_iters()

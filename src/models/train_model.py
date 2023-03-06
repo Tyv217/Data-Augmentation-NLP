@@ -4,7 +4,7 @@ from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
 from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping
 from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
 from .text_classifier import TextClassifierEmbeddingModel
@@ -232,10 +232,16 @@ def better_text_classify():
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
+    early_stop_callback = early_stopping.EarlyStopping(
+        monitor='val_loss',
+        min_delta=0,
+        patience=2,
+        mode='auto'
+    )
     print(args)
 
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

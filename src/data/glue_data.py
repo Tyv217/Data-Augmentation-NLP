@@ -21,6 +21,11 @@ class GlueDataModule(pl.LightningDataModule):
         self.dataset_percentage = dataset_percentage
         self.id2label =  {0: "unacceptable", 1: "acceptable"}
         self.label2id = {"unacceptable": 0, "acceptable": 1}
+        dataset = load_dataset("glue", self.glue_task)
+        train = list(dataset['train'])
+        random.shuffle(train)
+        self.train_dataset = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
+        self.test_dataset = dataset['validation']
 
 
     def format_data(self, data):
@@ -57,11 +62,7 @@ class GlueDataModule(pl.LightningDataModule):
         self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
 
     def setup(self, stage: str):
-        dataset = load_dataset("glue", self.glue_task)
-        train = list(dataset['train'])
-        random.shuffle(train)
-        self.train_dataset = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
-        self.test_dataset = dataset['validation']
+        pass
     
     def train_dataloader(self):
         self.shuffle_train_valid_iters()

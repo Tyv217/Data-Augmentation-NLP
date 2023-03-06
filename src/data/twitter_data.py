@@ -21,6 +21,12 @@ class TwitterDataModule(pl.LightningDataModule):
         self.dataset_percentage = dataset_percentage
         self.id2label =  {0: "negative", 1: "neutral", 2: "positive"}
         self.label2id = {"negative": 0, "neutral": 1, "positive": 2}
+        dataset = load_dataset("tweet_eval", self.twitter_task)
+        train = list(dataset['train'])
+        random.shuffle(train)
+        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
+        self.validation_dataset = dataset['validation']
+        self.test_dataset = dataset['test']
 
     def preprocess(self, text):
         data = []
@@ -63,12 +69,7 @@ class TwitterDataModule(pl.LightningDataModule):
         return data_seq
 
     def setup(self, stage: str):
-        dataset = load_dataset("tweet_eval", self.twitter_task)
-        train = list(dataset['train'])
-        random.shuffle(train)
-        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
-        self.validation_dataset = dataset['validation']
-        self.test_dataset = dataset['test']
+        pass
 
     def train_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)

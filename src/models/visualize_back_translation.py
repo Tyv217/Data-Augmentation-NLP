@@ -22,6 +22,7 @@ def visualize_back_translation_embedding():
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--augmentor", type=str, default="bt")
     parser.add_argument("--augmentation_params", type=int, default=0)
+    parser.add_argument("--datapoints", type=int, default=250)
 
     args = parser.parse_args()
     set_seed(args.seed)
@@ -83,7 +84,7 @@ def visualize_back_translation_embedding():
 
     # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 
-    plot_emb(difference, args.task + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.png')
+    plot_emb(difference, args.task + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.png', args.datapoints)
 
     
 

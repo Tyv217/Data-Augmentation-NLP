@@ -20,7 +20,7 @@ def plot_and_compare_emb(embeddings1, embeddings2, fig_name):
     plt.savefig(fig_name)
     plt.show()
     
-def plot_emb(embeddings, fig_name):
+def plot_emb(embeddings, fig_name, datapoints):
     pca = PCA(n_components=2)
     reduced = pca.fit_transform(embeddings)
     reduced = reduced.transpose()
@@ -30,7 +30,7 @@ def plot_emb(embeddings, fig_name):
     dist = np.sqrt(np.square(reduced[0] - x_mean) + np.square(reduced[1] - y_mean))
     dist1 = np.copy(dist)
     dist1 = np.sort(dist1)
-    num_samples = min(250, len(dist1))
+    num_samples = min(datapoints, len(dist1))
     cutoff = dist1[len(dist1) - num_samples]
 
     x_coords = np.array(reduced[0])[dist >= cutoff]

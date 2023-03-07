@@ -13,6 +13,8 @@ from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, Twit
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
+from pytorch_lightning.plugins.environments import SLURMEnvironment
+import signal
 
 def train_model_text_classifier(dataloader, model, loss_fn, optimizer, epoch_number, logger, writer):
     model.train()
@@ -171,7 +173,7 @@ def seq2seq_translate():
     print(args)
 
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor]
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

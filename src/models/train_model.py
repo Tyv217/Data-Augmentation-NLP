@@ -268,4 +268,4 @@ def better_text_classify():
     print("Augmentors:", args.augmentors)
     print("Dataset Percentage:", args.dataset_percentage)
     print("Early stopping on validation dataset used!")
-    print("Auto LR Finder Used": args.auto_lr_find)
+    print("Auto LR Finder Used:", args.auto_lr_find)

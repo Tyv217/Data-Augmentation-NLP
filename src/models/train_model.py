@@ -267,3 +267,4 @@ def better_text_classify():
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Dataset Percentage:", args.dataset_percentage)
+    print("Early stopping on validation dataset used!")

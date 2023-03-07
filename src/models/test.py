@@ -91,6 +91,8 @@ if __name__ == "__main__":
     # main()
     x = torch.tensor([True,True,True,False,False])
     y = torch.tensor([True,True,True,False,False])
-    xy = torch.stack([x,y])
-    z = torch.range(0, 5)
-    print(z.repeat(2,3,1))
+    from sklearn.metrics.pairwise import cosine_similarity
+    embeddings1 = np.array([[1,1,0,0],[1,1,0,0]])
+    embeddings2 = np.array([[1,1,0,0],[0,1,0,1]])
+    cosine_similarities = cosine_similarity(embeddings1, embeddings2)
+    print(cosine_similarities)

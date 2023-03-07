@@ -5,7 +5,9 @@ from ..helpers import set_seed, parse_augmentors, plot_and_compare_emb, plot_emb
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
+import numpy as np
 import os
 import pathlib
 
@@ -69,10 +71,15 @@ def visualize_back_translation_embedding():
     embeddings1 = model.encode(train_data1)
     embeddings2 = model.encode(train_data2)
 
+    embeddings1 = np.array(embeddings1)
+    embeddings2 = np.array(embeddings2)
+
     difference = []
     
     for e1, e2 in zip(embeddings1, embeddings2):
         difference.append(e2 - e1)
+
+    # cosine_similarities = cosine_similarity(embeddings1, embeddings2)
 
     # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 

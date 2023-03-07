@@ -33,7 +33,7 @@ def visualize_back_translation_embedding():
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
 
     data = data_modules[args.task](
-        dataset_percentage = 0,
+        dataset_percentage = 1,
         augmentors = [],
         batch_size = args.batch_size
     )
@@ -71,9 +71,6 @@ def visualize_back_translation_embedding():
 
     embeddings1 = model.encode(train_data1)
     embeddings2 = model.encode(train_data2)
-
-    embeddings1 = np.array(embeddings1)
-    embeddings2 = np.array(embeddings2)
 
     difference = []
     

@@ -230,7 +230,7 @@ def better_text_classify():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "runs_better_text_classify", name="fit"
+        "runs_better_text_classify", name="fit/" + args.task
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")

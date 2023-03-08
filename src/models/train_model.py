@@ -166,7 +166,7 @@ def seq2seq_translate():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "runs_translate", name="translate_" + args.augmentors + "_" + str(args.dataset_percentage)
+        "runs_translate", name="translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -230,7 +230,7 @@ def better_text_classify():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "runs_better_text_classify", name=args.task + "_" + args.augmentors + "_" + str(args.dataset_percentage)
+        "runs_better_text_classify", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")

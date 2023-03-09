@@ -164,11 +164,14 @@ def seq2seq_translate():
     )
     data.prepare_data()
     data.setup("fit")
-
+    dir = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
     logger = TensorBoardLogger(
-        "runs_translate", name="translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+        "runs_translate", name=dir
     )
 
+    args.default_root_dir = dir
+    print(args.default_root_dir)
+    
     lr_monitor = LearningRateMonitor(logging_interval="step")
     print(args)
 

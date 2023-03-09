@@ -169,9 +169,8 @@ def seq2seq_translate():
         "runs_translate", name=dir
     )
 
-    args.default_root_dir = dir
-    print(args.default_root_dir)
-    
+    args.default_root_dir = "runs_translate/" + dir
+
     lr_monitor = LearningRateMonitor(logging_interval="step")
     print(args)
 

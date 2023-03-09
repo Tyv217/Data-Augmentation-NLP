@@ -89,10 +89,9 @@ if __name__ == "__main__":
     # print(y)
     # main()
     # main()
-    x = torch.tensor([True,True,True,False,False])
-    y = torch.tensor([True,True,True,False,False])
-    from sklearn.metrics.pairwise import cosine_similarity
-    embeddings1 = np.array([[1,1,0,0],[1,1,0,0]])
-    embeddings2 = np.array([[1,1,0,0],[0,1,0,1]])
-    cosine_similarities = cosine_similarity(embeddings1, embeddings2)
-    print(cosine_similarities)
+    x = np.arange(10)
+    y = 7
+    x_1 = x[:y]
+    x_2 = x[y:]
+    print(x_1)
+    print(x_2)

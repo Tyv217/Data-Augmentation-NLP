@@ -89,9 +89,7 @@ if __name__ == "__main__":
     # print(y)
     # main()
     # main()
-    x = np.arange(10)
-    y = 7
-    x_1 = x[:y]
-    x_2 = x[y:]
-    print(x_1)
-    print(x_2)
+    x = torch.tensor([1,2,3,4])
+    print(x)
+    a,b,c,d = x.unbind(1)
+    print(a)

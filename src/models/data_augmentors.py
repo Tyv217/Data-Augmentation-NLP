@@ -351,10 +351,14 @@ class CutMix():
 
         return sentence, label
 
+    def generate_pairwise_and_augment(self, data):
+        pairwise = []
+        for i in range()
+
     def augment_dataset(self, data_iter, has_label = False):
         if has_label:
             label, data_iter = zip(*data_iter)
-        augmented_sentences = [self.approach_1(sentence) for sentence in list(data_iter)]
+        augmented_sentences = self.generate_pairwise_and_augment(list(data_iter))
         if has_label:
             augmented_sentences = zip(label, augmented_sentences)
         return list(augmented_sentences)

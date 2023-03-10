@@ -48,6 +48,7 @@ def plot_emb(embeddings, fig_name, datapoints):
         .format(x_mean = x_mean, y_mean = y_mean, x_std = x_std, y_std = y_std)
 
     ax = plt.gca()
+    
     abs_max = 0.75
     ax.set_ylim(ymin=-abs_max, ymax=abs_max)
     ax.set_xlim(xmin=-abs_max, xmax=abs_max)

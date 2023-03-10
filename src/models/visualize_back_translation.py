@@ -47,7 +47,7 @@ def visualize_back_translation_embedding():
     # random.shuffle(train_data1)
     # train_data1 = train_data1[:1000]
     
-    AUGMENT_LOOPS = 3
+    AUGMENT_LOOPS = 1
 
     dir = pathlib.Path(__file__).parent.resolve()
     filename = '../data/augmented_data/' + args.task + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.csv'

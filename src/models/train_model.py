@@ -239,8 +239,8 @@ def better_text_classify():
     early_stop_callback = early_stopping.EarlyStopping(
         monitor='validation_loss',
         min_delta=0,
-        patience=2,
-        mode='min'
+        patience=3,
+        mode='min',
     )
     print(args)
 

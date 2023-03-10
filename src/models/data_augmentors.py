@@ -3,6 +3,7 @@ from nltk.corpus import wordnet as wn, stopwords
 from nltk.stem import WordNetLemmatizer
 from torchdata.datapipes.iter import IterableWrapper
 import random, re, spacy
+import numpy as np
 from transformers import MarianMTModel, MarianTokenizer
 
 class Synonym_Replacer():
@@ -346,19 +347,26 @@ class CutMix():
         sentence = sentence1[:start_index] + sentence2[start_index:end_index] + sentence1[end_index:l1]
         label = label1 * lam + label2 * (1-lam)
 
-        import pdb
-        pdb.set_trace()
-
         return sentence, label
 
-    def generate_pairwise_and_augment(self, data):
-        pairwise = []
-        for i in range()
+    def generate_pairwise_and_augment(self, data, has_label):
+        generated = []
+
+        if has_label:
+            label, sentences = data
+            data = zip(sentences, label)
+        alpha = 0.1
+
+        to_generate = int(len(data) * alpha)
+        
+        for i in range(to_generate):
+            choices = np.random.choice(len(sentences), 2, replace = False)
+            sentence1, label1 = data[choices[0]]
+            sentence2, label2 = data[choices[1]]
+            generated.append(self.approach1(sentence1, sentence2, label1, label2))
+
+        return zip(generated)
 
     def augment_dataset(self, data_iter, has_label = False):
-        if has_label:
-            label, data_iter = zip(*data_iter)
-        augmented_sentences = self.generate_pairwise_and_augment(list(data_iter))
-        if has_label:
-            augmented_sentences = zip(label, augmented_sentences)
+        augmented_sentences = self.generate_pairwise_and_augment(list(data_iter), has_label)
         return list(augmented_sentences)

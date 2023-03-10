@@ -89,7 +89,11 @@ if __name__ == "__main__":
     # print(y)
     # main()
     # main()
-    x = torch.tensor([1,2,3,4])
+    a = [1,2,3,4,5]
+    b = [6,7,8,9,10]
+    x = list(zip(a,b))
     print(x)
-    a,b,c,d = x.unbind(1)
-    print(a)
+    print(list(zip(*x)))
+    c, d = zip(*x)
+    print(c)
+    print(d)

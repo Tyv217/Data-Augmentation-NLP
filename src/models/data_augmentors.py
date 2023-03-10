@@ -17,6 +17,7 @@ class Synonym_Replacer():
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.lemmatizer = WordNetLemmatizer()
         self.augmentation_percentage = 0
+        self.require_label = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -105,6 +106,7 @@ class Back_Translator():
         # self.device = torch.device("cpu")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
+        self.require_label = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage / 10000
@@ -187,6 +189,7 @@ class Insertor():
         self.nlp = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.lemmatizer = WordNetLemmatizer()
+        self.require_label = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -250,6 +253,7 @@ class Deletor():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
+        self.require_label = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -278,6 +282,7 @@ class CutOut():
         super().__init__()
         self.augmentation_percentage = 0
         self.cutout_percentage = 0.1
+        self.require_label = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -301,11 +306,13 @@ class CutOut():
         if has_label:
             augmented_sentences = zip(label, augmented_sentences)
         return list(augmented_sentences)
+
 class CutMix():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
         self.cutmix_percentage = 1
+        self.require_label = True
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -355,9 +362,8 @@ class CutMix():
         if has_label:
             label, sentences = data
             data = zip(sentences, label)
-        alpha = 0.1
 
-        to_generate = int(len(data) * alpha)
+        to_generate = int(len(data) * self.augmentation_percentage)
         
         for i in range(to_generate):
             choices = np.random.choice(len(sentences), 2, replace = False)
@@ -365,8 +371,8 @@ class CutMix():
             sentence2, label2 = data[choices[1]]
             generated.append(self.approach1(sentence1, sentence2, label1, label2))
 
-        return zip(generated)
+        return zip(*generated)
 
     def augment_dataset(self, data_iter, has_label = False):
-        augmented_sentences = self.generate_pairwise_and_augment(list(data_iter), has_label)
-        return list(augmented_sentences)
+        augmented_sentences = self.generate_pairwise_and_augment(data_iter, has_label)
+        return augmented_sentences

@@ -37,7 +37,7 @@ class AGNewsDataModule(pl.LightningDataModule):
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 if augmentor.require_label:
-                    zipped_lines = zip(labels, input_lines)
+                    zipped_lines = list(zip(labels, input_lines))
                     input_lines, labels = augmentor.augment_dataset(zipped_lines, has_label = True)
                 else:
                     input_lines = augmentor.augment_dataset(input_lines, has_label = False)

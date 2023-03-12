@@ -302,7 +302,7 @@ class CutOut():
     def augment_dataset(self, data_iter, has_label = False):
         if has_label:
             label, data_iter = zip(*data_iter)
-        augmented_sentences = [self.delete_randomly(sentence) for sentence in list(data_iter)]
+        augmented_sentences = [self.cutout_randomly(sentence) for sentence in list(data_iter)]
         if has_label:
             augmented_sentences = zip(label, augmented_sentences)
         return list(augmented_sentences)
@@ -360,8 +360,7 @@ class CutMix():
         generated = []
 
         if has_label:
-            label, sentences = data
-            data = zip(sentences, label)
+            label, sentences = zip(*data)
 
         to_generate = int(len(data) * self.augmentation_percentage)
         

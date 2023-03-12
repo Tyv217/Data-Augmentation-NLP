@@ -319,6 +319,8 @@ class CutMix():
 
     def approach_1(self, sentence1, sentence2, label1, label2):
         lam = np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        sentence1 = sentence1.split(" ")
+        sentence2 = sentence2.split(" ")
         if(len(sentence2) < len(sentence1)):
             sentence1, sentence2 = sentence2, sentence1
             label1, label2 = label2, label1
@@ -336,7 +338,7 @@ class CutMix():
         
         sentence = sentence1[:start_index1] + sentence2[start_index2:end_index2] + sentence1[end_index1:l1]
         label = label1 * lam + label2 * (1-lam)
-        return sentence, label
+        return " ".join(sentence), label
 
     def approach_2(self, sentence1, sentence2, label1, label2):
         # Difference to approach 1 is how it selects where in sentence 2 to take out the sentence.

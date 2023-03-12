@@ -30,7 +30,7 @@ def visualize_back_translation_embedding():
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentor = augmentator_mapping[args.augmentor]
 
-    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
+    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "iwslt": TranslationDataModule}
 
     data = data_modules[args.task](
         dataset_percentage = 1,

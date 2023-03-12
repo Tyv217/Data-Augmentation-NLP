@@ -84,3 +84,7 @@ class GlueDataModule(pl.LightningDataModule):
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished
         pass
+
+    def get_dataset_text(self):
+        text, _ = self.format_data(self.train_dataset)
+        return text

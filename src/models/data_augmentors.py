@@ -318,7 +318,7 @@ class CutMix():
         self.augmentation_percentage = augmentation_percentage
 
     def approach_1(self, sentence1, sentence2, label1, label2):
-        lam = random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        lam = np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
         if(len(sentence2) < len(sentence1)):
             sentence1, sentence2 = sentence2, sentence1
             label1, label2 = label2, label1
@@ -341,7 +341,7 @@ class CutMix():
     def approach_2(self, sentence1, sentence2, label1, label2):
         # Difference to approach 1 is how it selects where in sentence 2 to take out the sentence.
         # Just takes out same index as sentence 1
-        lam = random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        lam = np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
         if(len(sentence2) < len(sentence1)):
             sentence1, sentence2 = sentence2, sentence1
             label1, label2 = label2, label1

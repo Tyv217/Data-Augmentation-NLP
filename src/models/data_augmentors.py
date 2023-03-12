@@ -363,8 +363,8 @@ class CutMix():
         
         for i in range(to_generate):
             choices = np.random.choice(len(data), 2, replace = False)
-            sentence1, label1 = data[choices[0]]
-            sentence2, label2 = data[choices[1]]
+            label1, sentence1 = data[choices[0]]
+            label2, sentence2 = data[choices[1]]
             generated.append(self.approach_1(sentence1, sentence2, label1, label2))
 
         return zip(*generated)

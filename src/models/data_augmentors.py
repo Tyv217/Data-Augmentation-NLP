@@ -359,13 +359,10 @@ class CutMix():
     def generate_pairwise_and_augment(self, data, has_label):
         generated = []
 
-        if has_label:
-            label, sentences = zip(*data)
-
         to_generate = int(len(data) * self.augmentation_percentage)
         
         for i in range(to_generate):
-            choices = np.random.choice(len(sentences), 2, replace = False)
+            choices = np.random.choice(len(data), 2, replace = False)
             sentence1, label1 = data[choices[0]]
             sentence2, label2 = data[choices[1]]
             generated.append(self.approach1(sentence1, sentence2, label1, label2))

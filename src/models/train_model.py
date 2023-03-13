@@ -208,6 +208,7 @@ def seq2seq_translate():
     
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
+    print("Augmentation params:", args.augmentation_params)
     print("Dataset Percentage:", args.dataset_percentage)
 
 def better_text_classify():
@@ -287,6 +288,6 @@ def better_text_classify():
 
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
+    print("Augmentation params:", args.augmentation_params)
     print("Dataset Percentage:", args.dataset_percentage)
-    print("Early stopping on validation dataset used!")
     print("Auto LR Finder Used:", args.auto_lr_find)

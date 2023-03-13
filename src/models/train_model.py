@@ -149,6 +149,7 @@ def seq2seq_translate():
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--deterministic", type=bool, default=True)
+    parser.add_argument("--use_high_lr", type=bool, default=False)
     # parser.add_argument("--deterministic", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()

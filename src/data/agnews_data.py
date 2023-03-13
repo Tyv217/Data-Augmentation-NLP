@@ -58,6 +58,11 @@ class AGNewsDataModule(pl.LightningDataModule):
         return data_seq
 
     def shuffle_train_valid_iters(self):
+        train_iter, test_iter = agnews()
+        train_dataset = list(train_iter)
+        random.shuffle(train_dataset)
+        self.train_dataset = to_map_style_dataset(train_dataset[:int(len(train_dataset) * self.dataset_percentage)])
+        self.test_dataset = to_map_style_dataset(test_iter)
         num_train = int(len(self.train_dataset) * 0.95)
         self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
 

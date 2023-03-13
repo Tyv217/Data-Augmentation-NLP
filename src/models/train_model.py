@@ -227,6 +227,7 @@ def better_text_classify():
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--deterministic", type=bool, default=True)
+    parser.add_argument("--train", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
@@ -278,7 +279,8 @@ def better_text_classify():
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)
-    trainer.fit(model, data)
+    if args.train:
+        trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
 
     print("Seed:", args.seed)

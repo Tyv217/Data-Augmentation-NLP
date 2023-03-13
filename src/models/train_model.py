@@ -181,14 +181,20 @@ def seq2seq_translate():
     print(args)
 
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
     #     input_, output = batch
     #     print(input_['src_len'])
     
+    try:
+        use_high_lr = args.use_high_lr
+    except:
+        use_high_lr = False
+
     model = Seq2SeqTranslator(
+        use_high_lr,
         model_name = MODEL_NAME,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,

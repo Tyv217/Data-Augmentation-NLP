@@ -5,9 +5,11 @@ from transformers import AutoConfig, T5ForConditionalGeneration
 from datasets import load_metric
 
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch):
+    def __init__(self, use_high_lr, model_name, max_epochs, tokenizer, steps_per_epoch):
         super().__init__()
         self.learning_rate = 1e-4
+        if use_high_lr:
+            self.learning_rate = 1e-2
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
         self.config = AutoConfig.from_pretrained(model_name)
@@ -17,8 +19,7 @@ class Seq2SeqTranslator(pl.LightningModule):
     
     def forward(self, input_id, attention_mask, label):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)
-
-
+        
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr = self.learning_rate)
         lr_scheduler = {

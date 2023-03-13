@@ -228,6 +228,7 @@ def better_text_classify():
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--train", type=bool, default=True)
+    parser.add_argument("--pretrain", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
@@ -275,7 +276,8 @@ def better_text_classify():
         steps_per_epoch = int(len(data.train_dataloader())),
         num_labels = len(data.id2label),
         id2label = data.id2label,
-        label2id = data.label2id
+        label2id = data.label2id,
+        pretrain = args.pretrain
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

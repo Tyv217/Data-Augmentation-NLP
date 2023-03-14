@@ -251,10 +251,6 @@ def better_text_classify():
     data.prepare_data()
     data.setup("fit")
 
-    train = data.train_dataloader()
-    import pdb
-    pdb.set_trace()
-
     logger = TensorBoardLogger(
         "runs_better_text_classify", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
     )

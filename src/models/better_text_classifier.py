@@ -13,7 +13,6 @@ class Better_Text_Classifier(pl.LightningModule):
         self.model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = num_labels, id2label = id2label, label2id = label2id, problem_type="multi_label_classification")
         if not pretrain:
             self.model.init_weights()
-            self.learning_rate *= 100
         self.steps_per_epoch = steps_per_epoch
 
     def forward(self, input_id, attention_mask, label):

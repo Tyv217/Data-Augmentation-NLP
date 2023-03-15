@@ -318,7 +318,7 @@ def image_classify():
     data.setup("fit")
 
     logger = TensorBoardLogger(
-        "runs_gtsrb", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+        "runs_gtsrb"
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")

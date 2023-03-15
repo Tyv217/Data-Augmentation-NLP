@@ -1,3 +1,5 @@
+import pytorch_lightning as pl
+import torch
 from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN_ResNet50_FPN_Weights
 from torchvision.ops import MultiScaleRoIAlign
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
@@ -6,7 +8,7 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 
 class FasterRCNN(pl.LightningModule):
-  def __init__(self, leraning_rate, max_epochs, use_pretrained_weights = True, trainable_backbone_layers = 3):
+  def __init__(self, learning_rate, max_epochs, use_pretrained_weights = True, trainable_backbone_layers = 3):
     super().__init__()
     if use_pretrained_weights:
       weights = FasterRCNN_ResNet50_FPN_Weights.DEFAULT

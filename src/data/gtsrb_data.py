@@ -2,7 +2,7 @@ import pytorch_lightning as pl
 from torch.nn.functional import cross_entropy, softmax
 import datetime, os, random 
 from pytorch_lightning.loggers import TensorBoardLogger
-import pandas as pd
+import pandas as pd, numpy as np
 from torchvision import transforms
 from PIL import Image
 import torch
@@ -32,7 +32,7 @@ class GTSRBData(pl.LightningDataModule):
       self.std = std
 
     def resize_and_normalize_images(self, df, set_norm):
-      image = df['Path'].apply(lambda x: Image.open("/content/gtsrb-german-traffic-sign/" + x))
+      image = df['Path'].apply(lambda x: Image.open("/home/x/xty20/project/content/gtsrb-german-traffic-sign/" + x))
 
       image = image.apply(lambda x: x.resize((32,32)))
 

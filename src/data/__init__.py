@@ -4,3 +4,4 @@ from .glue_data import GlueDataModule
 from .twitter_data import TwitterDataModule
 from .bias_detection_data import BiasDetectionDataModule
 from .imdb_data import IMDBDataModule
+from .gtsrb_data import GTSRBData

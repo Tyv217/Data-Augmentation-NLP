@@ -93,7 +93,6 @@ class FasterRCNN(pl.LightningModule):
             logger = True,
             sync_dist = True,
         )
-        return map
 
     def test_step(self, batch, batch_idx):
         
@@ -119,4 +118,3 @@ class FasterRCNN(pl.LightningModule):
             logger = True,
             sync_dist = True,
         )
-        return map

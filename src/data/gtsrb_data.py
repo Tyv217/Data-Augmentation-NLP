@@ -13,8 +13,8 @@ class GTSRBData(pl.LightningDataModule):
       super().__init__()
       self.batch_size = batch_size
       self.convert_tensor = transforms.ToTensor()
-      train_df = pd.read_csv("/content/gtsrb-german-traffic-sign/Train.csv")
-      test_df = pd.read_csv("/content/gtsrb-german-traffic-sign/Train.csv")
+      train_df = pd.read_csv("/home/x/xty20/project/content/gtsrb-german-traffic-sign/Train.csv")
+      test_df = pd.read_csv("/home/x/xty20/project/content/gtsrb-german-traffic-sign/Train.csv")
       self.train = self.process_df(train_df, set_norm = True)
       self.test_dataset = self.process_df(test_df)
 

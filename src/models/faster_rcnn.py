@@ -78,7 +78,7 @@ class FasterRCNN(pl.LightningModule):
         target = []
         for box, label in zip(boxes, labels):
             target.append({"boxes": box, "labels": torch.stack([label])})
-            metric.update(outputs, target)
+        metric.update(outputs, target)
     
     def on_validation_epoch_end(self):
         maps = self.metric.compute()
@@ -103,7 +103,7 @@ class FasterRCNN(pl.LightningModule):
         target = []
         for box, label in zip(boxes, labels):
             target.append({"boxes": box, "labels": torch.stack([label])})
-            self.metric.update(outputs, target)
+        self.metric.update(outputs, target)
 
     def on_train_epoch_end(self):
         maps = self.metric.compute()

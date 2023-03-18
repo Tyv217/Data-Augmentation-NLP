@@ -156,12 +156,12 @@ def seq2seq_translate():
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
-    augmentors = parse_augmentors(args, augmentator_mapping)
+    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         dataset_percentage = args.dataset_percentage / 100,
-        augmentors = augmentors,
+        augmentors = augmentors_on_words,
         batch_size=args.batch_size
     )
     data.prepare_data()
@@ -200,7 +200,8 @@ def seq2seq_translate():
         model_name = MODEL_NAME,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
-        steps_per_epoch = int(len(data.train_dataloader()))
+        steps_per_epoch = int(len(data.train_dataloader())),
+        augmentors = augmentors_on_tokens
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # most basic trainer, uses good defaults (1 gpu)
@@ -239,13 +240,13 @@ def better_text_classify():
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
-    augmentors = parse_augmentors(args, augmentator_mapping)
+    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule}
 
     data = data_modules[args.task](
         dataset_percentage = args.dataset_percentage / 100,
-        augmentors = augmentors,
+        augmentors = augmentors_on_words,
         batch_size = args.batch_size
     )
 
@@ -283,7 +284,8 @@ def better_text_classify():
         num_labels = len(data.id2label),
         id2label = data.id2label,
         label2id = data.label2id,
-        pretrain = args.pretrain
+        pretrain = args.pretrain,
+        augmentors = augmentors_on_tokens,
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

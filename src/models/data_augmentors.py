@@ -18,6 +18,7 @@ class Synonym_Replacer():
         self.lemmatizer = WordNetLemmatizer()
         self.augmentation_percentage = 0
         self.require_label = False
+        self.operate_on_tokens = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -59,15 +60,9 @@ class Synonym_Replacer():
                 sentence = curr_sentence
         return sentence
 
-    def augment_dataset(self, data_iter, preprocessor = None, has_label = False):
-        self.preprocessor = preprocessor
-        self.start_time = time.time()
-        if has_label:
-            label, data_iter = zip(*data_iter)
-        augmented_sentences = [self.replace_with_synonyms(sentence) for sentence in list(data_iter)]
-        if has_label:
-            augmented_sentences = zip(label, augmented_sentences)
-        return list(augmented_sentences)
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
+        augmented_lines = [self.replace_with_synonyms(sentence) for sentence in list(inputs)]
+        return augmented_lines, attention_mask, labels
 
 # class Back_Translator():
 #     def __init__(self, src, dest):
@@ -107,6 +102,7 @@ class Back_Translator():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
         self.require_label = False
+        self.operate_on_tokens = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage / 10000
@@ -148,15 +144,14 @@ class Back_Translator():
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
 
-    def augment_dataset(self, data_iter, has_label = False):
-        data_list = list(data_iter)
+    def augment_dataset(self, inputs, attention_mask, labels):
+        if attention_mask is not None:
+            raise Exception("Back Translation on Tokens Instead of Words") 
         to_augment = []
-        for data in data_list:
+        for input in list(inputs):
             if(random.random() < self.augmentation_percentage):
-                to_augment.append(data)
-        
-        if(has_label):
-            label, to_augment = zip(*to_augment)
+                to_augment.append(input)
+
         translators = self.get_translators()
         count = 0
         translated_data = []
@@ -168,15 +163,13 @@ class Back_Translator():
             text = to_augment[count:min(count + BATCH_SIZE, len(to_augment))]
             translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
-        if has_label:
-            translated_data = zip(label, translated_data)
         
         for i1 in range(len(translated_data)):
-            i2 = data_list.index(to_augment[i1])
-            data_list[i2] = translated_data[i1]
+            i2 = inputs.index(to_augment[i1])
+            inputs[i2] = translated_data[i1]
 
         print("Augmentation took :", time.time() - start_time)
-        return list(data_list)
+        return list(inputs), attention_mask, labels
 
 class Insertor():
     def __init__(self, stopword_language):
@@ -190,6 +183,7 @@ class Insertor():
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.lemmatizer = WordNetLemmatizer()
         self.require_label = False
+        self.operate_on_tokens = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -239,14 +233,9 @@ class Insertor():
         return sentence
 
 
-    def augment_dataset(self, data_iter, preprocessor = None, has_label = False):
-        self.preprocessor = preprocessor
-        if has_label:
-            label, data_iter = zip(*data_iter)
-        augmented_sentences = [self.insert_synonyms(sentence)for sentence in list(data_iter)]
-        if has_label:
-            augmented_sentences = zip(label, augmented_sentences)
-        return list(augmented_sentences)
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
+        augmented_sentences = [self.insert_synonyms(sentence)for sentence in list(inputs)]
+        return list(augmented_sentences), attention_mask, labels
 
 class Deletor():
 
@@ -254,6 +243,7 @@ class Deletor():
         super().__init__()
         self.augmentation_percentage = 0
         self.require_label = False
+        self.operate_on_tokens = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -269,13 +259,9 @@ class Deletor():
         sentence = " ".join(word_list)
         return sentence
 
-    def augment_dataset(self, data_iter, has_label = False):
-        if has_label:
-            label, data_iter = zip(*data_iter)
-        augmented_sentences = [self.delete_randomly(sentence) for sentence in list(data_iter)]
-        if has_label:
-            augmented_sentences = zip(label, augmented_sentences)
-        return list(augmented_sentences)
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
+        augmented_sentences = [self.delete_randomly(sentence)for sentence in list(inputs)]
+        return list(augmented_sentences), attention_mask, labels
 
 class CutOut():
     def __init__(self):
@@ -283,6 +269,7 @@ class CutOut():
         self.augmentation_percentage = 0
         self.cutout_percentage = 0.1
         self.require_label = False
+        self.operate_on_tokens = True
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -299,13 +286,11 @@ class CutOut():
             sentence = " ".join(word_list)
         return sentence
 
-    def augment_dataset(self, data_iter, has_label = False):
-        if has_label:
-            label, data_iter = zip(*data_iter)
-        augmented_sentences = [self.cutout_randomly(sentence) for sentence in list(data_iter)]
-        if has_label:
-            augmented_sentences = zip(label, augmented_sentences)
-        return list(augmented_sentences)
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
+        augmented_sentences = [self.cutout_randomly(sentence)for sentence in list(inputs)]
+        return list(augmented_sentences), attention_mask, labels
+
+    
 
 class CutMix():
     def __init__(self):
@@ -313,6 +298,7 @@ class CutMix():
         self.augmentation_percentage = 0
         self.cutmix_percentage = 1
         self.require_label = True
+        self.operate_on_tokens = True
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage

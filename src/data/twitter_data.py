@@ -17,7 +17,13 @@ class TwitterDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.twitter_task = twitter_task
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
-        self.augmentors = augmentors
+        self.augmentors_on_words = []
+        self.augmentors_on_tokens = []
+        for augmentor in augmentors:
+            if augmentor.operate_on_tokens:
+                self.augmentors_on_tokens.append(augmentor)
+            else:
+                self.augmentors_on_words.append(augmentor)
         self.dataset_percentage = dataset_percentage
         self.id2label =  {0: "negative", 1: "neutral", 2: "positive"}
         self.label2id = {"negative": 0, "neutral": 1, "positive": 2}
@@ -49,8 +55,8 @@ class TwitterDataModule(pl.LightningDataModule):
 
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
-        if augment and self.augmentors is not None:
-            for augmentor in self.augmentors:
+        if augment and self.augmentors_on_words is not None:
+            for augmentor in self.augmentors_on_words:
                 if augmentor.require_label:
                     zipped_lines = zip(labels, input_lines)
                     input_lines, labels = augmentor.augment_dataset(zipped_lines, has_label = True)
@@ -66,7 +72,13 @@ class TwitterDataModule(pl.LightningDataModule):
             return_tensors = "pt",
         )
         input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
-
+        if augment and self.augmentor_on_tokens is not None:
+            for augmentor in self.augmentor_on_tokens:
+                if augmentor.require_label:
+                    zipped_lines = zip(labels, input_ids)
+                    input_ids, labels = augmentor.augment_dataset(zipped_lines, has_label = True)
+                else:
+                    input_ids = augmentor.augment_dataset(input_ids, has_label = False)
         data_seq = []
         for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})

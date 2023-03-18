@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class Better_Text_Classifier(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, steps_per_epoch, num_labels, id2label, label2id, pretrain = True):
+    def __init__(self, learning_rate, max_epochs, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -39,6 +39,12 @@ class Better_Text_Classifier(pl.LightningModule):
         return [optimizer], [lr_scheduler]
     
     def training_step(self, batch, batch_idx):
+        input = batch['input_id']
+        attention_mask = batch['attention_mask']
+        label = batch['label']
+        for augmentor in self.augmentors:
+            input, attention_mask, label = augmentor.augment_dataset(input, attention_mask, label)
+            
         loss = self.forward(batch['input_id'], batch['attention_mask'], batch['label']).loss
 
         self.log(

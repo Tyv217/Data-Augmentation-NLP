@@ -132,6 +132,7 @@ def better_text_classify_search():
         for name in filter(lambda x: x != "", (args.augmentors.split(","))):
             param_range = augmentation_param_range[name]
             augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
+        augmentation_params = [str(param) for param in augmentation_params]
         args.augmentation_param = ",".join(augmentation_params)
         augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule}

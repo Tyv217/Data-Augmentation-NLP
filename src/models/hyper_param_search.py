@@ -98,7 +98,7 @@ def seq2seq_translate_search():
     print("Augmentation params:", args.augmentation_params)
     print("Dataset Percentage:", args.dataset_percentage)
 
-def better_text_classify():
+def better_text_classify_search():
     parser = ArgumentParser(conflict_handler = 'resolve')
 
     # add PROGRAM level args

@@ -14,6 +14,7 @@ class Better_Text_Classifier(pl.LightningModule):
         if not pretrain:
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
+        self.augmentors = augmentors
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)

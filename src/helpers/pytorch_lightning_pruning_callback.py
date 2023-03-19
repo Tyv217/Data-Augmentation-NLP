@@ -1,6 +1,7 @@
 from pytorch_lightning import LightningModule
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import Callback
+import optuna
 
 class PyTorchLightningPruningCallback(Callback):
     """PyTorch Lightning callback to prune unpromising trials.
@@ -41,7 +42,7 @@ class PyTorchLightningPruningCallback(Callback):
                 "The metric '{}' is not in the evaluation logs for pruning. "
                 "Please make sure you set the correct metric name.".format(self.monitor)
             )
-            warnings.warn(message)
+            print(message)
             return
 
         self._trial.report(current_score, step=epoch)

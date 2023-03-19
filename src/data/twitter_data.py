@@ -51,7 +51,7 @@ class TwitterDataModule(pl.LightningDataModule):
         input_lines, labels = self.format_data(data)
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, _, labels)
+                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
         input_encoding = self.tokenizer.batch_encode_plus(
             input_lines,
             add_special_tokens = True,

@@ -46,7 +46,7 @@ class Better_Text_Classifier(pl.LightningModule):
         for augmentor in self.augmentors:
             input, attention_mask, label = augmentor.augment_dataset(input, attention_mask, label)
             
-        loss = self.forward(batch['input_id'], batch['attention_mask'], batch['label']).loss
+        loss = self.forward(input, attention_mask, label).loss
 
         self.log(
             "training_loss",

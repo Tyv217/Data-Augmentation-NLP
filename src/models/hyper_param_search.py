@@ -182,8 +182,7 @@ def better_text_classify_search():
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         
         # most basic trainer, uses good defaults (1 gpu)
-        if args.train:
-            trainer.fit(model, data)
+        trainer.fit(model, data)
         trainer.test(model, dataloaders = data.test_dataloader())
         test_accuracy = trainer.callback_metrics["test_accuracy"].item()
         return test_accuracy

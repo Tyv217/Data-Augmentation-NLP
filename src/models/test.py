@@ -72,13 +72,6 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    from data_augmentors import Synonym_Replacer
-    from nltk.stem.snowball import SnowballStemmer
-    stemmer = SnowballStemmer("english")
-
-    s = Synonym_Replacer("english")
-
-    print(list(s.get_synonym("followed")))
-    lemmatizer = WordNetLemmatizer()
-    print(stemmer.stem("followed"))
-    print(stemmer.stem("follow"))
+    from helpers import parse_augmentors_string
+    from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix
+    print(parse_augmentors_string("sr,in,de", "10,10,5", {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}))

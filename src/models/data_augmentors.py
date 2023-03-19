@@ -55,6 +55,8 @@ class Synonym_Replacer():
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = re.sub(word, synonym, curr_sentence)
+                with open("sr_data.txt", 'a') as f:
+                        f.write("Original: " + sentence + "\nReplaced: " + curr_sentence + "\n\n")
                 sentence = curr_sentence
         return sentence
 

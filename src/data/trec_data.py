@@ -11,40 +11,28 @@ import numpy as np
 import random
 
 
-class TwitterDataModule(pl.LightningDataModule):
-    def __init__(self, dataset_percentage, augmentors = [], twitter_task = "sentiment", batch_size: int = 32):
+class TrecDataModule(pl.LightningDataModule):
+    def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
         self.twitter_task = twitter_task
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
-        self.id2label =  {0: "negative", 1: "neutral", 2: "positive"}
-        self.label2id = {"negative": 0, "neutral": 1, "positive": 2}
+        self.id2label =  {0: "Abbreviation", 1: "Entity", 2: "Description and abstract concept", 3: "Human being", 4: "Location", 5: "Numeric value"}
+        self.label2id = {"Abbreviation": 0, "Entity": 1, "Description and abstract concept": 2, "Human being": 3, "Location": 4, "Numeric value": 5}
         dataset = load_dataset("tweet_eval", self.twitter_task)
         train = list(dataset['train'])
         random.shuffle(train)
         self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
-        self.validation_dataset = dataset['validation']
-        self.test_dataset = dataset['test']
-
-    def preprocess(self, text):
-        data = []
-        for t in text.split(" "):
-            if(t.startswith('@') and len(t) > 1):
-                data.append("@user")
-            elif t.startswith('http'):
-                data.append("http")
-            else:
-                data.append(t)
-        return " ".join(data)
+        self.test_dataset = list(dataset['test'])
 
     def format_data(self, data):
         input_lines = []
         labels = []
         for i in data:
-            input_lines.append(self.preprocess(i['text']))
-            labels.append(i['label'])
+            input_lines.append(i['text'])
+            labels.append(i['coarse_label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
     def split_and_pad_data(self, data, augment = False):
@@ -68,14 +56,19 @@ class TwitterDataModule(pl.LightningDataModule):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
         return data_seq
 
+    def shuffle_train_valid_iters(self):
+        num_train = int(len(self.train_dataset) * 0.95)
+        self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
+
     def setup(self, stage: str):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
+        self.shuffle_train_valid_iters()
+        return DataLoader(self.split_and_pad_data(self.split_train, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.validation_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.split_valid), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)

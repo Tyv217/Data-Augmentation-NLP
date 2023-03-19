@@ -16,13 +16,7 @@ class TranslationDataModule(pl.LightningDataModule):
         self.task_prefix = task_prefix
         self.input_language = input_language
         self.output_language = output_language
-        self.augmentors_on_words = []
-        self.augmentors_on_tokens = []
-        for augmentor in augmentors:
-            if augmentor.operate_on_tokens:
-                self.augmentors_on_tokens.append(augmentor)
-            else:
-                self.augmentors_on_words.append(augmentor)
+        self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
         train = list(self.dataset['train'])
         random.shuffle(train)
@@ -38,15 +32,12 @@ class TranslationDataModule(pl.LightningDataModule):
 
     def split_and_pad_data(self, data, augment = False, augment_target = False):
         input_lines, output_lines = self.format_data(data)
-
-        if augment and self.augmentors_on_words is not None:
-            for augmentor in self.augmentors_on_words:
-                if augmentor.require_label:
-                    zipped_lines = zip(labels, input_lines)
-                    input_lines, labels = augmentor.augment_dataset(zipped_lines, has_label = True)
-                else:
-                    input_lines = augmentor.augment_dataset(input_lines, has_label = False)
-
+        if augment and self.augmentors is not None:
+            for augmentor in self.augmentors:
+                input_lines = list(augmentor.augment_dataset(input_lines, has_label = False))
+        if augment and augment_target and self.augmentors is not None:
+            for augmentor in self.augmentors:
+                input_lines = list(augmentor.augment_dataset(input_lines, has_label = False))
         input_encoding = self.tokenizer(
             # [self.task_prefix + sequence for sequence in input_lines],
             input_lines,
@@ -55,14 +46,6 @@ class TranslationDataModule(pl.LightningDataModule):
             return_tensors = "pt",
         )
         input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
-
-        if augment and self.augmentor_on_tokens is not None:
-            for augmentor in self.augmentor_on_tokens:
-                if augmentor.require_label:
-                    zipped_lines = zip(labels, input_ids)
-                    input_ids, labels = augmentor.augment_dataset(zipped_lines, has_label = True)
-                else:
-                    input_ids = augmentor.augment_dataset(input_ids, has_label = False)
 
         output_encoding = self.tokenizer(
             output_lines,

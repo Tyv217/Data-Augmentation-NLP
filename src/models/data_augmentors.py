@@ -1,6 +1,6 @@
 import nltk, torch, time
 from nltk.corpus import wordnet as wn, stopwords
-from nltk.stem import WordNetLemmatizer
+from nltk.stem.snowball import SnowballStemmer
 from torchdata.datapipes.iter import IterableWrapper
 import random, re, spacy
 import numpy as np
@@ -15,7 +15,7 @@ class Synonym_Replacer():
         self.word_to_replace_per_sentence = word_to_replace_per_sentence
         self.nlp = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
-        self.lemmatizer = WordNetLemmatizer()
+        self.stemmer = SnowballStemmer("english")
         self.augmentation_percentage = 0
         self.require_label = False
         self.operate_on_tokens = False
@@ -30,8 +30,8 @@ class Synonym_Replacer():
             synset = wn.synsets(word)
         synonym_deeplist = [syn.lemma_names() for syn in synset]
         synonyms = [synonym for sublist in synonym_deeplist for synonym in sublist if synonym != word]
-        lemma = self.lemmatizer.lemmatize(word)
-        synonyms = filter(lambda x: self.lemmatizer.lemmatize(x) != lemma, synonyms)
+        lemma = self.stemmer.stem(word)
+        synonyms = filter(lambda x: self.stemmer.stem(x) != lemma, synonyms)
         return synonyms
         
     def get_word_list(self, sentence):
@@ -181,7 +181,7 @@ class Insertor():
         self.preprocessor = None
         self.nlp = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
-        self.lemmatizer = WordNetLemmatizer()
+        self.stemmer = SnowballStemmer("english")
         self.require_label = False
         self.operate_on_tokens = False
 
@@ -195,8 +195,8 @@ class Insertor():
             synset = wn.synsets(word)
         synonym_deeplist = [syn.lemma_names() for syn in synset]
         synonyms = [synonym for sublist in synonym_deeplist for synonym in sublist if synonym != word]
-        lemma = self.lemmatizer.lemmatize(word)
-        synonyms = filter(lambda x: self.lemmatizer.lemmatize(x) != lemma, synonyms)
+        lemma = self.stemmer.stem(word)
+        synonyms = filter(lambda x: self.stemmer.stem(x) != lemma, synonyms)
         return synonyms
         
     def get_word_list(self, sentence):

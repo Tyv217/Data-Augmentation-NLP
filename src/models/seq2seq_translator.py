@@ -5,17 +5,16 @@ from transformers import AutoConfig, T5ForConditionalGeneration
 from datasets import load_metric
 
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, use_high_lr, model_name, max_epochs, tokenizer, steps_per_epoch):
+    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, augmentors):
         super().__init__()
         self.learning_rate = 1e-4
-        if use_high_lr:
-            self.learning_rate = 1e-3
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
         self.config = AutoConfig.from_pretrained(model_name)
         self.model = T5ForConditionalGeneration(self.config)
         self.steps_per_epoch = steps_per_epoch
         self.model.resize_token_embeddings(len(tokenizer))
+        self.augmentors = augmentors
     
     def forward(self, input_id, attention_mask, label):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)
@@ -41,7 +40,13 @@ class Seq2SeqTranslator(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         
-        loss = self.forward(batch['input_id'], batch['attention_mask'], batch['label']).loss
+        input = batch['input_id']
+        attention_mask = batch['attention_mask']
+        label = batch['label']
+        for augmentor in self.augmentors:
+            input, attention_mask, label = augmentor.augment_dataset(input, attention_mask, label)
+            
+        loss = self.forward(input, attention_mask, label).loss
 
         self.log(
             "training_loss",

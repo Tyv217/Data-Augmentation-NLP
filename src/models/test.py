@@ -1,5 +1,5 @@
 from re import L
-
+from nltk.stem import WordNetLemmatizer
 
 def main():
     import torch
@@ -72,28 +72,13 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    import torch
-    import numpy as np
-    import pandas as pd
-    from pathlib import Path
-    # a = np.array([0,1,2,3,4,5,6,7,8,9])
-    # df = pd.DataFrame(a)
-    # import os
-    # import pathlib
-    # x = pathlib.Path(__file__).parent.resolve()
-    # filepath = '../data/augmented_data/out.csv'
-    # a = os.path.join(x, filepath)
-    # df.to_csv(a, index = False) 
+    from data_augmentors import Synonym_Replacer
+    from nltk.stem.snowball import SnowballStemmer
+    stemmer = SnowballStemmer("english")
 
-    # y = pd.read_csv(a)
-    # print(y)
-    # main()
-    # main()
-    a = [1,2,3,4,5]
-    b = [6,7,8,9,10]
-    x = list(zip(a,b))
-    print(x)
-    print(list(zip(*x)))
-    c, d = zip(*x)
-    print(c)
-    print(d)
+    s = Synonym_Replacer("english")
+
+    print(list(s.get_synonym("followed")))
+    lemmatizer = WordNetLemmatizer()
+    print(stemmer.stem("followed"))
+    print(stemmer.stem("follow"))

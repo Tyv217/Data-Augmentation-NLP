@@ -20,7 +20,7 @@ class TrecDataModule(pl.LightningDataModule):
         self.dataset_percentage = dataset_percentage
         self.id2label =  {0: "Abbreviation", 1: "Entity", 2: "Description and abstract concept", 3: "Human being", 4: "Location", 5: "Numeric value"}
         self.label2id = {"Abbreviation": 0, "Entity": 1, "Description and abstract concept": 2, "Human being": 3, "Location": 4, "Numeric value": 5}
-        dataset = load_dataset("tweet_eval", self.twitter_task)
+        dataset = load_dataset("trec")
         train = list(dataset['train'])
         random.shuffle(train)
         self.train_dataset = train[:int(len(train) * self.dataset_percentage)]

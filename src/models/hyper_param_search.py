@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping
 from argparse import ArgumentParser
-from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
+from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, PyTorchLightningPruningCallback
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, GTSRBData
@@ -17,7 +17,6 @@ from .faster_rcnn import FasterRCNN
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 import optuna
-from optuna.integration import PyTorchLightningPruningCallback
 
 def seq2seq_translate_search():
     MODEL_NAME = "t5-small"

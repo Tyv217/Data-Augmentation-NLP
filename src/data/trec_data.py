@@ -15,7 +15,6 @@ class TrecDataModule(pl.LightningDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
-        self.twitter_task = twitter_task
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage

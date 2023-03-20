@@ -282,7 +282,6 @@ class CutOut():
             sentence = sentence[:start_index] + sentence[end_index:l]
             if not self.operate_on_tokens:
                 sentence = " ".join(sentence)
-            else:
                 # TODO: change attention mask and sentence
                 # sentence = torch.cat(sentence, torch.full_like(torch.zeros(len(attention_mask) - len(sentence))))
         return sentence

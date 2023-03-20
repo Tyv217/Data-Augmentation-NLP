@@ -40,56 +40,72 @@ def seq2seq_translate_search():
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
-    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
-
-    data = TranslationDataModule(
-        model_name = MODEL_NAME,
-        dataset_percentage = args.dataset_percentage / 100,
-        augmentors = augmentors_on_words,
-        batch_size=args.batch_size
-    )
-    data.prepare_data()
-    data.setup("fit")
-    dir = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
-    logger = TensorBoardLogger(
-        "runs_translate", name=dir
-    )
-
-    args.default_root_dir = "runs_translate/" + dir
-
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    early_stop_callback = early_stopping.EarlyStopping(
-        monitor='validation_loss',
-        min_delta=0,
-        patience=3,
-        mode='min',
-    )
-    print(args)
-
-    trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
-    )  # , distributed_backend='ddp_cpu')
+    augmentation_param_range = {"sr": (0,50), "bt": (0,500), "in": (0,50), "de": (0,50), "co": (0,50), "cm": (0,50)}
     
-    # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
-    #     input_, output = batch
-    #     print(input_['src_len'])
-    
-    model = Seq2SeqTranslator(
-        model_name = MODEL_NAME,
-        max_epochs = args.max_epochs,
-        tokenizer = data.tokenizer,
-        steps_per_epoch = int(len(data.train_dataloader())),
-        augmentors = augmentors_on_tokens
-    ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    def objective(trial):
+        augmentation_params = []
+        for name in filter(lambda x: x != "", (args.augmentors.split(","))):
+            param_range = augmentation_param_range[name]
+            augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
+        augmentation_params = [str(param) for param in augmentation_params]
+        args.augmentation_param = ",".join(augmentation_params)
+        augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
+        data = TranslationDataModule(
+            model_name = MODEL_NAME,
+            dataset_percentage = args.dataset_percentage / 100,
+            augmentors = augmentors_on_words,
+            batch_size=args.batch_size
+        )
+        data.prepare_data()
+        data.setup("fit")
+        dir = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
+        logger = TensorBoardLogger(
+            "search_translate", name=dir
+        )
 
-    # most basic trainer, uses good defaults (1 gpu)
-    trainer.fit(model, data)
-    trainer.test(model, dataloaders = data.test_dataloader())
-    
-    print("Seed:", args.seed)
-    print("Augmentors:", args.augmentors)
-    print("Augmentation params:", args.augmentation_params)
-    print("Dataset Percentage:", args.dataset_percentage)
+        args.default_root_dir = "search_translate/" + dir
+
+        lr_monitor = LearningRateMonitor(logging_interval="step")
+        early_stop_callback = early_stopping.EarlyStopping(
+            monitor='validation_loss',
+            min_delta=0,
+            patience=3,
+            mode='min',
+        )
+        
+        early_pruning_callback = PyTorchLightningPruningCallback(trial, monitor="validation_bleu")
+        
+        print(args)
+
+        trainer = pl.Trainer.from_argparse_args(
+            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+        )  # , distributed_backend='ddp_cpu')
+        
+        # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
+        #     input_, output = batch
+        #     print(input_['src_len'])
+        
+        model = Seq2SeqTranslator(
+            model_name = MODEL_NAME,
+            max_epochs = args.max_epochs,
+            tokenizer = data.tokenizer,
+            steps_per_epoch = int(len(data.train_dataloader())),
+            augmentors = augmentors_on_tokens
+        ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+        # most basic trainer, uses good defaults (1 gpu)
+        trainer.fit(model, data)
+        trainer.test(model, dataloaders = data.test_dataloader())
+        test_accuracy = trainer.callback_metrics["test_bleu"].item()
+        return test_accuracy
+
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, timeout = 43200)
+
+    print(f"Best value: {study.best_value:.4f}")
+    print("Best hyperparameters:")
+    for key, value in study.best_params.items():
+        print(f"    {key}: {value}")
 
 def better_text_classify_search():
     parser = ArgumentParser(conflict_handler = 'resolve')

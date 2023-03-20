@@ -80,7 +80,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # torch.unsqueeze(trg_batchT,1).tolist())
         
         self.log(
-            "bleu_score",
+            "validation_bleu",
             bleu_score,
             on_step=False,
             on_epoch=True,
@@ -117,7 +117,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         # torch.unsqueeze(trg_batchT,1).tolist())
         
         self.log(
-            "bleu_score",
+            "test_bleu",
             bleu_score,
             on_step=False,
             on_epoch=True,

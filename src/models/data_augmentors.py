@@ -55,8 +55,6 @@ class Synonym_Replacer():
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = re.sub(word, synonym, curr_sentence)
-                with open("sr_data.txt", 'a') as f:
-                        f.write("Original: " + sentence + "\nReplaced: " + curr_sentence + "\n\n")
                 sentence = curr_sentence
         return sentence
 
@@ -272,16 +270,21 @@ class CutOut():
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def cutout_randomly(self, sentence):
+    def cutout_randomly(self, sentence, attention_mask):
         if(random.random() < self.augmentation_percentage):
-            word_list = sentence.split(" ")
-            l = len(word_list)
+            if not self.operate_on_tokens:
+                sentence = sentence.split(" ")
+            l = len(sentence)
             words_to_delete = int(l * self.cutout_percentage)
             i = random.randrange(0 - words_to_delete, l + 1)
             start_index = max(0, i)
             end_index = min(l, i + words_to_delete)
-            word_list = word_list[:start_index] + word_list[end_index:l]
-            sentence = " ".join(word_list)
+            sentence = sentence[:start_index] + sentence[end_index:l]
+            if not self.operate_on_tokens:
+                sentence = " ".join(sentence)
+            else:
+                # TODO: change attention mask and sentence
+                # sentence = torch.cat(sentence, torch.full_like(torch.zeros(len(attention_mask) - len(sentence))))
         return sentence
 
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
@@ -294,17 +297,17 @@ class CutMix():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
-        self.cutmix_percentage = 1
         self.require_label = True
         self.operate_on_tokens = True
 
     def set_augmentation_percentage(self, augmentation_percentage):
-        self.augmentation_percentage = augmentation_percentage
+        self.augmentation_percentage = augmentation_percentage / 10
 
     def approach_1(self, sentence1, sentence2, label1, label2):
         lam = np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
-        sentence1 = sentence1.split(" ")
-        sentence2 = sentence2.split(" ")
+        if not self.operate_on_tokens:
+            sentence1 = sentence1.split(" ")
+            sentence2 = sentence2.split(" ")
         if(len(sentence2) < len(sentence1)):
             sentence1, sentence2 = sentence2, sentence1
             label1, label2 = label2, label1
@@ -327,7 +330,10 @@ class CutMix():
     def approach_2(self, sentence1, sentence2, label1, label2):
         # Difference to approach 1 is how it selects where in sentence 2 to take out the sentence.
         # Just takes out same index as sentence 1
-        lam = np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        lam = np.random.beta(self.augmentation_percentage, self.augmentation_percentage)
+        if not self.operate_on_tokens:
+            sentence1 = sentence1.split(" ")
+            sentence2 = sentence2.split(" ")
         if(len(sentence2) < len(sentence1)):
             sentence1, sentence2 = sentence2, sentence1
             label1, label2 = label2, label1
@@ -342,7 +348,7 @@ class CutMix():
 
         return sentence, label
 
-    def generate_pairwise_and_augment(self, data, has_label):
+    def generate_pairwise_and_augment(self, data, labels):
         generated = []
 
         to_generate = int(len(data) * self.augmentation_percentage)
@@ -355,6 +361,6 @@ class CutMix():
 
         return zip(*generated)
 
-    def augment_dataset(self, data_iter, has_label = False):
-        augmented_sentences = self.generate_pairwise_and_augment(data_iter, has_label)
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
+        augmented_sentences = self.generate_pairwise_and_augment(inputs, labels)
         return augmented_sentences

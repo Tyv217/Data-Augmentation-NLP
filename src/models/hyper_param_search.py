@@ -52,7 +52,7 @@ def seq2seq_translate_search():
         augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
         data = TranslationDataModule(
             model_name = MODEL_NAME,
-            dataset_percentage = args.dataset_percentage / 100,
+            dataset_percentage = 1,
             augmentors = augmentors_on_words,
             batch_size=args.batch_size
         )

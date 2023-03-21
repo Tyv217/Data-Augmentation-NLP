@@ -23,7 +23,7 @@ class TrecDataModule(pl.LightningDataModule):
         dataset = load_dataset("trec")
         train = list(dataset['train'])
         random.shuffle(train)
-        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
+        self.train = train[:int(len(train) * self.dataset_percentage)]
         self.test_dataset = list(dataset['test'])
 
     def format_data(self, data):
@@ -56,18 +56,18 @@ class TrecDataModule(pl.LightningDataModule):
         return data_seq
 
     def shuffle_train_valid_iters(self):
-        num_train = int(len(self.train_dataset) * 0.95)
-        self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
+        num_train = int(len(self.train) * 0.95)
+        self.train_dataset, self.valid_dataset = random_split(self.train, [num_train, len(self.train) - num_train])
 
     def setup(self, stage: str):
         pass
 
     def train_dataloader(self):
         self.shuffle_train_valid_iters()
-        return DataLoader(self.split_and_pad_data(self.split_train, augment = True), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.split_valid), batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.valid_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)

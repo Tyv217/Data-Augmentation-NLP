@@ -72,6 +72,8 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    from helpers import parse_augmentors_string
-    from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix
-    print(parse_augmentors_string("sr,in,de", "10,10,5", {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}))
+    from ..data import BiasDetectionDataModule
+
+    x = BiasDetectionDataModule(1)
+
+    print(list(x.train_dataloader()))

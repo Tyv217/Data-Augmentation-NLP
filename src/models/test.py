@@ -72,8 +72,4 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    from ..data import BiasDetectionDataModule
-
-    x = BiasDetectionDataModule(1)
-
-    print(list(x.train_dataloader()))
+    pass

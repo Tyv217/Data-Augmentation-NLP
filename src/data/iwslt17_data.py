@@ -20,7 +20,9 @@ class TranslationDataModule(pl.LightningDataModule):
         self.dataset_percentage = dataset_percentage
         train = list(self.dataset['train'])
         random.shuffle(train)
-        self.train = train[:int(len(train) * self.dataset_percentage)]
+        self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
+        self.valid_dataset = self.dataset['validation']
+        self.test_dataset = self.dataset['test']
 
     def format_data(self, data):
         input_lines = []
@@ -64,21 +66,19 @@ class TranslationDataModule(pl.LightningDataModule):
         return data_seq
 
     def setup(self, stage: str):
-        self.valid_dataset = self.split_and_pad_data(self.dataset['validation'])
-        self.test_dataset = self.split_and_pad_data(self.dataset['test'])
+        pass
 
     def train_dataloader(self):
-        self.train_dataset = self.split_and_pad_data(self.train, augment = True)
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.valid_dataset, batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.valid_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
 
     def predict_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.batch_size)
+        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

@@ -5,9 +5,9 @@ from transformers import AutoConfig, T5ForConditionalGeneration
 from datasets import load_metric
 
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, augmentors):
+    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, augmentors, learning_rate = 1e-4):
         super().__init__()
-        self.learning_rate = 1e-4
+        self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
         self.config = AutoConfig.from_pretrained(model_name)

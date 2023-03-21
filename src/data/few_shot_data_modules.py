@@ -22,11 +22,9 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
         self.train_dataset = data_module.train_dataset
         self.valid_dataset = data_module.valid_dataset
         self.test_dataset = data_module.test_dataset
+        self.format_data = data_module.format_data
         self.train_dataset = self.extract_samples_per_class(train_samples_per_class)
         self.use_train_valid = use_train_valid
-
-    def get_list_from_dataloader(self):
-        pass
 
     def extract_samples_per_class(self, train_samples_per_class):
         num_classes = len(self.id2label)
@@ -41,7 +39,7 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
 
         for i in range(num_classes):
             pass
-        
+
 
     def format_data(self, data):
         labels, inputs = zip(*data)

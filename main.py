@@ -1,4 +1,4 @@
-from src.models import better_text_classify, text_classify, seq2seq_translate
+from src.models import better_text_classify, seq2seq_translate
 import random, torch, numpy
 import pytorch_lightning.utilities.seed as plseed
 from googletrans import Translator

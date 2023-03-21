@@ -1,4 +1,4 @@
-from src.models import better_text_classify, text_classify, seq2seq_translate
+from src.models import better_text_classify, seq2seq_translate
 
 from argparse import ArgumentParser
 

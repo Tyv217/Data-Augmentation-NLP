@@ -126,7 +126,7 @@ def seq2seq_translate_search_lr(to_search, parser):
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
     
     def objective(trial):
-        lr = trial.suggest_int(4e-5, 1e-2, log=True)
+        lr = trial.suggest_int("learning_rate", 4e-5, 1e-2, log=True)
         data = TranslationDataModule(
             model_name = MODEL_NAME,
             dataset_percentage = 1,
@@ -311,16 +311,10 @@ def better_text_classify_search_lr():
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
-    augmentation_param_range = {"sr": (0,50), "bt": (0,500), "in": (0,50), "de": (0,50), "co": (0,50), "cm": (0,50)}
+    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     def objective(trial):
-        augmentation_params = []
-        for name in filter(lambda x: x != "", (args.augmentors.split(","))):
-            param_range = augmentation_param_range[name]
-            augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
-        augmentation_params = [str(param) for param in augmentation_params]
-        args.augmentation_param = ",".join(augmentation_params)
-        augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
+        lr = trial.suggest_int("learning_rate", 4e-5, 1e-2, log=True)
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule}
         data = data_modules[args.task](
             dataset_percentage = 1,
@@ -358,7 +352,7 @@ def better_text_classify_search_lr():
         # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
         model = Better_Text_Classifier(
-            learning_rate = args.learning_rate,
+            learning_rate = lr,
             max_epochs = args.max_epochs,
             steps_per_epoch = int(len(data.train_dataloader())),
             num_labels = len(data.id2label),

@@ -126,7 +126,7 @@ def seq2seq_translate_search_lr(to_search, parser):
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
     
     def objective(trial):
-        lr = trial.suggest_int("learning_rate", 4e-5, 1e-2, log=True)
+        lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
         data = TranslationDataModule(
             model_name = MODEL_NAME,
             dataset_percentage = 1,
@@ -314,7 +314,7 @@ def better_text_classify_search_lr():
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     def objective(trial):
-        lr = trial.suggest_int("learning_rate", 4e-5, 1e-2, log=True)
+        lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule}
         data = data_modules[args.task](
             dataset_percentage = 1,

@@ -40,12 +40,6 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
         for i in range(num_classes):
             pass
 
-
-    def format_data(self, data):
-        labels, inputs = zip(*data)
-        labels = np.array(labels) - 1
-        return list(inputs), np.identity(len(self.id2label))[labels]
-
     def split_and_pad_data(self, data, augment = False):
         input_lines, labels = self.format_data(data)
         if augment and self.augmentors is not None:

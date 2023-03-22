@@ -190,8 +190,9 @@ def better_text_classify_search_aug():
     parser = ArgumentParser(conflict_handler = 'resolve')
 
     # add PROGRAM level args
+    parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--learning_rate", type=float, default=5e-5)
+    parser.add_argument("--learning_rate", type=float, default="5e-5")
     parser.add_argument("--task", type=str, default="bias_detection")
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--augmentation_params", type=str, default="")
@@ -209,12 +210,14 @@ def better_text_classify_search_aug():
     parser.add_argument("--pretrain", default=True, action="store_false")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
     parser.set_defaults(pretrain=True)
-    parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
     augmentation_param_range = {"sr": (0,50), "bt": (0,500), "in": (0,50), "de": (0,50), "co": (0,50), "cm": (0,50)}
-
+    try:
+        learning_rate = float(args.learning_rate)
+    except ValueError:
+        raise Exception("Learning rate argument should be a float")
     def objective(trial):
         augmentation_params = []
         for name in filter(lambda x: x != "", (args.augmentors.split(","))):
@@ -260,7 +263,7 @@ def better_text_classify_search_aug():
         # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
         model = Better_Text_Classifier(
-            learning_rate = args.learning_rate,
+            learning_rate = learning_rate,
             max_epochs = args.max_epochs,
             steps_per_epoch = int(len(data.train_dataloader())),
             num_labels = len(data.id2label),

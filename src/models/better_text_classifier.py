@@ -42,27 +42,14 @@ class Better_Text_Classifier(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         input = batch['input_id']
         attention_mask = batch['attention_mask']
-        label = batch['label']
-        
-        # label = label.to(torch.float)
+        label = batch['label'].to(torch.float)
+
+        inputs_embeds = self.model.distilbert.embeddings(input)
 
         for augmentor in self.augmentors:
-            input, attention_mask, label = augmentor.augment_dataset(input, attention_mask, label)
+            inputs_embeds, attention_mask, label = augmentor.augment_dataset(inputs_embeds, attention_mask, label)
 
-        # input = self.model.distilbert.embeddings(input)
-        
-        def hook(model, input, output):
-            print("\n\n\n HERE IS INPUT: \n\n\n")
-            print(input)
-            print("\n\n\n DIVIDER \n\n\n ")
-            print(output)
-
-        # self.model.distilbert.transformer.register_forward_hook(hook)
-        
-        loss = self.forward(input, attention_mask, label).loss
-
-        # import pdb
-        # pdb.set_trace()
+        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_mask, labels = label).loss
 
         self.log(
             "training_loss",

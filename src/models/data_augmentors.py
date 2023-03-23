@@ -274,7 +274,7 @@ class CutOut():
         if(random.random() < self.augmentation_percentage):
             h, w = sentence.shape
 
-            mask = np.ones((h, x), np.float32)
+            mask = np.ones((h, w), np.float32)
 
             y = np.random.randint(h)
             x = np.random.randint(w)
@@ -365,20 +365,20 @@ class CutMix():
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def cutout_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
+    def cutout_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, attention_mask1: torch.Tensor, attention_mask2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
         lam = self.sample_weight()
         h, w = sentence1.shape
 
         sentence1 = sentence1.clone()
         sentence2 = sentence2.clone()
 
-        x_lam = int(h * lam)
-        y_lam = int(w * lam)
+        y_lam = int(h * lam)
+        x_lam = int(w * lam)
 
         y = np.random.randint(h - y_lam)
         x = np.random.randint(w - x_lam)
 
-        mask_1 = np.ones((h, x), np.float32)
+        mask_1 = np.ones((h, w), np.float32)
 
         x1 = np.clip(x, 0, w)
         x2 = np.clip(x + x_lam, 0, w)
@@ -391,14 +391,19 @@ class CutMix():
         mask_2 = 1 - mask_1
 
         sentence = sentence1 * mask_1 + sentence2 * mask_2
+        
+        mask_1 = np.ones(h, np.float32)
+        mask_1[y1: y2] = 0.
+        mask2 = 1 - mask_1
+        attention_mask = attention_mask1 * mask_1 + attention_mask2 * mask_2
 
         true_lam = x_lam * y_lam / (x * y)
 
         label = (1- true_lam) * label1 + true_lam * label2
 
-        return sentence, label
+        return sentence, attention_mask, label
 
-    def generate_pairwise_and_augment(self, sentences, labels):
+    def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         generated_sentences = []
         generated_labels = []
 
@@ -407,10 +412,12 @@ class CutMix():
         for i in range(to_generate):
             choices = np.random.choice(len(sentences), 2, replace = False)
             sentence1 = sentences[choices[0]]
+            attention_mask1 = attention_masks[choices[0]]
             label1 = labels[choices[0]]
             sentence2 = sentences[choices[1]]
+            attention_mask2 = attention_masks[choices[0]]
             label2 = labels[choices[1]]
-            sentence, label = self.approach_1(sentence1, sentence2, label1, label2)
+            sentence, label = self.approach_1(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
             generated_sentences.append(sentence)
             generated_labels.append(label)
 
@@ -419,6 +426,6 @@ class CutMix():
 
         return new_sentences, new_labels
 
-    def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        sentences, labels = self.generate_pairwise_and_augment(inputs, labels)
-        return sentences, attention_mask, labels
+    def augment_dataset(self, inputs_embeds, attention_masks = None, labels = None):
+        sentences, labels = self.generate_pairwise_and_augment(inputs_embeds, attention_masks, labels)
+        return sentences, attention_masks, labels

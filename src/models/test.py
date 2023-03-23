@@ -76,10 +76,6 @@ if __name__ == "__main__":
     import numpy as np
     import pytorch_lightning as pl
     from transformers import AutoModelForSequenceClassification
-    x = torch.tensor([[1,1],[1,1]], dtype = torch.float32, requires_grad = True)
-    y = [z+1 for z in x]
-    print(y)
-    z = torch.stack(y)
-    z.mean().backward()
-    print(z)
-    
+
+    model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = 2, id2label = {0: "0", 1: "1"}, label2id = {"0": 0, "1": 1}, problem_type="multi_label_classification")
+    print(model)

@@ -43,8 +43,16 @@ class Better_Text_Classifier(pl.LightningModule):
         input = batch['input_id']
         attention_mask = batch['attention_mask']
         label = batch['label']
+        
+        label = label.to(torch.float)
+
         for augmentor in self.augmentors:
             input, attention_mask, label = augmentor.augment_dataset(input, attention_mask, label)
+
+        input = self.model.embeddings(input)
+        
+        import pdb
+        pdb.set_trace()
             
         loss = self.forward(input, attention_mask, label).loss
 

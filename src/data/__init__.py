@@ -5,3 +5,4 @@ from .twitter_data import TwitterDataModule
 from .bias_detection_data import BiasDetectionDataModule
 from .imdb_data import IMDBDataModule
 from .trec_data import TrecDataModule
+from .dbpedia_data import DBPediaDataModule

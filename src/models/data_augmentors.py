@@ -18,7 +18,7 @@ class Synonym_Replacer():
         self.stemmer = SnowballStemmer("english")
         self.augmentation_percentage = 0
         self.require_label = False
-        self.operate_on_tokens = False
+        self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -100,7 +100,7 @@ class Back_Translator():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
         self.require_label = False
-        self.operate_on_tokens = False
+        self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage / 10000
@@ -181,7 +181,7 @@ class Insertor():
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
         self.require_label = False
-        self.operate_on_tokens = False
+        self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -239,7 +239,7 @@ class Deletor():
         super().__init__()
         self.augmentation_percentage = 0
         self.require_label = False
-        self.operate_on_tokens = False
+        self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -263,103 +263,162 @@ class CutOut():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
-        self.cutout_percentage = 0.1
+        self.cutout_percentage = 0.5
         self.require_label = False
-        self.operate_on_tokens = True
+        self.operate_on_embeddings = True
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def cutout_randomly(self, sentence, attention_mask):
+    def cutout_randomly(self, sentence: torch.Tensor):
         if(random.random() < self.augmentation_percentage):
-            if not self.operate_on_tokens:
-                sentence = sentence.split(" ")
-            l = len(sentence)
-            words_to_delete = int(l * self.cutout_percentage)
-            i = random.randrange(0 - words_to_delete, l + 1)
-            start_index = max(0, i)
-            end_index = min(l, i + words_to_delete)
-            sentence = sentence[:start_index] + sentence[end_index:l]
-            if not self.operate_on_tokens:
-                sentence = " ".join(sentence)
-                # TODO: change attention mask and sentence
-                # sentence = torch.cat(sentence, torch.full_like(torch.zeros(len(attention_mask) - len(sentence))))
+            h, w = sentence.shape
+
+            mask = np.ones((h, x), np.float32)
+
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            x1 = np.clip(x - int(x * self.cutout_percentage / 2), 0, w)
+            x2 = np.clip(x1 + int(x * self.cutout_percentage), 0, w)
+            y1 = np.clip(y - int(y * self.cutout_percentage / 2), 0, h)
+            y2 = np.clip(y1 + int(y * self.cutout_percentage), 0, h)
+
+            mask[y1: y2, x1: x2] = 0.
+
+            mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
+            return sentence * mask
         return sentence
 
-    def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        augmented_sentences = [self.cutout_randomly(sentence)for sentence in list(inputs)]
-        return list(augmented_sentences), attention_mask, labels
-
+    def augment_dataset(self, inputs: torch.Tensor, attention_mask = None, labels = None):
+        augmented_sentences = [self.cutout_randomly(sentence)for sentence in inputs]
+        return torch.stack(augmented_sentences), attention_mask, labels
     
+class MixUp():
+    def __init__(self):
+        super().__init__()
+        self.augmentation_percentage = 0
+        self.require_label = True
+        self.operate_on_embeddings = True
+        self.weight_sampling_distribution = 'beta'
+        self.mixup_percentage = 0.5
+
+    def sample_weight(self):
+        if self.weight_sampling_distribution == 'beta':
+            return np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
+        if self.weight_sampling_distribution == 'normal':
+            return np.random.normal(loc = 0.5, scale = self.cutmix_percentage)
+        if self.weight_sampling_distribution == 'constant':
+            return self.cutmix_percentage
+
+    def set_augmentation_percentage(self, augmentation_percentage):
+        self.augmentation_percentage = augmentation_percentage
+
+    def mixup_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
+        lam = self.sample_weight()
+        sentence1 = sentence1.clone()
+        sentence2 = sentence2.clone()
+        sentence = sentence1 * lam + sentence2 * (1- lam)
+        label = label1 * lam + label2 * (1- lam)
+
+        return sentence, label
+
+    def generate_pairwise_and_augment(self, sentences, labels):
+        generated_sentences = []
+        generated_labels = []
+
+        to_generate = int(len(sentences) * self.augmentation_percentage)
+        
+        for i in range(to_generate):
+            choices = np.random.choice(len(sentences), 2, replace = False)
+            sentence1 = sentences[choices[0]]
+            label1 = labels[choices[0]]
+            sentence2 = sentences[choices[1]]
+            label2 = labels[choices[1]]
+            sentence, label = self.approach_1(sentence1, sentence2, label1, label2)
+            generated_sentences.append(sentence)
+            generated_labels.append(label)
+
+        new_sentences = torch.cat(sentences, torch.stack(generated_sentences))
+        new_labels = torch.cat(labels, torch.stack(generated_labels))
+
+        return new_sentences, new_labels
+
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
+        sentences, labels = self.generate_pairwise_and_augment(inputs, labels)
+        return sentences, attention_mask, labels
+
 
 class CutMix():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
         self.require_label = True
-        self.operate_on_tokens = True
+        self.operate_on_embeddings = True
+        self.weight_sampling_distribution = 'beta'
+        self.upper_limit = 0.7
+        self.lower_limit = 0.3
+
+    def sample_weight(self):
+        return np.random.uniform(self.lower_limit, self.upper_limit)
 
     def set_augmentation_percentage(self, augmentation_percentage):
-        self.augmentation_percentage = augmentation_percentage / 10
+        self.augmentation_percentage = augmentation_percentage
 
-    def approach_1(self, sentence1, sentence2, label1, label2):
-        lam = np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
-        if not self.operate_on_tokens:
-            sentence1 = sentence1.split(" ")
-            sentence2 = sentence2.split(" ")
-        if(len(sentence2) < len(sentence1)):
-            sentence1, sentence2 = sentence2, sentence1
-            label1, label2 = label2, label1
-        
-        l1 = len(sentence1)
-        l2 = len(sentence2)
-        words_to_cutout = int(l1 * lam)
-        start_index1 = random.randrange(0, l1 - words_to_cutout)
-        mid_index1 = start_index1 + words_to_cutout / 2
-        mid_index2 = mid_index1 * l2 / l1
-        start_index2 = int(mid_index2 - words_to_cutout / 2)
+    def cutout_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
+        lam = self.sample_weight()
+        h, w = sentence1.shape
 
-        end_index1 = start_index1 + words_to_cutout
-        end_index2 = start_index2 + words_to_cutout
-        
-        sentence = sentence1[:start_index1] + sentence2[start_index2:end_index2] + sentence1[end_index1:l1]
-        label = label1 * lam + label2 * (1-lam)
-        return " ".join(sentence), label
+        sentence1 = sentence1.clone()
+        sentence2 = sentence2.clone()
 
-    def approach_2(self, sentence1, sentence2, label1, label2):
-        # Difference to approach 1 is how it selects where in sentence 2 to take out the sentence.
-        # Just takes out same index as sentence 1
-        lam = np.random.beta(self.augmentation_percentage, self.augmentation_percentage)
-        if not self.operate_on_tokens:
-            sentence1 = sentence1.split(" ")
-            sentence2 = sentence2.split(" ")
-        if(len(sentence2) < len(sentence1)):
-            sentence1, sentence2 = sentence2, sentence1
-            label1, label2 = label2, label1
-        
-        l1 = len(sentence1)
-        l2 = len(sentence2)
-        words_to_cutout = int(l1 * lam)
-        start_index = random.randrange(0, l1 - words_to_cutout)
-        end_index = start_index + words_to_cutout
-        sentence = sentence1[:start_index] + sentence2[start_index:end_index] + sentence1[end_index:l1]
-        label = label1 * lam + label2 * (1-lam)
+        x_lam = int(h * lam)
+        y_lam = int(w * lam)
+
+        y = np.random.randint(h - y_lam)
+        x = np.random.randint(w - x_lam)
+
+        mask_1 = np.ones((h, x), np.float32)
+
+        x1 = np.clip(x, 0, w)
+        x2 = np.clip(x + x_lam, 0, w)
+        y1 = np.clip(y, 0, h)
+        y2 = np.clip(y + y_lam, 0, h)
+
+        mask_1[y1: y2, x1: x2] = 0.
+
+        mask_1 = torch.tensor(mask_1, requires_grad = False).to(sentence1.device)
+        mask_2 = 1 - mask_1
+
+        sentence = sentence1 * mask_1 + sentence2 * mask_2
+
+        true_lam = x_lam * y_lam / (x * y)
+
+        label = (1- true_lam) * label1 + true_lam * label2
 
         return sentence, label
 
-    def generate_pairwise_and_augment(self, data, labels):
-        generated = []
+    def generate_pairwise_and_augment(self, sentences, labels):
+        generated_sentences = []
+        generated_labels = []
 
-        to_generate = int(len(data) * self.augmentation_percentage)
+        to_generate = int(len(sentences) * self.augmentation_percentage)
         
         for i in range(to_generate):
-            choices = np.random.choice(len(data), 2, replace = False)
-            label1, sentence1 = data[choices[0]]
-            label2, sentence2 = data[choices[1]]
-            generated.append(self.approach_1(sentence1, sentence2, label1, label2))
+            choices = np.random.choice(len(sentences), 2, replace = False)
+            sentence1 = sentences[choices[0]]
+            label1 = labels[choices[0]]
+            sentence2 = sentences[choices[1]]
+            label2 = labels[choices[1]]
+            sentence, label = self.approach_1(sentence1, sentence2, label1, label2)
+            generated_sentences.append(sentence)
+            generated_labels.append(label)
 
-        return zip(*generated)
+        new_sentences = torch.cat(sentences, torch.stack(generated_sentences))
+        new_labels = torch.cat(labels, torch.stack(generated_labels))
+
+        return new_sentences, new_labels
 
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        augmented_sentences = self.generate_pairwise_and_augment(inputs, labels)
-        return augmented_sentences
+        sentences, labels = self.generate_pairwise_and_augment(inputs, labels)
+        return sentences, attention_mask, labels

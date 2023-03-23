@@ -7,7 +7,7 @@ def parse_augmentors(args, augmentator_mapping):
     for a,p in zip(augmentor_names, augmentation_params):
         augmentor = augmentator_mapping[a]
         augmentor.set_augmentation_percentage(int(p) / 100)
-        if augmentor.operate_on_tokens:
+        if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)
         else:
             augmentors_on_words.append(augmentor)
@@ -23,7 +23,7 @@ def parse_augmentors_string(augmentor_names, augmentation_params, augmentator_ma
     for a,p in zip(augmentor_names, augmentation_params):
         augmentor = augmentator_mapping[a]
         augmentor.set_augmentation_percentage(int(p) / 100)
-        if augmentor.operate_on_tokens:
+        if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)
         else:
             augmentors_on_words.append(augmentor)

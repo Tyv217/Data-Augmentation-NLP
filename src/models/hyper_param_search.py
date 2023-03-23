@@ -13,7 +13,6 @@ from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, Twit
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix
-from .faster_rcnn import FasterRCNN
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 import optuna
@@ -39,7 +38,7 @@ def seq2seq_translate_search_aug(to_search, parser):
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
     augmentation_param_range = {"sr": (0,50), "bt": (0,500), "in": (0,50), "de": (0,50), "co": (0,50), "cm": (0,50)}
     
-    def objective(trial):
+    def objective(trial: optuna.Trial):
         augmentation_params = []
         for name in filter(lambda x: x != "", (args.augmentors.split(","))):
             param_range = augmentation_param_range[name]
@@ -104,7 +103,7 @@ def seq2seq_translate_search_aug(to_search, parser):
     for key, value in study.best_params.items():
         print(f"    {key}: {value}")
 
-def seq2seq_translate_search_lr(to_search, parser):
+def seq2seq_translate_search_lr(parser):
     MODEL_NAME = "t5-small"
 
     # add PROGRAM level args

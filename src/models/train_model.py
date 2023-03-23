@@ -13,7 +13,6 @@ from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, Twit
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix
-from .faster_rcnn import FasterRCNN
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 
@@ -176,61 +175,4 @@ def better_text_classify():
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
     print("Dataset Percentage:", args.dataset_percentage)
-    print("Auto LR Finder Used:", args.auto_lr_find)
-
-
-
-def image_classify():
-    parser = ArgumentParser(conflict_handler = 'resolve')
-
-    # add PROGRAM level args
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--learning_rate", type=float, default=1e-3)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser = pl.Trainer.add_argparse_args(parser)
-    args = parser.parse_args()
-    set_seed(args.seed)
-
-    data = GTSRBData(
-        batch_size = args.batch_size
-    )
-
-    data.prepare_data()
-    data.setup("fit")
-
-    logger = TensorBoardLogger(
-        "runs_gtsrb"
-    )
-
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    early_stop_callback = early_stopping.EarlyStopping(
-        monitor='validation_map',
-        min_delta=0,
-        patience=3,
-        mode='min',
-    )
-    print(args)
-
-    trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback]
-    )  # , distributed_backend='ddp_cpu')
-    
-    # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
-    #     input_, output = batch
-    #     print(input_['src_len'])    
-
-    # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
-    # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
-
-    model = FasterRCNN(
-        learning_rate = args.learning_rate,
-        max_epochs = args.max_epochs,
-        use_pretrained_weights=False
-    ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-    
-    # most basic trainer, uses good defaults (1 gpu)
-    trainer.fit(model, data)
-    trainer.test(model, dataloaders = data.test_dataloader())
-
-    print("Seed:", args.seed)
     print("Auto LR Finder Used:", args.auto_lr_find)

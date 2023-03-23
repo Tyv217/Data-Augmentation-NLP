@@ -72,4 +72,14 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    pass
+    import torch
+    import numpy as np
+    import pytorch_lightning as pl
+    from transformers import AutoModelForSequenceClassification
+    x = torch.tensor([[1,1],[1,1]], dtype = torch.float32, requires_grad = True)
+    y = [z+1 for z in x]
+    print(y)
+    z = torch.stack(y)
+    z.mean().backward()
+    print(z)
+    

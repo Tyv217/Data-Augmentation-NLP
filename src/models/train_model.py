@@ -12,7 +12,7 @@ from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, GTSRBData, TrecDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
-from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix
+from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 
@@ -36,7 +36,7 @@ def seq2seq_translate():
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
+    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     data = TranslationDataModule(
@@ -114,7 +114,7 @@ def better_text_classify():
     parser.set_defaults(pretrain=True)
     args = parser.parse_args()
     set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix()}
+    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
     try:
         learning_rate = float(args.learning_rate)

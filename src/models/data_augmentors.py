@@ -394,7 +394,7 @@ class CutMix():
         
         mask_1 = np.ones(h, np.float32)
         mask_1[y1: y2] = 0.
-        mask2 = 1 - mask_1
+        mask_2 = 1 - mask_1
         attention_mask = attention_mask1 * mask_1 + attention_mask2 * mask_2
 
         true_lam = x_lam * y_lam / (x * y)

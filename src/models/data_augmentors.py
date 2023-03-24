@@ -304,7 +304,7 @@ class MixUp():
             label1 = labels[choices[0]]
             sentence2 = sentences[choices[1]]
             label2 = labels[choices[1]]
-            sentence, label = self.approach_1(sentence1, sentence2, label1, label2)
+            sentence, label = self.mixup_randomly(sentence1, sentence2, label1, label2)
             generated_sentences.append(sentence)
             generated_labels.append(label)
 
@@ -334,7 +334,7 @@ class CutMix():
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def cutout_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, attention_mask1: torch.Tensor, attention_mask2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
+    def cutmix_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, attention_mask1: torch.Tensor, attention_mask2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
         lam = self.sample_weight()
         h, w = sentence1.shape
 
@@ -386,7 +386,7 @@ class CutMix():
             sentence2 = sentences[choices[1]]
             attention_mask2 = attention_masks[choices[0]]
             label2 = labels[choices[1]]
-            sentence, label = self.approach_1(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
+            sentence, label = self.cutmix_randomly(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
             generated_sentences.append(sentence)
             generated_labels.append(label)
 

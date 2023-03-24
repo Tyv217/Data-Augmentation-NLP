@@ -17,7 +17,6 @@ class Synonym_Replacer():
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
         self.augmentation_percentage = 0
-        self.require_label = False
         self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
@@ -68,7 +67,6 @@ class Back_Translator():
         # self.device = torch.device("cpu")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
-        self.require_label = False
         self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
@@ -149,7 +147,6 @@ class Insertor():
         self.nlp = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
-        self.require_label = False
         self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
@@ -207,7 +204,6 @@ class Deletor():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
-        self.require_label = False
         self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
@@ -233,7 +229,6 @@ class CutOut():
         super().__init__()
         self.augmentation_percentage = 0
         self.cutout_percentage = 0.5
-        self.require_label = False
         self.operate_on_embeddings = True
 
     def set_augmentation_percentage(self, augmentation_percentage):
@@ -267,18 +262,17 @@ class MixUp():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
-        self.require_label = True
         self.operate_on_embeddings = True
         self.weight_sampling_distribution = 'beta'
         self.mixup_percentage = 0.5
 
     def sample_weight(self):
         if self.weight_sampling_distribution == 'beta':
-            return np.random.beta(self.cutmix_percentage, self.cutmix_percentage)
+            return np.random.beta(self.mixup_percentage, self.mixup_percentage)
         if self.weight_sampling_distribution == 'normal':
-            return np.random.normal(loc = 0.5, scale = self.cutmix_percentage)
+            return np.random.normal(loc = 0.5, scale = self.mixup_percentage)
         if self.weight_sampling_distribution == 'constant':
-            return self.cutmix_percentage
+            return self.mixup_percentage
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -322,7 +316,6 @@ class CutMix():
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
-        self.require_label = True
         self.operate_on_embeddings = True
         self.weight_sampling_distribution = 'beta'
         self.upper_limit = 0.7

@@ -243,10 +243,10 @@ class CutOut():
             y = np.random.randint(h)
             x = np.random.randint(w)
 
-            x1 = np.clip(x - int(x * self.cutout_percentage / 2), 0, w)
-            x2 = np.clip(x1 + int(x * self.cutout_percentage), 0, w)
-            y1 = np.clip(y - int(y * self.cutout_percentage / 2), 0, h)
-            y2 = np.clip(y1 + int(y * self.cutout_percentage), 0, h)
+            x1 = np.clip(x - int(w * self.cutout_percentage / 2), 0, w)
+            x2 = np.clip(x + int(w * self.cutout_percentage / 2), 0, w)
+            y1 = np.clip(y - int(h * self.cutout_percentage / 2), 0, h)
+            y2 = np.clip(y + int(h * self.cutout_percentage / 2), 0, h)
 
             mask[y1: y2, x1: x2] = 0.
 

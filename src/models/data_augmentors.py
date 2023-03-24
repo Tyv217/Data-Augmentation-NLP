@@ -277,17 +277,19 @@ class MixUp():
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def mixup_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
+    def mixup_randomly(self, sentence1: torch.Tensor, sentence2: torch.Tensor, attention_mask1: torch.Tensor, attention_mask2: torch.Tensor, label1: torch.Tensor, label2: torch.Tensor):
         lam = self.sample_weight()
         sentence1 = sentence1.clone()
         sentence2 = sentence2.clone()
         sentence = sentence1 * lam + sentence2 * (1- lam)
+        attention_mask = torch.logical_or(attention_mask1, attention_mask2).to(attention_mask1.device)
         label = label1 * lam + label2 * (1- lam)
 
-        return sentence, label
+        return sentence, attention_mask, label
 
-    def generate_pairwise_and_augment(self, sentences, labels):
+    def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         generated_sentences = []
+        generated_attention_masks = []
         generated_labels = []
 
         to_generate = int(len(sentences) * self.augmentation_percentage)
@@ -295,21 +297,30 @@ class MixUp():
         for i in range(to_generate):
             choices = np.random.choice(len(sentences), 2, replace = False)
             sentence1 = sentences[choices[0]]
+            attention_mask1 = attention_masks[choices[0]]
             label1 = labels[choices[0]]
             sentence2 = sentences[choices[1]]
+            attention_mask2 = attention_masks[choices[1]]
             label2 = labels[choices[1]]
-            sentence, label = self.mixup_randomly(sentence1, sentence2, label1, label2)
+            sentence, attention_mask, label = self.mixup_randomly(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
             generated_sentences.append(sentence)
+            generated_attention_masks.append(attention_mask)
             generated_labels.append(label)
 
         new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
+        new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
         new_labels = torch.cat([labels, torch.stack(generated_labels)])
 
-        return new_sentences, new_labels
+        indices = torch.randperm(new_sentences.size()[0])
+        new_sentences = new_sentences[indices]
+        new_attention_masks = new_attention_masks[indices]
+        new_labels = new_labels[indices]
 
-    def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        sentences, labels = self.generate_pairwise_and_augment(inputs, labels)
-        return sentences, attention_mask, labels
+        return new_sentences, new_attention_masks, new_labels
+
+    def augment_dataset(self, inputs, attention_masks = None, labels = None):
+        sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs, attention_masks, labels)
+        return sentences, attention_masks, labels
 
 
 class CutMix():
@@ -358,7 +369,7 @@ class CutMix():
 
         mask_1[y1: y2] = 0.
 
-        mask_1 = torch.tensor(mask_1, requires_grad = False).to(sentence1.device)
+        mask_1 = torch.tensor(mask_1, requires_grad = False).to(attention_mask1.device)
         mask_2 = 1 - mask_1
 
         attention_mask = attention_mask1 * mask_1 + attention_mask2 * mask_2
@@ -371,6 +382,7 @@ class CutMix():
 
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         generated_sentences = []
+        generated_attention_masks = []
         generated_labels = []
 
         to_generate = int(len(sentences) * self.augmentation_percentage)
@@ -381,17 +393,24 @@ class CutMix():
             attention_mask1 = attention_masks[choices[0]]
             label1 = labels[choices[0]]
             sentence2 = sentences[choices[1]]
-            attention_mask2 = attention_masks[choices[0]]
+            attention_mask2 = attention_masks[choices[1]]
             label2 = labels[choices[1]]
-            sentence, label = self.cutmix_randomly(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
+            sentence, attention_mask, label = self.cutmix_randomly(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
             generated_sentences.append(sentence)
+            generated_attention_masks.append(attention_mask)
             generated_labels.append(label)
 
-        new_sentences = torch.cat(sentences, torch.stack(generated_sentences))
-        new_labels = torch.cat(labels, torch.stack(generated_labels))
+        new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
+        new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
+        new_labels = torch.cat([labels, torch.stack(generated_labels)])
 
-        return new_sentences, new_labels
+        indices = torch.randperm(new_sentences.size()[0])
+        new_sentences = new_sentences[indices]
+        new_attention_masks = new_attention_masks[indices]
+        new_labels = new_labels[indices]
+
+        return new_sentences, new_attention_masks, new_labels
 
     def augment_dataset(self, inputs_embeds, attention_masks = None, labels = None):
-        sentences, labels = self.generate_pairwise_and_augment(inputs_embeds, attention_masks, labels)
+        sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs_embeds, attention_masks, labels)
         return sentences, attention_masks, labels

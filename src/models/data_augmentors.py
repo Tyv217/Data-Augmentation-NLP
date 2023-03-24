@@ -62,37 +62,6 @@ class Synonym_Replacer():
         augmented_lines = [self.replace_with_synonyms(sentence) for sentence in list(inputs)]
         return augmented_lines, attention_mask, labels
 
-# class Back_Translator():
-#     def __init__(self, src, dest):
-#         self.src = src
-#         self.dest = dest
-#         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-#     def translate(self, sentence, model, tokenizer, augmentation_percentage):
-#         input_ids = tokenizer(text = sentence, return_tensors="pt", add_special_tokens=False).input_ids.to(self.device)
-#         output_ids = model.generate(input_ids)[0]
-#         sentence = tokenizer.decode(output_ids, skip_special_tokens=True)
-#         return sentence
-
-#     def back_translate(self, sentence, model, tokenizer, augmentation_percentage):
-#         if(random.random() > augmentation_percentage):
-#             intermediate = self.translate(sentence, model, tokenizer, augmentation_percentage)
-#             return self.translate(intermediate, model, tokenizer, augmentation_percentage)
-#         else:
-#             return sentence
-
-#     def augment_dataset(self, data_iter, augmentation_percentage = 0.01):
-#         start_time = time.time()
-#         count = 0
-#         model_name = "google/bert2bert_L-24_wmt_" + self.src + "_" + self.dest
-#         tokenizer = AutoTokenizer.from_pretrained(model_name, model_max_length = 1024, pad_token="<pad>", eos_token="</s>", bos_token="<s>", unk_token="<unk>", sep_token="</s>", cls_token="<s>")
-#         model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-#         model.to(self.device)
-#         translated_data = [(label, self.back_translate(sentence, model, tokenizer, augmentation_percentage)) for (label, sentence) in data_iter]
-#         random.shuffle(translated_data)
-#         print("Time to augment: " + str(time.time() - start_time))
-#         return IterableWrapper(translated_data)
-
 class Back_Translator():
     def __init__(self, src):
         self.src = src
@@ -142,7 +111,7 @@ class Back_Translator():
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
 
-    def augment_dataset(self, inputs, attention_mask, labels):
+    def augment_dataset(self, inputs, attention_mask = None, labels = None):
         if attention_mask is not None:
             raise Exception("Back Translation on Tokens Instead of Words") 
         to_augment = []

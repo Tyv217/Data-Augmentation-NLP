@@ -17,10 +17,14 @@ from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 import optuna
 
-def seq2seq_translate_search_aug(to_search, parser):
+def seq2seq_translate_search_aug():
     MODEL_NAME = "t5-small"
 
     # add PROGRAM level args
+    parser = ArgumentParser(conflict_handler = 'resolve')
+
+    # add PROGRAM level args
+    parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--N_samples", type=int, default=256 * 10)
@@ -103,10 +107,14 @@ def seq2seq_translate_search_aug(to_search, parser):
     for key, value in study.best_params.items():
         print(f"    {key}: {value}")
 
-def seq2seq_translate_search_lr(parser):
+def seq2seq_translate_search_lr():
     MODEL_NAME = "t5-small"
 
     # add PROGRAM level args
+    parser = ArgumentParser(conflict_handler = 'resolve')
+
+    # add PROGRAM level args
+    parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--N_samples", type=int, default=256 * 10)

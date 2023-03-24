@@ -72,10 +72,15 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    import torch
-    import numpy as np
-    import pytorch_lightning as pl
-    from transformers import AutoModelForSequenceClassification
+    from data_augmentors import Back_Translator
 
-    model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = 2, id2label = {0: "0", 1: "1"}, label2id = {"0": 0, "1": 1}, problem_type="multi_label_classification")
-    print(model)
+    bt = Back_Translator("en")
+
+    bt.set_augmentation_percentage(10000)
+
+    a = "The quick brown fox jumps over the lazy dog."
+
+    bt_data = bt.augment_dataset([a])
+
+    print(bt_data)
+

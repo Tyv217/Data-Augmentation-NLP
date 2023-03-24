@@ -93,7 +93,7 @@ class Seq2SeqTranslator(pl.LightningModule):
         )
 
         self.log(
-            "eval_loss",
+            "validation_loss",
             loss.item(),
             on_step=True,
             on_epoch=True,

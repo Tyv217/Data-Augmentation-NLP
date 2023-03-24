@@ -26,7 +26,9 @@ def seq2seq_translate_search_aug():
     # add PROGRAM level args
     parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--dataset_percentage", type=int, default=100)
+    parser.add_argument("--augmentation_params", type=str, default="")
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)
@@ -116,7 +118,9 @@ def seq2seq_translate_search_lr():
     # add PROGRAM level args
     parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--dataset_percentage", type=int, default=100)
+    parser.add_argument("--augmentation_params", type=str, default="")
     parser.add_argument("--N_samples", type=int, default=256 * 10)
     parser.add_argument("--N_valid_size", type=int, default=32 * 10)
     parser.add_argument("--batch_size", type=int, default=32)

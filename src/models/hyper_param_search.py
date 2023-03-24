@@ -37,6 +37,9 @@ def seq2seq_translate_search_aug():
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--use_high_lr", type=bool, default=False)
+    parser.add_argument("--pretrain", action="store_true")
+    parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
+    parser.set_defaults(pretrain=True)
     # parser.add_argument("--deterministic", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -92,6 +95,7 @@ def seq2seq_translate_search_aug():
             max_epochs = args.max_epochs,
             tokenizer = data.tokenizer,
             steps_per_epoch = int(len(data.train_dataloader())),
+            pretrain = args.pretrain,
             augmentors = augmentors_on_tokens
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -129,7 +133,7 @@ def seq2seq_translate_search_lr():
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--use_high_lr", type=bool, default=False)
-    parser.add_argument("--pretrain", action="store_false")
+    parser.add_argument("--pretrain", action="store_true")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
     parser.set_defaults(pretrain=True)
     # parser.add_argument("--deterministic", type=bool, default=True)
@@ -138,7 +142,7 @@ def seq2seq_translate_search_lr():
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
-    
+
     def objective(trial):
         lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
         data = TranslationDataModule(
@@ -181,6 +185,7 @@ def seq2seq_translate_search_lr():
             max_epochs = args.max_epochs,
             tokenizer = data.tokenizer,
             steps_per_epoch = int(len(data.train_dataloader())),
+            pretrain = args.pretrain,
             augmentors = augmentors_on_tokens,
             learning_rate = lr
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))

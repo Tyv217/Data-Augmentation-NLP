@@ -70,7 +70,7 @@ class Back_Translator():
         self.operate_on_embeddings = False
 
     def set_augmentation_percentage(self, augmentation_percentage):
-        self.augmentation_percentage = augmentation_percentage / 10000
+        self.augmentation_percentage = augmentation_percentage / 100 # DONT CHANGE
 
     def bulk_translate(self, sentences, model, tokenizer):
         input_encoding = tokenizer(
@@ -307,16 +307,19 @@ class MixUp():
             generated_attention_masks.append(attention_mask)
             generated_labels.append(label)
 
-        new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
-        new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
-        new_labels = torch.cat([labels, torch.stack(generated_labels)])
+        if(to_generate > 0):
+            new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
+            new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
+            new_labels = torch.cat([labels, torch.stack(generated_labels)])
 
-        indices = torch.randperm(new_sentences.size()[0])
-        new_sentences = new_sentences[indices]
-        new_attention_masks = new_attention_masks[indices]
-        new_labels = new_labels[indices]
+            indices = torch.randperm(new_sentences.size()[0])
+            new_sentences = new_sentences[indices]
+            new_attention_masks = new_attention_masks[indices]
+            new_labels = new_labels[indices]
 
-        return new_sentences, new_attention_masks, new_labels
+            return new_sentences, new_attention_masks, new_labels
+
+        return sentences, attention_masks, labels
 
     def augment_dataset(self, inputs, attention_masks = None, labels = None):
         sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs, attention_masks, labels)
@@ -374,7 +377,7 @@ class CutMix():
 
         attention_mask = attention_mask1 * mask_1 + attention_mask2 * mask_2
 
-        true_lam = x_lam * y_lam / (x * y)
+        true_lam = x_lam * y_lam / (h * w)
 
         label = (1- true_lam) * label1 + true_lam * label2
 
@@ -400,16 +403,20 @@ class CutMix():
             generated_attention_masks.append(attention_mask)
             generated_labels.append(label)
 
-        new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
-        new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
-        new_labels = torch.cat([labels, torch.stack(generated_labels)])
+        if(to_generate > 0):
 
-        indices = torch.randperm(new_sentences.size()[0])
-        new_sentences = new_sentences[indices]
-        new_attention_masks = new_attention_masks[indices]
-        new_labels = new_labels[indices]
+            new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
+            new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
+            new_labels = torch.cat([labels, torch.stack(generated_labels)])
 
-        return new_sentences, new_attention_masks, new_labels
+            indices = torch.randperm(new_sentences.size()[0])
+            new_sentences = new_sentences[indices]
+            new_attention_masks = new_attention_masks[indices]
+            new_labels = new_labels[indices]
+
+            return new_sentences, new_attention_masks, new_labels
+
+        return sentences, attention_masks, labels
 
     def augment_dataset(self, inputs_embeds, attention_masks = None, labels = None):
         sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs_embeds, attention_masks, labels)

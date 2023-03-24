@@ -1,17 +1,20 @@
 import torch, random, evaluate
 import pytorch_lightning as pl
 import torchmetrics.functional as plfunc
-from transformers import AutoConfig, T5ForConditionalGeneration
+from transformers import AutoConfig, T5ForConditionalGeneration, T5Model
 from datasets import load_metric
 
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, augmentors, learning_rate = 1e-4):
+    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, pretrain, augmentors = [], learning_rate = 1e-4):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
-        self.config = AutoConfig.from_pretrained(model_name)
-        self.model = T5ForConditionalGeneration(self.config)
+        if pretrain:
+            self.model = T5Model.from_pretrained()
+        else:
+            self.config = AutoConfig.from_pretrained(model_name)
+            self.model = T5ForConditionalGeneration(self.config)
         self.steps_per_epoch = steps_per_epoch
         self.model.resize_token_embeddings(len(tokenizer))
         self.augmentors = augmentors

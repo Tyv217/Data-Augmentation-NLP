@@ -302,8 +302,8 @@ class MixUp():
             generated_sentences.append(sentence)
             generated_labels.append(label)
 
-        new_sentences = torch.cat(sentences, torch.stack(generated_sentences))
-        new_labels = torch.cat(labels, torch.stack(generated_labels))
+        new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
+        new_labels = torch.cat([labels, torch.stack(generated_labels)])
 
         return new_sentences, new_labels
 
@@ -355,8 +355,12 @@ class CutMix():
         sentence = sentence1 * mask_1 + sentence2 * mask_2
         
         mask_1 = np.ones(h, np.float32)
+
         mask_1[y1: y2] = 0.
+
+        mask_1 = torch.tensor(mask_1, requires_grad = False).to(sentence1.device)
         mask_2 = 1 - mask_1
+
         attention_mask = attention_mask1 * mask_1 + attention_mask2 * mask_2
 
         true_lam = x_lam * y_lam / (x * y)

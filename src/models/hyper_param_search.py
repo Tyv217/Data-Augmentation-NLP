@@ -271,7 +271,7 @@ def better_text_classify_search_aug():
         print(args)
 
         trainer = pl.Trainer.from_argparse_args(
-            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback]
+            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

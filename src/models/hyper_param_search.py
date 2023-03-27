@@ -53,7 +53,7 @@ def seq2seq_translate_search_aug():
             param_range = augmentation_param_range[name]
             augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
         augmentation_params = [str(param) for param in augmentation_params]
-        args.augmentation_param = ",".join(augmentation_params)
+        args.augmentation_params = ",".join(augmentation_params)
         augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
         data = TranslationDataModule(
             model_name = MODEL_NAME,
@@ -271,7 +271,7 @@ def better_text_classify_search_aug():
         print(args)
 
         trainer = pl.Trainer.from_argparse_args(
-            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback]
+            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

@@ -72,15 +72,9 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    from data_augmentors import Back_Translator
+    a = ["10","20"]
+    print(".".join(a))
+    a = ["10"]
+    print(".".join(a))
 
-    bt = Back_Translator("en")
-
-    bt.set_augmentation_percentage(10000)
-
-    a = "The quick brown fox jumps over the lazy dog."
-
-    bt_data = bt.augment_dataset([a])
-
-    print(bt_data)
 

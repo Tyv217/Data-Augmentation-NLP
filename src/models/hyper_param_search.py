@@ -348,7 +348,7 @@ def better_text_classify_search_lr():
         data.setup("fit")
 
         logger = TensorBoardLogger(
-            "runs_hyperparam_search_better_text_classify", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+            "runs_hyperparam_search_better_text_classify", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "lr=" + str(lr)
         )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")

@@ -49,7 +49,7 @@ class Better_Text_Classifier(pl.LightningModule):
         for augmentor in self.augmentors:
             inputs_embeds, attention_mask, label = augmentor.augment_dataset(inputs_embeds, attention_mask, label)
 
-        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_mask, labels = label).loss
+        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_mask, labels = label)
 
         self.log(
             "training_loss",

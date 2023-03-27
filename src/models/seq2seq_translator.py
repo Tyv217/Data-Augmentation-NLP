@@ -16,6 +16,8 @@ class Seq2SeqTranslator(pl.LightningModule):
             self.config = AutoConfig.from_pretrained(model_name)
             self.model = T5ForConditionalGeneration(self.config)
         self.steps_per_epoch = steps_per_epoch
+        print(self.model)
+        raise Exception
         self.model.resize_token_embeddings(len(tokenizer))
         self.augmentors = augmentors
     

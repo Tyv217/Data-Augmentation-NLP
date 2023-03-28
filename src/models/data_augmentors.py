@@ -21,7 +21,6 @@ class Synonym_Replacer():
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
-        raise Exception(str(self.augmentation_percentage))
     
     def get_synonym(self, word, pos = None):
         if (pos):

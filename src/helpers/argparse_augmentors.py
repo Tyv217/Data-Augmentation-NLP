@@ -1,12 +1,77 @@
 def parse_augmentors(args, augmentator_mapping):
     augmentor_names = filter(lambda x: x != "", (args.augmentors.split(",")))
     augmentation_params = filter(lambda x: x != "", (args.augmentation_params.split(",")))
+    task = args.task
+
+    augmentation_param_mapping = {
+        "ag_news": {
+            "sr": 0,
+            "in": 0,
+            "de": 0,
+            "sr,in,de": 0,
+            "bt": 0,
+            "co": 0,
+            "mu": 0,
+            "cm": 0,
+        },
+        "bias_detection": {
+            "sr": 0,
+            "in": 0,
+            "de": 0,
+            "sr,in,de": 0,
+            "bt": 0,
+            "co": 0,
+            "mu": 0,
+            "cm": 0,
+        },
+        "glue": {
+            "sr": 0,
+            "in": 0,
+            "de": 0,
+            "sr,in,de": 0,
+            "bt": 0,
+            "co": 0,
+            "mu": 0,
+            "cm": 0,
+        },
+        "trec": {
+            "sr": 0,
+            "in": 0,
+            "de": 0,
+            "sr,in,de": 0,
+            "bt": 0,
+            "co": 0,
+            "mu": 0,
+            "cm": 0,
+        },
+        "translate": {
+            "sr": 0,
+            "in": 0,
+            "de": 0,
+            "sr,in,de": 0,
+            "bt": 0,
+            "co": 0,
+            "mu": 0,
+            "cm": 0,
+        },
+        "language_model": {
+            "sr": 0,
+            "in": 0,
+            "de": 0,
+            "sr,in,de": 0,
+            "bt": 0,
+            "co": 0,
+            "mu": 0,
+            "cm": 0,
+        },
+    }
 
     augmentors_on_words = []
     augmentors_on_tokens = []
-    for a,p in zip(augmentor_names, augmentation_params):
+    
+    for a in augmentor_names:
         augmentor = augmentator_mapping[a]
-        augmentor.set_augmentation_percentage(int(p) / 100)
+        augmentor.set_augmentation_percentage(augmentation_param_mapping[task][a] / 100)
         if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)
         else:

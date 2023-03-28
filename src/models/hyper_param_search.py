@@ -107,6 +107,23 @@ def seq2seq_translate_search_aug():
 
     study = optuna.create_study(direction="maximize")
     study.optimize(objective, timeout = 43200)
+    pruned_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.PRUNED])
+    complete_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.COMPLETE])
+    print("Study statistics:")
+    print(" Number of finished trials: ", len(study.trials))
+    print(" Number of pruned tirals: ", len(pruned_trials))
+    print(" Number of complete trials: ", len(complete_trials))
+    for complete_trial in complete_trials:
+        try:
+            print(f"Best value: {complete_trial.value:.4f}")
+        except:
+            print("Best value:", complete_trial.value)
+        print("Best hyperparameters:")
+        try:
+            for key, value in complete_trial.params.items():
+                print(f"    {key}: {value}")
+        except:
+            print(complete_trial.params)
 
     print(f"Best value: {study.best_value:.4f}")
     print("Best hyperparameters:")

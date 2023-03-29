@@ -43,7 +43,7 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
 
         for label in self.id2label.keys():
             label = np.identity(len(self.id2label))[label]
-            matching_samples = input_lines[labels == label]
+            matching_samples = input_lines[np.logical_and.reduce(labels == label, axis = -1)]
             if(len(matching_samples) < samples_per_class):
                 raise Exception("Insufficient samples per class, expected", samples_per_class, "samples per class but class", str(label), "only has", len(matching_samples), "samples")
             np.random.shuffle(matching_samples)

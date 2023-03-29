@@ -5,6 +5,7 @@ from torchdata.datapipes.iter import IterableWrapper
 import random, re, spacy
 import numpy as np
 from transformers import MarianMTModel, MarianTokenizer
+import math
 
 class Synonym_Replacer():
     def __init__(self, stopword_language, word_to_replace_per_sentence = 2):
@@ -345,8 +346,8 @@ class CutMix():
         sentence1 = sentence1.clone()
         sentence2 = sentence2.clone()
 
-        y_lam = int(h * lam)
-        x_lam = int(w * lam)
+        y_lam = int(h * math.sqrt(1 - lam))
+        x_lam = int(w * math.sqrt(1 - lam))
 
         y = np.random.randint(h - y_lam)
         x = np.random.randint(w - x_lam)
@@ -374,9 +375,7 @@ class CutMix():
 
         attention_mask = attention_mask1 * mask_1 + attention_mask2 * mask_2
 
-        true_lam = x_lam * y_lam / (h * w)
-
-        label = (1- true_lam) * label1 + true_lam * label2
+        label = lam * label1 + (1- lam)* label2
 
         return sentence, attention_mask, label
 

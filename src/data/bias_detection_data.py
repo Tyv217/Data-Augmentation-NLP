@@ -46,7 +46,7 @@ class BiasDetectionDataModule(CustomDataModule):
         valid_index = int(len(df) * valid_size)
         train = df[0 : train_index]
         self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
-        self.validation_dataset = df[train_index : train_index + valid_index]
+        self.valid_dataset = df[train_index : train_index + valid_index]
         self.test_dataset = df[train_index + valid_index : ]
 
 
@@ -88,7 +88,7 @@ class BiasDetectionDataModule(CustomDataModule):
         return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.validation_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)

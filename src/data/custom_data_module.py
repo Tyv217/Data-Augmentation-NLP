@@ -9,3 +9,18 @@ class CustomDataModule(pl.LightningDataModule):
     @abstractmethod
     def split_and_tokenize(self, data, format, augment):
         pass
+
+    @property
+    @abstractmethod
+    def train_dataset(self):
+        pass
+
+    @property
+    @abstractmethod
+    def valid_dataset(self):
+        pass
+
+    @property
+    @abstractmethod
+    def test_dataset(self):
+        pass

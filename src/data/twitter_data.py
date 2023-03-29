@@ -26,7 +26,7 @@ class TwitterDataModule(CustomDataModule):
         train = list(dataset['train'])
         random.shuffle(train)
         self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
-        self.validation_dataset = dataset['validation']
+        self.valid_dataset = dataset['validation']
         self.test_dataset = dataset['test']
 
     def preprocess(self, text):
@@ -79,7 +79,7 @@ class TwitterDataModule(CustomDataModule):
         return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.validation_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)

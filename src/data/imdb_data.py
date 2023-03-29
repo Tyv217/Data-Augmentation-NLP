@@ -35,8 +35,11 @@ class IMDBDataModule(CustomDataModule):
             labels.append(i['label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
-    def split_and_tokenize(self, data, augment = False):
-        input_lines, labels = self.format_data(data)
+    def split_and_tokenize(self, data, format = True, augment = False):
+        if format:
+            input_lines, labels = self.format_data(data)
+        else:
+            input_lines, labels = data
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
                 input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)

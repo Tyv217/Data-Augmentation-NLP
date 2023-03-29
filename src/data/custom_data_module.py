@@ -7,5 +7,5 @@ class CustomDataModule(pl.LightningDataModule):
         super().__init__()
 
     @abstractmethod
-    def split_and_tokenize(self, data, augment):
+    def split_and_tokenize(self, data, format, augment):
         pass

@@ -23,52 +23,65 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
         self.valid_dataset = data_module.valid_dataset
         self.test_dataset = data_module.test_dataset
         self.format_data = data_module.format_data
-        self.train_dataset = self.extract_samples_per_class(train_samples_per_class)
+        self.split_and_tokenizer = data_module.split_and_tokenize
+
         self.use_train_valid = use_train_valid
-
-    def extract_samples_per_class(self, train_samples_per_class):
-        num_classes = len(self.id2label)
-        valid_samples_per_class = 0
-        if self.use_train_valid:
-            TRAIN_SPLIT = 0.8
-            temp = int(train_samples_per_class * 0.8)
-            valid_samples_per_class = train_samples_per_class - temp
-            train_samples_per_class = temp
         
-        samples = []
+        train_dataset, valid_dataset = self.extract_samples_per_class(train_samples_per_class)
+        self.train_dataset = train_dataset
+        self.valid_dataset = valid_dataset
 
-        for k in self.id2label.keys():
-            pass
+    def extract_samples_per_class(self, samples_per_class):
+        train_input_lines = []
+        train_labels = []
+        valid_input_lines = []
+        valid_labels = []
 
-    def split_and_tokenize(self, data, augment = False):
-        input_lines, labels = self.format_data(data)
-        if augment and self.augmentors is not None:
-            for augmentor in self.augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
-        input_encoding = self.tokenizer.batch_encode_plus(
-            input_lines,
-            add_special_tokens = True,
-            max_length = 400,
-            padding = "max_length",
-            truncation = True,
-            return_attention_mask = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+        input_lines, labels = self.format_data(self.train_dataset)
+        input_lines = np.array(input_lines)
+        labels = np.array(labels)
 
-        data_seq = []
-        for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
-            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.float)})
-        return data_seq
+        for label in self.id2label.keys():
+            matching_samples = input_lines[labels == label]
+            if(len(matching_samples) < samples_per_class):
+                raise Exception("Insufficient samples per class, expected", samples_per_class, "samples per class but class", str(label), "only has", len(matching_samples), "samples")
+            np.random.shuffle(matching_samples)
+            matching_samples = matching_samples[:samples_per_class]
+            if self.use_train_valid:
+                TRAIN_SPLIT = 0.8
+                train_samples_per_class = int(samples_per_class * TRAIN_SPLIT)
+
+                train_matching_samples = matching_samples[:train_samples_per_class]
+                valid_matching_samples = matching_samples[train_samples_per_class:]
+
+                for sample in train_matching_samples:
+                    train_input_lines.append(sample)
+                    train_labels.append(label)
+
+                for sample in valid_matching_samples:
+                    valid_input_lines.append(sample)
+                    valid_labels.append(label)
+
+            else:
+                for sample in matching_samples:
+                    train_input_lines.append(sample)
+                    train_labels.append(label)
+                    valid_input_lines.append(sample)
+                    valid_labels.append(label)
+
+        train_dataset = (train_input_lines, train_labels)
+        valid_dataset = (valid_input_lines, valid_labels)
+
+        return train_dataset, valid_dataset
 
     def setup(self, stage: str):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset, format = False, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset, format = False), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)

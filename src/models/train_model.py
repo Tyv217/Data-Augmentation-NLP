@@ -129,6 +129,9 @@ def better_text_classify():
         raise Exception("Learning rate argument should be a float")
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
+    if args.samples_per_class is not None:
+        args.dataset_percentage = 100
+
     data = data_modules[args.task](
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = augmentors_on_words,

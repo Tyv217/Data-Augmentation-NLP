@@ -6,12 +6,11 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import DistilBertTokenizer
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
-from .custom_data_module import CustomDataModule
 import numpy as np
 import random
 
 
-class IMDBDataModule(CustomDataModule):
+class IMDBDataModule(pl.LightningDataModule):
     def __init__(self, dataset_percentage, augmentors = [], twitter_task = "sentiment", batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size

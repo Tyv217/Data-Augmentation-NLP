@@ -4,10 +4,9 @@ from torch.utils.data import DataLoader
 from datasets import load_dataset
 from torch.nn.utils.rnn import pad_sequence
 from transformers import T5Tokenizer
-from .custom_data_module import CustomDataModule
 
 
-class TranslationDataModule(CustomDataModule):
+class TranslationDataModule(pl.LightningDataModule):
     def __init__(self, model_name = "t5-small", dataset_percentage = 1, augmentors = [], batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
         super().__init__()
 

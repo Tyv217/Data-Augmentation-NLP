@@ -7,12 +7,11 @@ from transformers import DistilBertTokenizer
 from torchtext.datasets import AG_NEWS as agnews
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
-from .custom_data_module import CustomDataModule
 import numpy as np
 import random
 
 
-class GlueDataModule(CustomDataModule):
+class GlueDataModule(pl.LightningDataModule):
     def __init__(self, dataset_percentage, augmentors = [], glue_task = "cola", batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size

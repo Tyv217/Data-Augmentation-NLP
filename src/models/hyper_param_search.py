@@ -316,7 +316,7 @@ def better_text_classify_search_aug():
         return test_accuracy
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, timeout = 14400)
+    study.optimize(objective, n_trials = 20)
 
     pruned_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.COMPLETE])
@@ -326,10 +326,10 @@ def better_text_classify_search_aug():
     print(" Number of complete trials: ", len(complete_trials))
     for complete_trial in complete_trials:
         try:
-            print(f"Best value: {complete_trial.value:.4f}")
+            print(f"Value in trial number {complete_trial.number}: {complete_trial.value:.4f}")
         except:
-            print("Best value:", complete_trial.value)
-        print("Best hyperparameters:")
+            print("Value in trial number", str(complete_trial.number) + ":", complete_trial.value)
+        print("Hyperparameters in trial number", str(complete_trial.number) + ":")
         try:
             for key, value in complete_trial.params.items():
                 print(f"    {key}: {value}")

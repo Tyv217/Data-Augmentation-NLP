@@ -72,9 +72,7 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    a = ["10","20"]
-    print(".".join(a))
-    a = ["10"]
-    print(".".join(a))
+    x = 5
+    import numpy as np
 
 

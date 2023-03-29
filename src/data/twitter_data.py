@@ -7,11 +7,12 @@ from transformers import DistilBertTokenizer
 from torchtext.datasets import AG_NEWS as agnews
 from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
+from .custom_data_module import CustomDataModule
 import numpy as np
 import random
 
 
-class TwitterDataModule(pl.LightningDataModule):
+class TwitterDataModule(CustomDataModule):
     def __init__(self, dataset_percentage, augmentors = [], twitter_task = "sentiment", batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
@@ -47,7 +48,7 @@ class TwitterDataModule(pl.LightningDataModule):
             labels.append(i['label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
-    def split_and_pad_data(self, data, augment = False):
+    def split_and_tokenize(self, data, augment = False):
         input_lines, labels = self.format_data(data)
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
@@ -72,16 +73,16 @@ class TwitterDataModule(pl.LightningDataModule):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.validation_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.validation_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)
 
     def predict_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

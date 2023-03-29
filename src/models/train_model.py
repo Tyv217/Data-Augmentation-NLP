@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule
+from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
@@ -49,6 +49,7 @@ def seq2seq_translate():
         augmentors = augmentors_on_words,
         batch_size=args.batch_size
     )
+
     data.prepare_data()
     data.setup("fit")
     dir = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
@@ -117,6 +118,7 @@ def better_text_classify():
     parser.add_argument("--pretrain", default=True, action="store_false")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
     parser.set_defaults(pretrain=True)
+    parser.add_argument("--samples_per_class", type=int)
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
@@ -132,6 +134,9 @@ def better_text_classify():
         augmentors = augmentors_on_words,
         batch_size = args.batch_size
     )
+
+    if args.samples_per_class is not None:
+        data = FewShotTextClassifyModule(data, args.samples_per_class)
 
     data.prepare_data()
     data.setup("fit")

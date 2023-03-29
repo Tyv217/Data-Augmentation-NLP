@@ -37,10 +37,10 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
         
         samples = []
 
-        for i in range(num_classes):
+        for k in self.id2label.keys():
             pass
 
-    def split_and_pad_data(self, data, augment = False):
+    def split_and_tokenize(self, data, augment = False):
         input_lines, labels = self.format_data(data)
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
@@ -61,25 +61,20 @@ class FewShotTextClassifyModule(pl.LightningDataModule):
             data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.float)})
         return data_seq
 
-    def shuffle_train_valid_iters(self):
-        num_train = int(len(self.train_dataset) * 0.95)
-        self.split_train, self.split_valid = random_split(self.train_dataset, [num_train, len(self.train_dataset) - num_train])
-
     def setup(self, stage: str):
         pass
 
     def train_dataloader(self):
-        self.shuffle_train_valid_iters()
-        return DataLoader(self.split_and_pad_data(self.split_train, augment = True), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.split_valid), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)
 
     def predict_dataloader(self):
-        return DataLoader(self.split_and_pad_data(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

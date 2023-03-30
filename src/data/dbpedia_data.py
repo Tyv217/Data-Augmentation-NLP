@@ -44,9 +44,6 @@ class DBPediaDataModule(pl.LightningDataModule):
         self.train = train[:int(len(train) * self.dataset_percentage)]
         self.test_dataset = list(dataset['test'])
 
-        import pdb
-        pdb.set_trace()
-
     def format_data(self, data):
         input_lines = []
         labels = []

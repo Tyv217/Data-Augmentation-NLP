@@ -94,3 +94,16 @@ def parse_augmentors_string(augmentor_names, augmentation_params, augmentator_ma
             augmentors_on_words.append(augmentor)
 
     return augmentors_on_words, augmentors_on_tokens
+
+def parse_augmentors_int(augmentor_names, augmentation_params, augmentator_mapping):
+    augmentors_on_words = []
+    augmentors_on_tokens = []
+    for a,p in zip(augmentor_names, augmentation_params):
+        augmentor = augmentator_mapping[a]
+        augmentor.set_augmentation_percentage(int(p) / 100)
+        if augmentor.operate_on_embeddings:
+            augmentors_on_tokens.append(augmentor)
+        else:
+            augmentors_on_words.append(augmentor)
+
+    return augmentors_on_words, augmentors_on_tokens

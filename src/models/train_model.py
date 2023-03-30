@@ -34,7 +34,7 @@ def seq2seq_translate():
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--pretrain", default=True, action="store_false")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
-    parser.set_defaults(pretrain=True)
+    parser.set_defaults(pretrain=False)
     # parser.add_argument("--deterministic", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -69,7 +69,7 @@ def seq2seq_translate():
     print(args)
 
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback] # , plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback] , plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

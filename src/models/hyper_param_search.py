@@ -30,6 +30,7 @@ def seq2seq_translate_search_aug():
         # add PROGRAM level args
         parser = pl.Trainer.add_argparse_args(parser)
         parser.add_argument("--seed", type=int, default=0)
+        parser.add_argument("--task", type=str, default="translate")
         parser.add_argument("--augmentors", type=str, default="")
         parser.add_argument("--dataset_percentage", type=int, default=100)
         parser.add_argument("--augmentation_params", type=str, default="")
@@ -158,8 +159,6 @@ def seq2seq_translate_search_lr():
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     def objective(trial):
         lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)

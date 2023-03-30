@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyModule
+from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
@@ -139,7 +139,7 @@ def better_text_classify():
     )
 
     if args.samples_per_class is not None:
-        data = FewShotTextClassifyModule(data, args.samples_per_class)
+        data = FewShotTextClassifyWrapperModule(data, args.samples_per_class)
 
     data.prepare_data()
     data.setup("fit")
@@ -187,5 +187,9 @@ def better_text_classify():
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
-    print("Dataset Percentage:", args.dataset_percentage)
+    if args.samples_per_class is not None:
+        print("FewShot Training Used. Samples per class:", args.samples_per_class)
+    else:
+        print("Dataset Percentage:", args.dataset_percentage)
+
     print("Auto LR Finder Used:", args.auto_lr_find)

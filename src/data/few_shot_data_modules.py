@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 
-class FewShotTextClassifyModule(pl.LightningDataModule):
+class FewShotTextClassifyWrapperModule(pl.LightningDataModule):
     def __init__(self, data_module: pl.LightningDataModule, train_samples_per_class = 1, use_train_valid = False):
         super().__init__()
         self.batch_size = data_module.batch_size

@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, parse_augmentors_int, set_seed, PyTorchLightningPruningCallback
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule
+from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
@@ -382,6 +382,7 @@ def better_text_classify_search_lr():
     parser.add_argument("--pretrain", default=True, action="store_false")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
     parser.set_defaults(pretrain=True)
+    parser.add_argument("--samples_per_class", type=int)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
@@ -391,11 +392,18 @@ def better_text_classify_search_lr():
     def objective(trial):
         lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+        
+        if args.samples_per_class is not None:
+            args.dataset_percentage = 100
+
         data = data_modules[args.task](
-            dataset_percentage = 1,
+            dataset_percentage = args.dataset_percentage / 100,
             augmentors = augmentors_on_words,
             batch_size = args.batch_size
         )
+
+        if args.samples_per_class is not None:
+            data = FewShotTextClassifyWrapperModule(data, args.samples_per_class)
 
         data.prepare_data()
         data.setup("fit")

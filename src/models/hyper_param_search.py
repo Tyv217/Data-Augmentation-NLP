@@ -452,7 +452,7 @@ def better_text_classify_search_lr():
         return test_accuracy
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, timeout = 14400)
+    study.optimize(objective, n_trials = 50, timeout = 14400)
 
     print(f"Best value: {study.best_value:.4f}")
     print("Best hyperparameters:")

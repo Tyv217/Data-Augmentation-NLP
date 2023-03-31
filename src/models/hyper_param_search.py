@@ -65,10 +65,12 @@ def seq2seq_translate_search_aug():
         )
         data.prepare_data()
         data.setup("fit")
-        dir = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
+        dir = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_params" + str(augmentation_params)
         logger = TensorBoardLogger(
             "search_translate", name=dir
         )
+
+        arguments.default_root_dir = "search_translate/" + dir
 
         arguments.default_root_dir = "search_translate/" + dir
 
@@ -289,9 +291,12 @@ def better_text_classify_search_aug():
         data.prepare_data()
         data.setup("fit")
 
+        dir = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_params" + str(augmentation_params)
         logger = TensorBoardLogger(
-            "runs_hyperparam_search_better_text_classify", name=arguments.task + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "seed=" + str(arguments.seed)
+            "runs_hyperparam_search_better_text_classify", name=dir
         )
+
+        arguments.default_root_dir = "runs_hyperparam_search_better_text_classify/" + dir
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
@@ -305,7 +310,7 @@ def better_text_classify_search_aug():
         print(arguments)
 
         trainer = pl.Trainer.from_argparse_args(
-            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback]
+            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

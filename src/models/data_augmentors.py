@@ -126,8 +126,12 @@ class Back_Translator():
             text = to_augment[count:min(count + BATCH_SIZE, len(to_augment))]
             translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
             count += BATCH_SIZE
+
+        inputs = list(inputs)
         
         for i1 in range(len(translated_data)):
+            import pdb
+            pdb.set_trace()
             i2 = inputs.index(to_augment[i1])
             inputs[i2] = translated_data[i1]
 

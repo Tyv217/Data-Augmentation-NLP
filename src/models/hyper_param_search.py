@@ -310,7 +310,7 @@ def better_text_classify_search_aug():
         print(arguments)
 
         trainer = pl.Trainer.from_argparse_args(
-            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback]#, plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

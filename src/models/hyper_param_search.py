@@ -338,7 +338,7 @@ def better_text_classify_search_aug():
         return test_accuracy
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials = 10, timeout = 64800)
+    study.optimize(objective, n_trials = 10, timeout = 32400)
 
     pruned_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.COMPLETE])

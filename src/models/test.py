@@ -72,18 +72,9 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    def hmm():
-        from argparse import ArgumentParser
-        parser = ArgumentParser(conflict_handler = 'resolve')
-
-        # add PROGRAM level args
-        parser.add_argument("--seed", type=int, default=0)
-
-        args = parser.parse_args()
-        print(args.seed)
-
-    for i in range(3):
-        hmm()
+    i = "5f"
+    x = float(i)
+    print(x * 2)
     
 
 

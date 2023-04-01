@@ -22,6 +22,7 @@ def seq2seq_translate():
 
     # add PROGRAM level args
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--learning_rate", type=str, default="5e-5")
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--augmentation_params", type=str, default="")
@@ -42,7 +43,10 @@ def seq2seq_translate():
     args.task = "translate"
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
     augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
-
+    try:
+        learning_rate = float(args.learning_rate)
+    except ValueError:
+        raise Exception("Learning rate argument should be a float")
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         dataset_percentage = args.dataset_percentage / 100,
@@ -82,7 +86,8 @@ def seq2seq_translate():
         tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader())),
         pretrain = args.pretrain,
-        augmentors = augmentors_on_tokens
+        augmentors = augmentors_on_tokens,
+        learning_rate = learning_rate
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # most basic trainer, uses good defaults (1 gpu)

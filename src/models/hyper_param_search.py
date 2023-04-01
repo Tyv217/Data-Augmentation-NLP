@@ -163,7 +163,7 @@ def seq2seq_translate_search_lr():
     set_seed(args.seed)
 
     def objective(trial):
-        lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
+        lr = trial.suggest_float("learning_rate", 4e-5, 1e-3, log=True)
         data = TranslationDataModule(
             model_name = MODEL_NAME,
             dataset_percentage = 1,
@@ -249,7 +249,7 @@ def better_text_classify_search_aug():
         # add PROGRAM level args
         parser = pl.Trainer.add_argparse_args(parser)
         parser.add_argument("--seed", type=int, default=0)
-        parser.add_argument("--learning_rate", type=float, default="5e-5")
+        parser.add_argument("--learning_rate", type=str, default="5e-5")
         parser.add_argument("--task", type=str, default="bias_detection")
         parser.add_argument("--augmentors", type=str, default="")
         parser.add_argument("--augmentation_params", type=str, default="")

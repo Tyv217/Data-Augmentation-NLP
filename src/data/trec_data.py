@@ -12,11 +12,10 @@ import random
 
 
 class TrecDataModule(pl.LightningDataModule):
-    def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
+    def __init__(self, dataset_percentage, batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
-        self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
         self.id2label =  {0: "Abbreviation", 1: "Entity", 2: "Description and abstract concept", 3: "Human being", 4: "Location", 5: "Numeric value"}
         self.label2id = {"Abbreviation": 0, "Entity": 1, "Description and abstract concept": 2, "Human being": 3, "Location": 4, "Numeric value": 5}
@@ -34,28 +33,15 @@ class TrecDataModule(pl.LightningDataModule):
             labels.append(i['coarse_label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
-    def split_and_tokenize(self, data, format = True, augment = False):
+    def split_and_tokenize(self, data, format = True):
         if format:
             input_lines, labels = self.format_data(data)
         else:
             input_lines, labels = data
-        if augment and self.augmentors is not None:
-            for augmentor in self.augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
-        input_encoding = self.tokenizer.batch_encode_plus(
-            input_lines,
-            add_special_tokens = True,
-            max_length = 400,
-            padding = "max_length",
-            truncation = True,
-            return_attention_mask = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
-
+        
         data_seq = []
-        for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
-            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
+        for input_line, label in zip(input_lines, labels):
+            data_seq.append({"input_lines": input_line, "label": torch.tensor(label, dtype = torch.float)})
         return data_seq
 
     def shuffle_train_valid_iters(self):
@@ -67,7 +53,7 @@ class TrecDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         self.shuffle_train_valid_iters()
-        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)

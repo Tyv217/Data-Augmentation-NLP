@@ -42,7 +42,7 @@ def seq2seq_translate():
     set_seed(args.seed)
     args.task = "translate"
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
+    word_augmentors, embed_augmentors = parse_augmentors(args, augmentator_mapping)
     try:
         learning_rate = float(args.learning_rate)
     except ValueError:
@@ -50,7 +50,6 @@ def seq2seq_translate():
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         dataset_percentage = args.dataset_percentage / 100,
-        augmentors = augmentors_on_words,
         batch_size=args.batch_size
     )
 
@@ -86,7 +85,8 @@ def seq2seq_translate():
         tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader())),
         pretrain = args.pretrain,
-        augmentors = augmentors_on_tokens,
+        word_augmentors = word_augmentors,
+        embed_augmentors = embed_augmentors,
         learning_rate = learning_rate
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -127,7 +127,7 @@ def better_text_classify():
     args = parser.parse_args()
     set_seed(args.seed)
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
+    word_augmentors, embed_augmentors = parse_augmentors(args, augmentator_mapping)
     try:
         learning_rate = float(args.learning_rate)
     except ValueError:
@@ -139,7 +139,6 @@ def better_text_classify():
 
     data = data_modules[args.task](
         dataset_percentage = args.dataset_percentage / 100,
-        augmentors = augmentors_on_words,
         batch_size = args.batch_size
     )
 
@@ -181,7 +180,8 @@ def better_text_classify():
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        augmentors = augmentors_on_tokens,
+        word_augmentors = word_augmentors,
+        embed_augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

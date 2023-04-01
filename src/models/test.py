@@ -72,9 +72,16 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    i = "5f"
-    x = float(i)
-    print(x * 2)
+    import torch
+    from transformers import T5ForConditionalGeneration, T5Tokenizer
+
+    # Load the T5 model and tokenizer
+    model_name = 't5-base'
+    model = T5ForConditionalGeneration.from_pretrained(model_name)
+    tokenizer = T5Tokenizer.from_pretrained(model_name)
+
+    # Print the model
+    print(model)
     
 
 

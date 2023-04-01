@@ -56,11 +56,10 @@ def seq2seq_translate_search_aug():
         for name in augmentor_names:
             param_range = augmentation_param_range[name]
             augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
-        augmentors_on_words, augmentors_on_tokens = parse_augmentors_int(augmentor_names, augmentation_params, augmentator_mapping)
+        word_augmentors, embed_augmentors = parse_augmentors(arguments, augmentator_mapping)
         data = TranslationDataModule(
             model_name = MODEL_NAME,
             dataset_percentage = 1,
-            augmentors = augmentors_on_words,
             batch_size=arguments.batch_size
         )
         data.prepare_data()
@@ -100,7 +99,8 @@ def seq2seq_translate_search_aug():
             tokenizer = data.tokenizer,
             steps_per_epoch = int(len(data.train_dataloader())),
             pretrain = arguments.pretrain,
-            augmentors = augmentors_on_tokens
+            word_augmentors = word_augmentors,
+            embed_augmentors = embed_augmentors
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
         # most basic trainer, uses good defaults (1 gpu)
@@ -167,7 +167,6 @@ def seq2seq_translate_search_lr():
         data = TranslationDataModule(
             model_name = MODEL_NAME,
             dataset_percentage = 1,
-            augmentors = [],
             batch_size=args.batch_size
         )
         data.prepare_data()
@@ -205,7 +204,6 @@ def seq2seq_translate_search_lr():
             tokenizer = data.tokenizer,
             steps_per_epoch = int(len(data.train_dataloader())),
             pretrain = args.pretrain,
-            augmentors = [],
             learning_rate = lr
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -280,11 +278,10 @@ def better_text_classify_search_aug():
         for name in augmentor_names:
             param_range = augmentation_param_range[name]
             augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
-        augmentors_on_words, augmentors_on_tokens = parse_augmentors_int(augmentor_names, augmentation_params, augmentator_mapping)
+        word_augmentors, embed_augmentors = parse_augmentors(arguments, augmentator_mapping)
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
         data = data_modules[arguments.task](
             dataset_percentage = 1,
-            augmentors = augmentors_on_words,
             batch_size = arguments.batch_size
         )
 
@@ -328,7 +325,8 @@ def better_text_classify_search_aug():
             id2label = data.id2label,
             label2id = data.label2id,
             pretrain = arguments.pretrain,
-            augmentors = augmentors_on_tokens,
+            word_augmentors = word_augmentors,
+            embed_augmentors = embed_augmentors
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         
         # most basic trainer, uses good defaults (1 gpu)
@@ -391,8 +389,6 @@ def better_text_classify_search_lr():
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
     set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    augmentors_on_words, augmentors_on_tokens = parse_augmentors(args, augmentator_mapping)
 
     def objective(trial):
         lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
@@ -403,7 +399,6 @@ def better_text_classify_search_lr():
 
         data = data_modules[args.task](
             dataset_percentage = args.dataset_percentage / 100,
-            augmentors = augmentors_on_words,
             batch_size = args.batch_size
         )
 
@@ -447,7 +442,8 @@ def better_text_classify_search_lr():
             id2label = data.id2label,
             label2id = data.label2id,
             pretrain = args.pretrain,
-            augmentors = augmentors_on_tokens,
+            word_augmentors = [],
+            embed_augmentors = []
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         
         # most basic trainer, uses good defaults (1 gpu)

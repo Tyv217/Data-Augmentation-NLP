@@ -65,7 +65,7 @@ def seq2seq_translate():
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     early_stop_callback = early_stopping.EarlyStopping(
-        monitor='validation_loss',
+        monitor='validation_loss_epoch',
         min_delta=0,
         patience=3,
         mode='min',

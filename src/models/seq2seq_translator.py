@@ -56,9 +56,9 @@ class Seq2SeqTranslator(pl.LightningModule):
         )
         input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         for augmentor in self.embed_augmentors:
-            input_ids, attention_mask, label = augmentor.augment_dataset(input_ids, attention_masks, label)
+            input_ids, attention_mask, labels = augmentor.augment_dataset(input_ids, attention_masks, labels)
             
-        loss = self.forward(input_ids, attention_mask, label).loss
+        loss = self.forward(input_ids, attention_mask, labels).loss
 
         self.log(
             "training_loss",

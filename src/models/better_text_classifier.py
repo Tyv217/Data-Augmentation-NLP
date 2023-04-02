@@ -59,9 +59,9 @@ class Better_Text_Classifier(pl.LightningModule):
         inputs_embeds = self.model.distilbert.embeddings(input_ids)
 
         for augmentor in self.embed_augmentors:
-            inputs_embeds, attention_masks, label = augmentor.augment_dataset(inputs_embeds, attention_masks, label)
+            inputs_embeds, attention_masks, labels = augmentor.augment_dataset(inputs_embeds, attention_masks, labels)
 
-        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = label).loss
+        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = labels).loss
 
         self.log(
             "training_loss",

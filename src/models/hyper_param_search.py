@@ -63,6 +63,7 @@ def seq2seq_translate_search_aug():
         data = TranslationDataModule(
             model_name = MODEL_NAME,
             dataset_percentage = 1,
+            augmentors = word_augmentors,
             batch_size=arguments.batch_size
         )
         data.prepare_data()
@@ -108,8 +109,7 @@ def seq2seq_translate_search_aug():
             tokenizer = data.tokenizer,
             steps_per_epoch = int(len(data.train_dataloader())),
             pretrain = arguments.pretrain,
-            word_augmentors = word_augmentors,
-            embed_augmentors = embed_augmentors
+            augmentors = embed_augmentors
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
         # most basic trainer, uses good defaults (1 gpu)
@@ -291,10 +291,9 @@ def better_text_classify_search_aug():
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
         data = data_modules[arguments.task](
             dataset_percentage = 1,
+            augmentors = word_augmentors,
             batch_size = arguments.batch_size
         )
-
-        data.prepare_data()
         data.setup("fit")
 
         dir = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_params" + str(augmentation_params)
@@ -343,8 +342,7 @@ def better_text_classify_search_aug():
             id2label = data.id2label,
             label2id = data.label2id,
             pretrain = arguments.pretrain,
-            word_augmentors = word_augmentors,
-            embed_augmentors = embed_augmentors
+            augmentors = embed_augmentors
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         
         # most basic trainer, uses good defaults (1 gpu)

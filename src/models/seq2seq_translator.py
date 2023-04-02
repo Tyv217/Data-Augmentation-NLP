@@ -5,7 +5,7 @@ from transformers import AutoConfig, T5ForConditionalGeneration, T5Model
 from datasets import load_metric
 
 class Seq2SeqTranslator(pl.LightningModule):
-    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, pretrain, word_augmentors = [], embed_augmentors = [], learning_rate = 1e-4):
+    def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, pretrain, augmentors = [], learning_rate = 1e-4):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -17,8 +17,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             self.model = T5ForConditionalGeneration(self.config)
         self.steps_per_epoch = steps_per_epoch
         self.model.resize_token_embeddings(len(tokenizer))
-        self.word_augmentors = word_augmentors
-        self.embed_augmentors = embed_augmentors
+        self.augmentors = augmentors
     
     def forward(self, input_id, attention_mask, label):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)
@@ -43,22 +42,13 @@ class Seq2SeqTranslator(pl.LightningModule):
         return [optimizer], [lr_scheduler]
 
     def training_step(self, batch, batch_idx):
-        input_lines = batch['input_lines']
-        labels = batch['label']
-        for augmentor in self.word_augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
-        input_encoding = self.tokenizer(
-            # [self.task_prefix + sequence for sequence in input_lines],
-            input_lines,
-            padding = "longest",
-            truncation = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
-        for augmentor in self.embed_augmentors:
-            input_ids, attention_mask, labels = augmentor.augment_dataset(input_ids, attention_masks, labels)
+        input = batch['input_id']
+        attention_mask = batch['attention_mask']
+        label = batch['label']
+        for augmentor in self.augmentors:
+            input, attention_mask, label = augmentor.augment_dataset(input, attention_mask, label)
             
-        loss = self.forward(input_ids, attention_mask, labels).loss
+        loss = self.forward(input, attention_mask, label).loss
 
         self.log(
             "training_loss",

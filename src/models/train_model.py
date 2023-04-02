@@ -86,7 +86,7 @@ def seq2seq_translate():
         tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader())),
         pretrain = args.pretrain,
-        embed_augmentors = embed_augmentors,
+        augmentors = embed_augmentors,
         learning_rate = learning_rate
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -182,7 +182,7 @@ def better_text_classify():
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        embed_augmentors = embed_augmentors
+        augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

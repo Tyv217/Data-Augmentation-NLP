@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class Better_Text_Classifier(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -15,8 +15,7 @@ class Better_Text_Classifier(pl.LightningModule):
         if not pretrain:
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
-        self.word_augmentors = word_augmentors
-        self.embed_augmentors = embed_augmentors
+        self.augmentors = augmentors
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)
@@ -42,26 +41,16 @@ class Better_Text_Classifier(pl.LightningModule):
         return [optimizer], [lr_scheduler]
     
     def training_step(self, batch, batch_idx):
-        input_lines = batch['input_lines']
-        labels = batch['label']
-        for augmentor in self.word_augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
-        input_encoding = self.tokenizer.batch_encode_plus(
-            input_lines,
-            add_special_tokens = True,
-            max_length = 400,
-            padding = "max_length",
-            truncation = True,
-            return_attention_mask = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
-        inputs_embeds = self.model.distilbert.embeddings(input_ids)
+        input = batch['input_id']
+        attention_mask = batch['attention_mask']
+        label = batch['label'].to(torch.float)
+        
+        inputs_embeds = self.model.distilbert.embeddings(input)
 
-        for augmentor in self.embed_augmentors:
-            inputs_embeds, attention_masks, labels = augmentor.augment_dataset(inputs_embeds, attention_masks, labels)
+        for augmentor in self.augmentors:
+            inputs_embeds, attention_mask, label = augmentor.augment_dataset(inputs_embeds, attention_mask, label)
 
-        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = labels).loss
+        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_mask, labels = label).loss
 
         self.log(
             "training_loss",
@@ -76,19 +65,7 @@ class Better_Text_Classifier(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        input_lines = batch['input_lines']
-        input_encoding = self.tokenizer.batch_encode_plus(
-            input_lines,
-            add_special_tokens = True,
-            max_length = 400,
-            padding = "max_length",
-            truncation = True,
-            return_attention_mask = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
-        with torch.no_grad():
-            output = self.forward(input_id = input_ids, attention_mask = attention_masks, label = batch['label'])
+        output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
         loss = output.loss
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()
@@ -118,19 +95,8 @@ class Better_Text_Classifier(pl.LightningModule):
         return loss, acc
     
     def test_step(self, batch, batch_idx):
-        input_lines = batch['input_lines']
-        input_encoding = self.tokenizer.batch_encode_plus(
-            input_lines,
-            add_special_tokens = True,
-            max_length = 400,
-            padding = "max_length",
-            truncation = True,
-            return_attention_mask = True,
-            return_tensors = "pt",
-        )
-        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         with torch.no_grad():
-            output = self.forward(input_id = input_ids, attention_mask = attention_masks, label = batch['label'])
+            output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()
         labels_flat = torch.argmax(batch['label'], axis=1).flatten()

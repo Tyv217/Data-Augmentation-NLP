@@ -53,7 +53,7 @@ class Seq2SeqTranslator(pl.LightningModule):
             truncation = True,
             return_tensors = "pt",
         )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         for augmentor in self.embed_augmentors:
             input_ids, attention_mask, label = augmentor.augment_dataset(input_ids, attention_masks, label)
             
@@ -72,8 +72,17 @@ class Seq2SeqTranslator(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        input_lines = batch['input_lines']
+        input_encoding = self.tokenizer(
+            # [self.task_prefix + sequence for sequence in input_lines],
+            input_lines,
+            padding = "longest",
+            truncation = True,
+            return_tensors = "pt",
+        )
+        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         label_ids = batch['label']
-        output = self.forward(batch['input_id'], batch['attention_mask'], label_ids)
+        output = self.forward(input_ids, attention_masks, label_ids)
         loss = output.loss
         logits = output.logits
         pred_output_ids = torch.argmax(logits, axis = 2)
@@ -113,7 +122,16 @@ class Seq2SeqTranslator(pl.LightningModule):
         return loss, bleu_score
 
     def test_step(self, batch, batch_idx):
-        pred_output_ids = self.model.generate(input_ids = batch['input_id'], attention_mask = batch['attention_mask'], do_sample=False, max_length = 512)
+        input_lines = batch['input_lines']
+        input_encoding = self.tokenizer(
+            # [self.task_prefix + sequence for sequence in input_lines],
+            input_lines,
+            padding = "longest",
+            truncation = True,
+            return_tensors = "pt",
+        )
+        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
+        pred_output_ids = self.model.generate(input_ids = input_ids, attention_mask = attention_masks, do_sample=False, max_length = 512)
         pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
         label_ids = batch['label']
         label_ids[label_ids == -100] = 0

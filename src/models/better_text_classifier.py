@@ -85,7 +85,7 @@ class Better_Text_Classifier(pl.LightningModule):
             return_attention_mask = True,
             return_tensors = "pt",
         )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         with torch.no_grad():
             output = self.forward(input_id = input_ids, attention_mask = attention_masks, label = batch['label'])
         loss = output.loss
@@ -127,7 +127,7 @@ class Better_Text_Classifier(pl.LightningModule):
             return_attention_mask = True,
             return_tensors = "pt",
         )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         with torch.no_grad():
             output = self.forward(input_id = input_ids, attention_mask = attention_masks, label = batch['label'])
         logits = output.logits

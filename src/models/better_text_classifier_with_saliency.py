@@ -3,7 +3,7 @@ import numpy as np
 import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
-class Better_Text_Classifier(pl.LightningModule):
+class Better_Text_Classifier_With_Saliency(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
@@ -16,10 +16,12 @@ class Better_Text_Classifier(pl.LightningModule):
         self.steps_per_epoch = steps_per_epoch
         self.word_augmentors = word_augmentors
         self.embed_augmentors = embed_augmentors
+        self.saliency_scores = {}
+        self.new_saliency_scores = {}
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)
-        return self.model(input_id, attention_mask = attention_mask, labels = label)
+        return self.model(input_id, attention_mask = attention_mask, labels = label, output_attentions = True)
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr = self.learning_rate)
@@ -42,8 +44,9 @@ class Better_Text_Classifier(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         input_lines = batch['input_lines']
+        saliency_scores = [self.saliency_scores[input_line] for input_line in input_lines]
         for augmentor in self.word_augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
+                input_lines, _, labels = augmentor.augment_dataset_with_saliency(input_lines, None, labels, saliency_scores)
         input_encoding = self.tokenizer.batch_encode_plus(
             input_lines,
             add_special_tokens = True,
@@ -59,7 +62,12 @@ class Better_Text_Classifier(pl.LightningModule):
         for augmentor in self.embed_augmentors:
             inputs_embeds, attention_masks, label = augmentor.augment_dataset(inputs_embeds, attention_masks, label)
 
-        loss = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = label).loss
+        output = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = label)
+
+        loss = output.loss
+        attention_weights = output.attentions
+        saliency_scores = attention_weights.sum(dim=1).sum(dim=1)
+        # input_tokens = self.tokenizer.decode(encoded_input['input_ids'])
 
         self.log(
             "training_loss",
@@ -72,6 +80,10 @@ class Better_Text_Classifier(pl.LightningModule):
         )
 
         return loss
+    
+    def on_train_epoch_end(self):
+        self.saliency_scores = self.new_saliency_scores
+        self.new_saliency_scores = {}
     
     def validation_step(self, batch, batch_idx):
         input_lines = batch['input_lines']

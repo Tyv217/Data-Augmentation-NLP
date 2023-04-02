@@ -4,10 +4,11 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class Better_Text_Classifier(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
+        self.tokenizer = tokenizer
         self.id2label = id2label
         self.label2id = label2id
         self.model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = num_labels, id2label = id2label, label2id = label2id, problem_type="multi_label_classification")

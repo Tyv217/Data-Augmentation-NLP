@@ -175,6 +175,7 @@ def better_text_classify():
     model = Better_Text_Classifier(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
+        tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader())),
         num_labels = len(data.id2label),
         id2label = data.id2label,

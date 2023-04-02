@@ -54,7 +54,7 @@ class Better_Text_Classifier(pl.LightningModule):
             return_attention_mask = True,
             return_tensors = "pt",
         )
-        input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+        input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         inputs_embeds = self.model.distilbert.embeddings(input_ids)
 
         for augmentor in self.embed_augmentors:

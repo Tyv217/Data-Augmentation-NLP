@@ -12,7 +12,7 @@ import random
 
 
 class TrecDataModule(pl.LightningDataModule):
-    def __init__(self, dataset_percentage, batch_size: int = 32):
+    def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32, tokenize = True):
         super().__init__()
         self.batch_size = batch_size
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
@@ -24,6 +24,9 @@ class TrecDataModule(pl.LightningDataModule):
         random.shuffle(train)
         self.train = train[:int(len(train) * self.dataset_percentage)]
         self.test_dataset = list(dataset['test'])
+        self.augmentors = augmentors
+        self.tokenize = tokenize
+        self.augmentors = augmentors
 
     def format_data(self, data):
         input_lines = []

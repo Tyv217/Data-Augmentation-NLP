@@ -72,17 +72,24 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    import torch
-    from transformers import T5ForConditionalGeneration, T5Tokenizer
+    from transformers import T5Tokenizer
 
-    # Load the T5 model and tokenizer
-    model_name = 't5-base'
-    model = T5ForConditionalGeneration.from_pretrained(model_name)
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
+    tokenizer = T5Tokenizer.from_pretrained('t5-base')
 
-    # Print the model
-    print(model)
-    
+    # Example input text
+    input_text = "Wall St. Bears Claw Back Into the Black (Reuters) Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."
 
+    # Tokenize input text
+    tokens = tokenizer.tokenize(input_text)
+    print(tokens)
+    # Output: ['Hello', ',', 'Ġhow', 'Ġare', 'Ġyou', 'Ġdoing', 'Ġtoday', '?']
 
+    # Convert tokens to IDs
+    input_ids = tokenizer.convert_tokens_to_ids(tokens)
+    print(input_ids)
+    # Output: [8777, 6, 169, 33, 24, 358, 2412, 57]
 
+    # Convert IDs back to tokens
+    decoded_tokens = tokenizer.convert_ids_to_tokens(input_ids)
+    print(decoded_tokens)
+    # Output: ['Hello', ',', 'Ġhow', 'Ġare', 'Ġyou', 'Ġdoing', 'Ġtoday', '?']

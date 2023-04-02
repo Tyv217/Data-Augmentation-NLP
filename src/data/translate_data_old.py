@@ -6,7 +6,7 @@ from ..helpers import CustomTokenizerEncoder
 
 
 class TranslationDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size: int = 32):
+    def __init__(self, batch_size: int = 32, tokenize = True):
         super().__init__()
 
         self.dataset = load_dataset("iwslt2017", "iwslt2017-en-de")

@@ -7,7 +7,7 @@ from transformers import T5Tokenizer
 
 
 class TranslationDataModule(pl.LightningDataModule):
-    def __init__(self, model_name = "t5-small", dataset_percentage = 1, batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256):
+    def __init__(self, model_name = "t5-small", dataset_percentage = 1,  augmentors = [], batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256, tokenize = True):
         super().__init__()
 
         self.dataset = load_dataset("iwslt2017", "iwslt2017-" + input_language + "-" + output_language)
@@ -22,6 +22,8 @@ class TranslationDataModule(pl.LightningDataModule):
         self.train_dataset = train[:int(len(train) * self.dataset_percentage)]
         self.valid_dataset = self.dataset['validation']
         self.test_dataset = self.dataset['test']
+        self.tokenize = tokenize
+        self.augmentors = augmentors
 
     def format_data(self, data):
         input_lines = []
@@ -31,7 +33,7 @@ class TranslationDataModule(pl.LightningDataModule):
             output_lines.append(line['translation'][self.output_language])
         return input_lines, output_lines
 
-    def split_and_tokenize(self, data, format = True):
+    def split_and_tokenize(self, data, format = True, augment = False):
         if format:
             input_lines, output_lines = self.format_data(data)
         else:
@@ -49,15 +51,33 @@ class TranslationDataModule(pl.LightningDataModule):
         labels[labels == self.tokenizer.pad_token_id] = -100
 
         data_seq = []   
-        for input_line, label in zip(input_lines, labels):
-            data_seq.append({"input_lines": input_line, "label": label})
+        
+        if self.tokenize:
+            if augment and self.augmentors is not None:
+                for augmentor in self.augmentors:
+                    input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
+            input_encoding = self.tokenizer.batch_encode_plus(
+                input_lines,
+                add_special_tokens = True,
+                max_length = 400,
+                padding = "max_length",
+                truncation = True,
+                return_attention_mask = True,
+                return_tensors = "pt",
+            )
+            input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+            for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
+                data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": label})
+        else:
+            for input_line, label in zip(input_lines, labels):
+                data_seq.append({"input_lines": input_line, "label": label})
         return data_seq
 
     def setup(self, stage: str):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.train_dataset), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)

@@ -16,6 +16,9 @@ from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deleto
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 import optuna
+from pytorch_lightning.callbacks import ModelCheckpoint
+import os
+
 
 def seq2seq_translate_search_aug():
     
@@ -71,8 +74,6 @@ def seq2seq_translate_search_aug():
 
         arguments.default_root_dir = "search_translate/" + dir
 
-        arguments.default_root_dir = "search_translate/" + dir
-
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
             monitor='validation_loss',
@@ -80,13 +81,21 @@ def seq2seq_translate_search_aug():
             patience=3,
             mode='min',
         )
+
+        checkpoint_callback = ModelCheckpoint(
+            dirpath="search_translate/" + dir,
+            filename='my_model-{epoch:02d}-{val_loss:.2f}',
+            monitor=os.environ.get('SLURM_JOB_ID', None),
+            save_top_k=1,
+            mode='min'
+        )
         
         early_pruning_callback = PyTorchLightningPruningCallback(trial, monitor="validation_bleu")
         
         print(arguments)
 
         trainer = pl.Trainer.from_argparse_args(
-            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
@@ -295,6 +304,14 @@ def better_text_classify_search_aug():
 
         arguments.default_root_dir = "runs_hyperparam_search_better_text_classify/" + dir
 
+        checkpoint_callback = ModelCheckpoint(
+            dirpath="runs_hyperparam_search_better_text_classify/" + dir,
+            filename='my_model-{epoch:02d}-{val_loss:.2f}',
+            monitor=os.environ.get('SLURM_JOB_ID', None),
+            save_top_k=1,
+            mode='min'
+        )
+
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
             monitor='validation_loss',
@@ -307,9 +324,9 @@ def better_text_classify_search_aug():
         print(arguments)
 
         trainer = pl.Trainer.from_argparse_args(
-            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
         )  # , distributed_backend='ddp_cpu')
-        
+                
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
         #     input_, output = batch
         #     print(input_['src_len'])    
@@ -408,9 +425,17 @@ def better_text_classify_search_lr():
 
         data.prepare_data()
         data.setup("fit")
-
+        dir = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "lr=" + str(lr)
         logger = TensorBoardLogger(
-            "runs_hyperparam_search_better_text_classify", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "lr=" + str(lr)
+            "runs_hyperparam_search_better_text_classify", name=dir
+        )
+
+        checkpoint_callback = ModelCheckpoint(
+            dirpath="runs_hyperparam_search_better_text_classify/" + dir,
+            filename='my_model-{epoch:02d}-{val_loss:.2f}',
+            monitor=os.environ.get('SLURM_JOB_ID', None),
+            save_top_k=1,
+            mode='min'
         )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -425,7 +450,7 @@ def better_text_classify_search_lr():
         print(args)
 
         trainer = pl.Trainer.from_argparse_args(
-            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback]
+            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

@@ -50,6 +50,7 @@ def seq2seq_translate():
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         dataset_percentage = args.dataset_percentage / 100,
+        augmentors = word_augmentors,
         batch_size=args.batch_size
     )
 
@@ -85,7 +86,6 @@ def seq2seq_translate():
         tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader())),
         pretrain = args.pretrain,
-        word_augmentors = word_augmentors,
         embed_augmentors = embed_augmentors,
         learning_rate = learning_rate
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
@@ -139,6 +139,7 @@ def better_text_classify():
 
     data = data_modules[args.task](
         dataset_percentage = args.dataset_percentage / 100,
+        augmentors = word_augmentors,
         batch_size = args.batch_size
     )
 
@@ -181,7 +182,6 @@ def better_text_classify():
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        word_augmentors = word_augmentors,
         embed_augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     

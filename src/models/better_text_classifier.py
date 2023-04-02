@@ -43,6 +43,7 @@ class Better_Text_Classifier(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         input_lines = batch['input_lines']
+        labels = batch['label']
         for augmentor in self.word_augmentors:
                 input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
         input_encoding = self.tokenizer.batch_encode_plus(

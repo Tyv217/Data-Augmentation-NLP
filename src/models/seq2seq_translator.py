@@ -44,6 +44,7 @@ class Seq2SeqTranslator(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         input_lines = batch['input_lines']
+        labels = batch['label']
         for augmentor in self.word_augmentors:
                 input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
         input_encoding = self.tokenizer(
@@ -73,6 +74,7 @@ class Seq2SeqTranslator(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         input_lines = batch['input_lines']
+        labels = batch['label']
         input_encoding = self.tokenizer(
             # [self.task_prefix + sequence for sequence in input_lines],
             input_lines,
@@ -81,14 +83,13 @@ class Seq2SeqTranslator(pl.LightningModule):
             return_tensors = "pt",
         )
         input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
-        label_ids = batch['label']
-        output = self.forward(input_ids, attention_masks, label_ids)
+        output = self.forward(input_ids, attention_masks, labels)
         loss = output.loss
         logits = output.logits
         pred_output_ids = torch.argmax(logits, axis = 2)
         pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
-        label_ids[label_ids == -100] = 0
-        labels = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
+        labels[labels == -100] = 0
+        labels = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
         references = [[label] for label in labels]
         # bleu score needs two arguments
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
@@ -96,7 +97,6 @@ class Seq2SeqTranslator(pl.LightningModule):
         
         bleu_metric = evaluate.load("sacrebleu")
         bleu_score = bleu_metric.compute(predictions = pred_outputs, references = references)['score']
-        loss = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label']).loss
         # torch.unsqueeze(trg_batchT,1).tolist())
         
         self.log(
@@ -133,9 +133,9 @@ class Seq2SeqTranslator(pl.LightningModule):
         input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         pred_output_ids = self.model.generate(input_ids = input_ids, attention_mask = attention_masks, do_sample=False, max_length = 512)
         pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
-        label_ids = batch['label']
-        label_ids[label_ids == -100] = 0
-        labels = self.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
+        labels = batch['label']
+        labels[labels == -100] = 0
+        labels = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
         references = [[label] for label in labels]
         # bleu score needs two arguments
         # first: predicted_ids - list of predicted sequences as a list of predicted ids
@@ -156,9 +156,3 @@ class Seq2SeqTranslator(pl.LightningModule):
         )
 
         return bleu_score
-
-    def predict_step(self, batch, batch_idx):
-        pred_output_ids = self.model.generate(input_ids = batch['input_id'], attention_mask = batch['attention_mask'], do_sample=False, max_length = 512)
-        pred_outputs = self.tokenizer.batch_decode(pred_output_ids, skip_special_tokens = True)
-
-        return pred_outputs

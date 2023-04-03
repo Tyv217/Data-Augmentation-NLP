@@ -68,12 +68,10 @@ def seq2seq_translate_search_aug():
         )
         data.prepare_data()
         data.setup("fit")
-        dir = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_params" + str(augmentation_params)
+        filename = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
         logger = TensorBoardLogger(
             "search_translate", name=dir
         )
-
-        arguments.default_root_dir = "search_translate/" + dir
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
@@ -84,11 +82,13 @@ def seq2seq_translate_search_aug():
         )
 
         checkpoint_callback = ModelCheckpoint(
-            dirpath="search_translate/" + dir,
-            filename='my_model-{epoch:02d}-{val_loss:.2f}',
-            monitor=os.environ.get('SLURM_JOB_ID', None),
+            dirpath='search_translate',
+            save_last=True,
             save_top_k=1,
-            mode='min'
+            save_weights_only=True,
+            filename=filename,
+            auto_insert_metric_name=False,
+            reset_on_train_end=True  # Reset the callback between trials
         )
         
         early_pruning_callback = PyTorchLightningPruningCallback(trial, monitor="validation_bleu")
@@ -180,7 +180,7 @@ def seq2seq_translate_search_lr():
         )
         data.prepare_data()
         data.setup("fit")
-        dir = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed) + "_lr=" + str(lr)
+        filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
         logger = TensorBoardLogger(
             "search_translate", name=dir
         )
@@ -194,13 +194,23 @@ def seq2seq_translate_search_lr():
             patience=3,
             mode='min',
         )
+
+        checkpoint_callback = ModelCheckpoint(
+            dirpath='search_translate',
+            save_last=True,
+            save_top_k=1,
+            save_weights_only=True,
+            filename=filename,
+            auto_insert_metric_name=False,
+            reset_on_train_end=True  # Reset the callback between trials
+        )
         
         early_pruning_callback = PyTorchLightningPruningCallback(trial, monitor="validation_bleu")
         
         print(args)
 
         trainer = pl.Trainer.from_argparse_args(
-            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+            args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
         )  # , distributed_backend='ddp_cpu')
         
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
@@ -296,19 +306,19 @@ def better_text_classify_search_aug():
         )
         data.setup("fit")
 
-        dir = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_params" + str(augmentation_params)
+        filename = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
         logger = TensorBoardLogger(
             "runs_hyperparam_search_better_text_classify", name=dir
         )
 
-        arguments.default_root_dir = "runs_hyperparam_search_better_text_classify/" + dir
-
         checkpoint_callback = ModelCheckpoint(
-            dirpath="runs_hyperparam_search_better_text_classify/" + dir,
-            filename='my_model-{epoch:02d}-{val_loss:.2f}',
-            monitor=os.environ.get('SLURM_JOB_ID', None),
+            dirpath='runs_hyperparam_search_better_text_classify',
+            save_last=True,
             save_top_k=1,
-            mode='min'
+            save_weights_only=True,
+            filename=filename,
+            auto_insert_metric_name=False,
+            reset_on_train_end=True  # Reset the callback between trials
         )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")

@@ -4,7 +4,7 @@ from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
 from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping
+from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
 from .text_classifier import TextClassifierEmbeddingModel
@@ -56,7 +56,7 @@ def seq2seq_translate():
 
     data.prepare_data()
     data.setup("fit")
-    dir = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
+    filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
     logger = TensorBoardLogger(
         "runs_translate", name=dir
     )
@@ -72,8 +72,18 @@ def seq2seq_translate():
     )
     print(args)
 
+    checkpoint_callback = ModelCheckpoint(
+        dirpath='search_translate',
+        save_last=True,
+        save_top_k=1,
+        save_weights_only=True,
+        filename=filename,
+        auto_insert_metric_name=False,
+        reset_on_train_end=True  # Reset the callback between trials
+    )
+
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback] , plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback] , plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
@@ -149,8 +159,10 @@ def better_text_classify():
     data.prepare_data()
     data.setup("fit")
 
+    filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+
     logger = TensorBoardLogger(
-        "runs_better_text_classify", name=args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+        "runs_better_text_classify", name=filename
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -162,8 +174,18 @@ def better_text_classify():
     )
     print(args)
 
+    checkpoint_callback = ModelCheckpoint(
+            dirpath='search_translate',
+            save_last=True,
+            save_top_k=1,
+            save_weights_only=True,
+            filename=filename,
+            auto_insert_metric_name=False,
+            reset_on_train_end=True  # Reset the callback between trials
+        )
+
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback]
+        args, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

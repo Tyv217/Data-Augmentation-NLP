@@ -1,7 +1,6 @@
 import nltk, torch, time
 from nltk.corpus import wordnet as wn, stopwords
 from nltk.stem.snowball import SnowballStemmer
-from torchdata.datapipes.iter import IterableWrapper
 import random, re, spacy
 import numpy as np
 from transformers import MarianMTModel, MarianTokenizer
@@ -12,6 +11,7 @@ class Synonym_Replacer():
         nltk.download('wordnet')
         nltk.download('omw-1.4')
         nltk.download('stopwords')
+
         self.stopwords = stopwords.words(stopword_language)
         self.word_to_replace_per_sentence = word_to_replace_per_sentence
         self.nlp = spacy.load("en_core_web_sm")
@@ -28,6 +28,7 @@ class Synonym_Replacer():
             synset = wn.synsets(word, pos=pos)
         else:
             synset = wn.synsets(word)
+
         synonym_deeplist = [syn.lemma_names() for syn in synset]
         synonyms = [synonym for sublist in synonym_deeplist for synonym in sublist if synonym != word]
         lemma = self.stemmer.stem(word)
@@ -37,12 +38,12 @@ class Synonym_Replacer():
     def get_word_list(self, sentence):
         word_list = []
         doc = self.nlp(sentence)
+
         for token in doc:
             word = token.text
             if word not in self.stopwords and any(map(str.isupper, word)) is False and not any(char.isdigit() for char in word):
                 if token.pos_ in self.pos_mapper:
                     word_list.append((word, self.pos_mapper[token.pos_]))
-                    # word_list.append(word)
         return word_list
 
     def replace_with_synonyms(self, sentence):
@@ -52,14 +53,42 @@ class Synonym_Replacer():
                 curr_sentence = sentence
                 synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
+
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = re.sub(word, synonym, curr_sentence)
+
                 sentence = curr_sentence
         return sentence
 
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
         augmented_lines = [self.replace_with_synonyms(sentence) for sentence in list(inputs)]
+        return augmented_lines, attention_mask, labels
+    
+    def replace_with_synonyms_with_saliency(self, sentence, score):
+        if len(sentence) != len(score):
+            score = [1 / len(sentence) for _ in range(len(sentence))]
+
+        word_list = self.get_word_list(sentence)
+        num_replace = int(len(word_list) * self.augmentation_percentage)
+        to_replace = np.random.choice(np.array(word_list), size=num_replace, replace=False, p = score)
+        for word,pos in to_replace:
+            curr_sentence = sentence
+            synonyms = self.get_synonym(word, pos)
+            synonyms = list(filter(lambda x: '_' not in x, synonyms))
+
+            if(synonyms):
+                synonym = random.choice(synonyms)
+                curr_sentence = re.sub(word, synonym, curr_sentence)
+
+            sentence = curr_sentence
+        return sentence
+    
+    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
+        if len(saliency_scores) != len(inputs):
+            saliency_scores = [[] for _ in range(len(inputs))]
+
+        augmented_lines = [self.replace_with_synonyms_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
         return augmented_lines, attention_mask, labels
 
 class Back_Translator():
@@ -190,6 +219,7 @@ class Insertor():
                 curr_sentence = sentence
                 synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
+
                 if(synonyms):
                     synonym = random.choice(synonyms)
                     curr_sentence = self.insert_randomly(synonym, curr_sentence)
@@ -200,6 +230,33 @@ class Insertor():
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
         augmented_sentences = [self.insert_synonyms(sentence)for sentence in list(inputs)]
         return list(augmented_sentences), attention_mask, labels
+    
+    def insert_synonyms_with_saliency(self, sentence, score):
+        if len(sentence) != len(score):
+            score = [1 / len(sentence) for _ in range(len(sentence))]
+
+        word_list = self.get_word_list(sentence)
+        num_insert = int(len(word_list) * self.augmentation_percentage)
+        to_insert = np.random.choice(np.array(word_list), size=num_insert, replace=False, p = score)
+        for word,pos in to_insert:
+            curr_sentence = sentence
+            synonyms = self.get_synonym(word, pos)
+            synonyms = list(filter(lambda x: '_' not in x, synonyms))
+
+            if(synonyms):
+                synonym = random.choice(synonyms)
+                curr_sentence = self.insert_randomly(synonym, curr_sentence)
+
+            sentence = curr_sentence
+        return sentence
+    
+    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
+        if len(saliency_scores) != len(inputs):
+            saliency_scores = [[] for _ in range(len(inputs))]
+
+        augmented_lines = [self.insert_synonyms_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
+        return augmented_lines, attention_mask, labels
+
 
 class Deletor():
 
@@ -225,6 +282,32 @@ class Deletor():
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
         augmented_sentences = [self.delete_randomly(sentence)for sentence in list(inputs)]
         return list(augmented_sentences), attention_mask, labels
+    
+    def delete_randomly_with_saliency(self, sentence, score):
+        if len(sentence) != len(score):
+            score = [1 / len(sentence) for _ in range(len(sentence))]
+
+        word_list = sentence.split(" ")
+        num_delete = int(len(word_list) * self.augmentation_percentage)
+        to_delete = np.random.choice(np.array(word_list), size=num_delete, replace=False, p = score)
+        for word,pos in to_delete:
+            curr_sentence = sentence
+            synonyms = self.get_synonym(word, pos)
+            synonyms = list(filter(lambda x: '_' not in x, synonyms))
+            
+            if(synonyms):
+                synonym = random.choice(synonyms)
+                curr_sentence = self.insert_randomly(synonym, curr_sentence)
+
+            sentence = curr_sentence
+        return sentence
+    
+    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
+        if len(saliency_scores) != len(inputs):
+            saliency_scores = [[] for _ in range(len(inputs))]
+
+        augmented_lines = [self.delete_randomly_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
+        return augmented_lines, attention_mask, labels
 
 class CutOut():
     def __init__(self):

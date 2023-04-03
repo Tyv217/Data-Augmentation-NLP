@@ -4,13 +4,14 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class Better_Text_Classifier_With_Saliency(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
+        self.tokenizer = tokenizer
         self.id2label = id2label
         self.label2id = label2id
-        self.model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = num_labels, id2label = id2label, label2id = label2id, problem_type="multi_label_classification")
+        self.model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = num_labels, id2label = id2label, label2id = label2id, problem_type="multi_label_classification", output_attentions=True)
         if not pretrain:
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
@@ -48,34 +49,34 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         # print(tokenized_inputs)
         # print(attention_masks)
         words = input_lines.split(" ")
-
-        saliency_scores = []
-
         tokens = [token.lstrip('▁') for token in tokenized_inputs]
-        non_special_indices = np.nonzero(~np.char.startswith(np.array(tokens), '<'))
-
+        special_tokens = np.logical_and(np.char.startswith(np.array(tokens), '['), np.char.endswith(np.array(tokens), ']'))
+        non_special_indices = np.nonzero(~special_tokens)
+        
         attentions = np.array(attentions)[non_special_indices]
         tokens = np.array(tokens)[non_special_indices]
         num_words = len(words)
         word_weights = np.empty(num_words, dtype=float)
         token_index = 0
+
         for i in range(num_words):
             curr_tokens = tokens[token_index]
             word_weights[i] = attentions[token_index]
-            while(curr_tokens != words[i]):
+            while(curr_tokens != words[i].lower()):
                 token_index += 1
                 curr_tokens += tokens[token_index]
                 word_weights[i] += attentions[token_index]
             token_index += 1
-        
-        return word_weights
+
+        return word_weights / np.sum(word_weights)
 
     
     def training_step(self, batch, batch_idx):
         input_lines = batch['input_lines']
+        label = batch['label'].to(torch.float)
         saliency_scores = [self.saliency_scores.get(input_line, np.array([])) for input_line in input_lines]
         for augmentor in self.word_augmentors:
-                input_lines, _, labels = augmentor.augment_dataset_with_saliency(input_lines, None, labels, saliency_scores)
+                input_lines, _, label = augmentor.augment_dataset_with_saliency(input_lines, None, label, saliency_scores)
         input_encoding = self.tokenizer.batch_encode_plus(
             input_lines,
             add_special_tokens = True,
@@ -95,7 +96,10 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
 
         loss = output.loss
         attention_weights = output.attentions
-        saliency_scores_tokens = attention_weights.sum(dim=1).sum(dim=1)
+
+        saliency_scores_tokens = attention_weights[0].detach().sum(dim=1).sum(dim=1)
+
+        print(saliency_scores_tokens.size())
         
         for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
             saliency_scores_words = self.get_saliency_scores(lines, ids, attentions)

@@ -1,83 +1,31 @@
 def main():
-    from transformers import T5Tokenizer, T5ForConditionalGeneration
+    import os
+    import glob
 
-    import torch
+    # directory containing the Python files
+    dir_path = "src"
 
-    tokenizer = T5Tokenizer.from_pretrained("t5-small", model_max_length = 256)
+    # list of Python files in the directory
+    files = glob.glob(os.path.join(dir_path, "*.py"))
 
-    model = T5ForConditionalGeneration.from_pretrained("t5-small")
+    print(files)
 
-    # the following 2 hyperparameters are task-specific
+    # initialize a variable to store the total number of lines
+    total_lines = 0
 
-    max_source_length = 256
+    # iterate over each file and count the lines
+    for root, dirs, files in os.walk(dir_path):
+        # filter for only Python files
+        files = [file for file in files if file.endswith(".py")]
 
-    max_target_length = 128
+        # iterate over each Python file and count the lines
+        for file_path in files:
+            with open(os.path.join(root, file_path), "r") as file:
+                lines = file.readlines()
+                total_lines += len(lines)
 
-    # Suppose we have the following 2 training examples:
-
-    input_sequence_1 = "Welcome to NYC"
-
-    output_sequence_1 = "Bienvenue à NYC"
-
-    input_sequence_2 = "HuggingFace is a company"
-
-    output_sequence_2 = "HuggingFace est une entreprise"
-
-    # encode the inputs
-
-    task_prefix = "translate English to French: "
-
-    input_sequences = [input_sequence_1, input_sequence_2]
-
-    encoding = tokenizer(
-
-        [task_prefix + sequence for sequence in input_sequences],
-
-        padding="longest",
-
-        truncation=True,
-
-        return_tensors="pt",
-
-    )
-
-    input_ids, attention_mask = encoding.input_ids, encoding.attention_mask
-
-    # encode the targets
-
-    target_encoding = tokenizer(
-
-        [output_sequence_1, output_sequence_2],
-
-        padding="longest",
-
-        truncation=True,
-
-        return_tensors="pt",
-
-    )
-
-    labels = target_encoding.input_ids
-
-    # replace padding token id's of the labels by -100 so it's ignored by the loss
-
-    labels[labels == tokenizer.pad_token_id] = -100
-
-    # forward pass
-
-    print(attention_mask)
-
-    loss = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels).loss
-
-    loss.item()
+    # print the total number of lines
+    print("Total number of lines:", total_lines)
 
 if __name__ == "__main__":
-    from src.helpers import plot_and_compare_emb
-    from sentence_transformers import SentenceTransformer
-    sentences1 = ["This is an example sentence", "Each sentence is converted"]
-    sentences2 = ["This is not an example sentence", "Each sentence is not converted"]
-
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-    embeddings1 = model.encode(sentences1)
-    embeddings2 = model.encode(sentences2)
-    plot_and_compare_emb(embeddings1, embeddings2)
+    main()

@@ -42,9 +42,38 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
 
         return [optimizer], [lr_scheduler]
     
+    def get_saliency_scores(self, input_lines, input_ids, attentions):
+        tokenized_inputs = self.tokenizer.convert_ids_to_tokens(input_ids)
+        # print(encoded_inputs)
+        # print(tokenized_inputs)
+        # print(attention_masks)
+        words = input_lines.split(" ")
+
+        saliency_scores = []
+
+        tokens = [token.lstrip('▁') for token in tokenized_inputs]
+        non_special_indices = np.nonzero(~np.char.startswith(np.array(tokens), '<'))
+
+        attentions = np.array(attentions)[non_special_indices]
+        tokens = np.array(tokens)[non_special_indices]
+        num_words = len(words)
+        word_weights = np.empty(num_words, dtype=float)
+        token_index = 0
+        for i in range(num_words):
+            curr_tokens = tokens[token_index]
+            word_weights[i] = attentions[token_index]
+            while(curr_tokens != words[i]):
+                token_index += 1
+                curr_tokens += tokens[token_index]
+                word_weights[i] += attentions[token_index]
+            token_index += 1
+        
+        return word_weights
+
+    
     def training_step(self, batch, batch_idx):
         input_lines = batch['input_lines']
-        saliency_scores = [self.saliency_scores[input_line] for input_line in input_lines]
+        saliency_scores = [self.saliency_scores.get(input_line, np.array([])) for input_line in input_lines]
         for augmentor in self.word_augmentors:
                 input_lines, _, labels = augmentor.augment_dataset_with_saliency(input_lines, None, labels, saliency_scores)
         input_encoding = self.tokenizer.batch_encode_plus(
@@ -66,7 +95,16 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
 
         loss = output.loss
         attention_weights = output.attentions
-        saliency_scores = attention_weights.sum(dim=1).sum(dim=1)
+        saliency_scores_tokens = attention_weights.sum(dim=1).sum(dim=1)
+        
+        for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
+            saliency_scores_words = self.get_saliency_scores(lines, ids, attentions)
+            self.saliency_scores[lines] = saliency_scores_words
+
+
+        import pdb
+        pdb.set_trace()
+
         # input_tokens = self.tokenizer.decode(encoded_input['input_ids'])
 
         self.log(
@@ -80,10 +118,6 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         )
 
         return loss
-    
-    def on_train_epoch_end(self):
-        self.saliency_scores = self.new_saliency_scores
-        self.new_saliency_scores = {}
     
     def validation_step(self, batch, batch_idx):
         input_lines = batch['input_lines']

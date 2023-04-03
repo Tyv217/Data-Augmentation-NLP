@@ -12,6 +12,7 @@ from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
+from .better_text_classifier_with_saliency import Better_Text_Classifier_With_Saliency
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal, os
@@ -189,8 +190,7 @@ def better_text_classify():
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
-            auto_insert_metric_name=False,
-            reset_on_train_end=True  # Reset the callback between trials
+            auto_insert_metric_name=False
         )
 
     trainer = pl.Trainer.from_argparse_args(

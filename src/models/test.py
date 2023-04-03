@@ -72,28 +72,30 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    import torch
+    import torch, numpy as np
     from transformers import T5Tokenizer
 
     tokenizer = T5Tokenizer.from_pretrained("t5-base")
 
-    input_texts = ["This is the first input text.", "This is the second input text.", "And this is the third input text."]
+    input_texts = ["This is the first input text.", "This is the second wow input text.", "And this is the third input text."]
 
     encoded_inputs = tokenizer.batch_encode_plus(input_texts, padding=True, truncation=True, return_token_type_ids=False, return_attention_mask=True, return_tensors="pt")
-    tokenized_inputs = [tokenizer.convert_ids_to_tokens(input_ids) for input_ids in encoded_inputs['input_ids']]
+    tokenized_inputs = np.array([tokenizer.convert_ids_to_tokens(input_ids) for input_ids in encoded_inputs['input_ids']])
     # print(encoded_inputs)
     attention_masks = encoded_inputs['attention_mask']
     attentions = torch.rand_like(encoded_inputs['input_ids'], dtype = torch.float)
     # print(tokenized_inputs)
     # print(attention_masks)
     input_words = [input_text.split(" ") for input_text in input_texts]
+
     for w, tokens, a in zip(input_words, tokenized_inputs, attentions):
         t = [token.lstrip('▁') for token in tokens]
-        print(w)
-        print(t)
-        print(a)
+        non_special_indices = np.nonzero(~np.char.startswith(np.array(t), '<'))
+
+        a = np.array(a)[non_special_indices]
+        t = np.array(t)[non_special_indices]
         num_words = len(w)
-        word_weights = []
+        word_weights = np.empty(num_words, dtype=float)
         token_index = 0
         for i in range(num_words):
             curr_tokens = t[token_index]
@@ -102,7 +104,7 @@ if __name__ == "__main__":
                 token_index += 1
                 curr_tokens += t[token_index]
                 word_weights[i] += a[token_index]
-        print(word_weights)
+            token_index += 1
 
     # print(tokens)
     # Output: ['Hello', ',', 'Ġhow', 'Ġare', 'Ġyou', 'Ġdoing', 'Ġtoday', '?']

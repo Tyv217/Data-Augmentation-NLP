@@ -88,13 +88,12 @@ def seq2seq_translate_search_aug():
         )
 
         checkpoint_callback = ModelCheckpoint(
+            monitor='validation_bleu',
             dirpath='search_translate',
-            save_last=True,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
             auto_insert_metric_name=False,
-            reset_on_train_end=True  # Reset the callback between trials
         )
         
         early_pruning_callback = PyTorchLightningPruningCallback(trial, monitor="validation_bleu")
@@ -206,13 +205,12 @@ def seq2seq_translate_search_lr():
         )
 
         checkpoint_callback = ModelCheckpoint(
+            monitor='validation_loss_epoch',
             dirpath='search_translate',
-            save_last=True,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
             auto_insert_metric_name=False,
-            reset_on_train_end=True  # Reset the callback between trials
         )
         
         early_pruning_callback = PyTorchLightningPruningCallback(trial, monitor="validation_bleu")
@@ -328,13 +326,12 @@ def better_text_classify_search_aug():
         )
 
         checkpoint_callback = ModelCheckpoint(
+            monitor='validation_accuracy',
             dirpath='runs_hyperparam_search_better_text_classify',
-            save_last=True,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
             auto_insert_metric_name=False,
-            reset_on_train_end=True  # Reset the callback between trials
         )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -449,17 +446,18 @@ def better_text_classify_search_lr():
 
         data.prepare_data()
         data.setup("fit")
-        dir = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "lr=" + str(lr)
+        filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "lr=" + str(lr)
         logger = TensorBoardLogger(
-            "runs_hyperparam_search_better_text_classify", name=dir
+            "runs_hyperparam_search_better_text_classify", name=filename
         )
 
         checkpoint_callback = ModelCheckpoint(
-            dirpath="runs_hyperparam_search_better_text_classify/" + dir,
-            filename='my_model-{epoch:02d}-{val_loss:.2f}',
-            monitor=os.environ.get('SLURM_JOB_ID', None),
+            monitor='validation_accuracy',
+            dirpath='runs_hyperparam_search_better_text_classify',
             save_top_k=1,
-            mode='min'
+            save_weights_only=True,
+            filename=filename,
+            auto_insert_metric_name=False,
         )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")

@@ -77,13 +77,13 @@ def seq2seq_translate():
     print(args)
 
     checkpoint_callback = ModelCheckpoint(
+        monitor='validation_bleu',
         dirpath='runs_translate',
         save_last=True,
         save_top_k=1,
         save_weights_only=True,
         filename=filename,
         auto_insert_metric_name=False,
-        reset_on_train_end=True  # Reset the callback between trials
     )
 
     trainer = pl.Trainer.from_argparse_args(
@@ -184,8 +184,8 @@ def better_text_classify():
     print(args)
 
     checkpoint_callback = ModelCheckpoint(
+            monitor='validation_accuracy',
             dirpath='runs_better_text_classify',
-            save_last=True,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,

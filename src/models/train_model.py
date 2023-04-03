@@ -14,7 +14,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from .better_text_classifier import Better_Text_Classifier
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
 from pytorch_lightning.plugins.environments import SLURMEnvironment
-import signal
+import signal, os
 
 def seq2seq_translate():
     MODEL_NAME = "t5-small"
@@ -57,11 +57,15 @@ def seq2seq_translate():
     data.prepare_data()
     data.setup("fit")
     filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
+    
+    try:
+        os.remove("runs_translate/" + filename + ".ckpt")
+    except FileNotFoundError:
+        pass
+    
     logger = TensorBoardLogger(
-        "runs_translate", name=dir
+        "runs_translate", name=filename
     )
-
-    args.default_root_dir = "runs_translate/" + dir
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     early_stop_callback = early_stopping.EarlyStopping(
@@ -73,7 +77,7 @@ def seq2seq_translate():
     print(args)
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath='search_translate',
+        dirpath='runs_translate',
         save_last=True,
         save_top_k=1,
         save_weights_only=True,
@@ -161,6 +165,11 @@ def better_text_classify():
 
     filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
+    try:
+        os.remove("runs_better_text_classify/" + filename + ".ckpt")
+    except FileNotFoundError:
+        pass
+
     logger = TensorBoardLogger(
         "runs_better_text_classify", name=filename
     )
@@ -175,7 +184,7 @@ def better_text_classify():
     print(args)
 
     checkpoint_callback = ModelCheckpoint(
-            dirpath='search_translate',
+            dirpath='runs_better_text_classify',
             save_last=True,
             save_top_k=1,
             save_weights_only=True,

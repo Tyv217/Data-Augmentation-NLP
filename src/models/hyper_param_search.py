@@ -69,8 +69,14 @@ def seq2seq_translate_search_aug():
         data.prepare_data()
         data.setup("fit")
         filename = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
+        
+        try:
+            os.remove("search_translate/" + filename + ".ckpt")
+        except FileNotFoundError:
+            pass
+        
         logger = TensorBoardLogger(
-            "search_translate", name=dir
+            "search_translate", name=filename
         )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -181,11 +187,15 @@ def seq2seq_translate_search_lr():
         data.prepare_data()
         data.setup("fit")
         filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
-        logger = TensorBoardLogger(
-            "search_translate", name=dir
-        )
+        
+        try:
+            os.remove("search_translate/" + filename + ".ckpt")
+        except FileNotFoundError:
+            pass
 
-        args.default_root_dir = "search_translate/" + dir
+        logger = TensorBoardLogger(
+            "search_translate", name=filename
+        )
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
@@ -307,8 +317,14 @@ def better_text_classify_search_aug():
         data.setup("fit")
 
         filename = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
+        
+        try:
+            os.remove("runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
+        except FileNotFoundError:
+            pass
+        
         logger = TensorBoardLogger(
-            "runs_hyperparam_search_better_text_classify", name=dir
+            "runs_hyperparam_search_better_text_classify", name=filename
         )
 
         checkpoint_callback = ModelCheckpoint(

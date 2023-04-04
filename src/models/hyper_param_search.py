@@ -345,10 +345,7 @@ def better_text_classify_search_aug():
         
         print(arguments)
 
-        if arguments.task == 'ag_news':
-            plugins = [SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
-        else:
-            plugins = []
+        plugins = []
 
         trainer = pl.Trainer.from_argparse_args(
             arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback], plugins=plugins

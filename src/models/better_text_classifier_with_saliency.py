@@ -70,9 +70,7 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
                     word_weights[i] += attentions[token_index]
                 token_index += 1
         except:
-            import pdb
-            pdb.set_trace()
-
+            return []
         return word_weights / np.sum(word_weights)
 
     
@@ -109,10 +107,6 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
             saliency_scores_words = self.get_saliency_scores(lines, ids.detach().cpu(), attentions.detach().cpu())
             self.saliency_scores[lines] = saliency_scores_words
-
-
-        import pdb
-        pdb.set_trace()
 
         # input_tokens = self.tokenizer.decode(encoded_input['input_ids'])
 

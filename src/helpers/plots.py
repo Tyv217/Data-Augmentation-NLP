@@ -58,4 +58,18 @@ def plot_emb(embeddings, fig_name, datapoints):
         verticalalignment='top')
     plt.savefig(fig_name)
     plt.show()
+
+def plot_saliency_scores(words, saliency_scores, fig_name):
+    fig, ax = plt.subplots(figsize=(100, 50))
+
+    ax.bar(words, saliency_scores)
+
+    # Set labels and title
+    ax.set_xlabel('Words')
+    ax.set_ylabel('Saliency Score')
+    ax.set_title('Saliency Scores of Words')
+
+    plt.savefig(fig_name)
+    plt.show()
+
     

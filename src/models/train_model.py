@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from argparse import ArgumentParser
-from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
+from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
 from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
@@ -348,6 +348,13 @@ def better_text_classify_with_saliency():
         print("Dataset Percentage:", args.dataset_percentage)
 
     print("Auto LR Finder Used:", args.auto_lr_find)
+    
+    saliency_scores = model.saliency_scores
+    keys = list(saliency_scores.keys())
+    for i in range(len(keys)):
+        words = keys[i]
+        scores = saliency_scores[keys[i]]
+        plot_saliency_scores(words, scores, "saliency_fig_" + str(i) + ".png")
 
 def language_model():
     parser = ArgumentParser(conflict_handler = 'resolve')

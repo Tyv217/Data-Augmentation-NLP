@@ -49,7 +49,7 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         # print(tokenized_inputs)
         # print(attention_masks)
         words = input_lines.split(" ")
-        tokens = [token.lstrip('▁') for token in tokenized_inputs]
+        tokens = [token.lstrip('▁').lstrip('#') for token in tokenized_inputs]
         special_tokens = np.logical_and(np.char.startswith(np.array(tokens), '['), np.char.endswith(np.array(tokens), ']'))
         non_special_indices = np.nonzero(~special_tokens)
         
@@ -58,15 +58,18 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         num_words = len(words)
         word_weights = np.empty(num_words, dtype=float)
         token_index = 0
-
-        for i in range(num_words):
-            curr_tokens = tokens[token_index]
-            word_weights[i] = attentions[token_index]
-            while(curr_tokens != words[i].lower()):
+        try:
+            for i in range(num_words):
+                curr_tokens = tokens[token_index]
+                word_weights[i] = attentions[token_index]
+                while(curr_tokens != words[i].lower()):
+                    token_index += 1
+                    curr_tokens += tokens[token_index]
+                    word_weights[i] += attentions[token_index]
                 token_index += 1
-                curr_tokens += tokens[token_index]
-                word_weights[i] += attentions[token_index]
-            token_index += 1
+        except:
+            import pdb
+            pdb.set_trace()
 
         return word_weights / np.sum(word_weights)
 

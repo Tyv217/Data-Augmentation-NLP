@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
+import re
 
 class Better_Text_Classifier_With_Saliency(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
@@ -48,6 +49,7 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         # print(encoded_inputs)
         # print(tokenized_inputs)
         # print(attention_masks)
+        input_lines = re.sub(' +', ' ', input_lines)
         words = input_lines.split(" ")
         tokens = [token.lstrip('▁').replace("##", "", 1) for token in tokenized_inputs]
         special_tokens = np.logical_and(np.char.startswith(np.array(tokens), '['), np.char.endswith(np.array(tokens), ']'))

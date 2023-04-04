@@ -102,7 +102,7 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         print(saliency_scores_tokens.size())
         
         for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
-            saliency_scores_words = self.get_saliency_scores(lines, ids, attentions)
+            saliency_scores_words = self.get_saliency_scores(lines, ids.detach().cpu(), attentions.detach().cpu())
             self.saliency_scores[lines] = saliency_scores_words
 
 

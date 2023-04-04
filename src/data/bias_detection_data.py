@@ -20,19 +20,14 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         self.id2label =  {0: "Non-biased", 1: "No agreement", 2: "Biased"}
         self.label2id = {"Non-biased": 0, "No agreement": 1, "Biased": 2}
         try:
-            PATH_sg1 = "src/data/bias_detection_data_files/final_labels_SG1.xlsx"
             PATH_sg2 = "src/data/bias_detection_data_files/final_labels_SG2.xlsx"
-            df_sg1 = pd.read_excel(PATH_sg1)
             df_sg2 = pd.read_excel(PATH_sg2)
         except FileNotFoundError:
-            PATH_sg1 = "project/src/data/bias_detection_data_files/final_labels_SG1.xlsx"
             PATH_sg2 = "project/src/data/bias_detection_data_files/final_labels_SG2.xlsx"
-            df_sg1 = pd.read_excel(PATH_sg1)
             df_sg2 = pd.read_excel(PATH_sg2)
-        df_sg1 = df_sg1[["text", "label_bias"]]
         df_sg2 = df_sg2[["text", "label_bias"]]
 
-        df = pd.concat([df_sg1, df_sg2])
+        df = df_sg2
         df = df.sample(frac=1).reset_index() # Shuffles df
 
         df['label_bias'] = df['label_bias'].map(self.label2id)

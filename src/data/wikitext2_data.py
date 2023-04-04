@@ -17,28 +17,9 @@ class WikiText2DataModule(pl.LightningDataModule):
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
-        label_names = ["Company",
-                        "EducationalInstitution",
-                        "Artist",
-                        "Athlete",
-                        "OfficeHolder",
-                        "MeanOfTransportation",
-                        "Building",
-                        "NaturalPlace",
-                        "Village",
-                        "Animal",
-                        "Plant",
-                        "Album",
-                        "Film",
-                        "WrittenWork"]
-        self.id2label =  {}
-        self.label2id = {}
 
-        for i, name in zip(np.arange(len(label_names)), label_names):
-            self.id2label[i] = name
-            self.label2id[name] = i
+        dataset = load_dataset('wikitext', 'wikitext-2-raw-v1')
 
-        dataset = load_dataset("dbpedia_14")
         train = list(dataset['train'])
         random.shuffle(train)
         self.train = train[:int(len(train) * self.dataset_percentage)]

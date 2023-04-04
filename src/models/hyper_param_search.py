@@ -81,7 +81,7 @@ def seq2seq_translate_search_aug():
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
-            monitor='validation_loss',
+            monitor='validation_loss_epoch',
             min_delta=0,
             patience=3,
             mode='min',
@@ -198,7 +198,7 @@ def seq2seq_translate_search_lr():
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
-            monitor='validation_loss',
+            monitor='validation_loss_epoch',
             min_delta=0,
             patience=3,
             mode='min',
@@ -336,7 +336,7 @@ def better_text_classify_search_aug():
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
-            monitor='validation_loss',
+            monitor='validation_loss_epoch',
             min_delta=0,
             patience=3,
             mode='min',
@@ -345,8 +345,13 @@ def better_text_classify_search_aug():
         
         print(arguments)
 
+        if arguments.task == 'ag_news':
+            plugins = [SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+        else:
+            plugins = []
+
         trainer = pl.Trainer.from_argparse_args(
-            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback], plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+            arguments, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, early_pruning_callback, checkpoint_callback], plugins=plugins
         )  # , distributed_backend='ddp_cpu')
                 
         # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
@@ -462,7 +467,7 @@ def better_text_classify_search_lr():
 
         lr_monitor = LearningRateMonitor(logging_interval="step")
         early_stop_callback = early_stopping.EarlyStopping(
-            monitor='validation_loss',
+            monitor='validation_loss_epoch',
             min_delta=0,
             patience=3,
             mode='min',

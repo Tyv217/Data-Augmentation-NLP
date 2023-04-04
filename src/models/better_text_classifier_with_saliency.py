@@ -49,7 +49,7 @@ class Better_Text_Classifier_With_Saliency(pl.LightningModule):
         # print(encoded_inputs)
         # print(tokenized_inputs)
         # print(attention_masks)
-        input_lines = re.sub(' +', ' ', input_lines)
+        input_lines = re.sub(' +', ' ', input_lines).lstrip().rstrip()
         words = input_lines.split(" ")
         tokens = [token.lstrip('▁').replace("##", "", 1) for token in tokenized_inputs]
         special_tokens = np.logical_and(np.char.startswith(np.array(tokens), '['), np.char.endswith(np.array(tokens), ']'))

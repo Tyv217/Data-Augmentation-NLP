@@ -24,6 +24,8 @@ class GlueDataModule(pl.LightningDataModule):
         train = list(dataset['train'])
         random.shuffle(train)
         self.train = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
+        num_train = int(len(self.train) * 0.95)
+        self.train_dataset, self.valid_dataset = random_split(self.train, [num_train, len(self.train) - num_train])
         self.test_dataset = dataset['validation']
         self.tokenize = tokenize
         self.augmentors = augmentors

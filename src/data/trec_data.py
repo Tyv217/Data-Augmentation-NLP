@@ -23,6 +23,8 @@ class TrecDataModule(pl.LightningDataModule):
         train = list(dataset['train'])
         random.shuffle(train)
         self.train = train[:int(len(train) * self.dataset_percentage)]
+        num_train = int(len(self.train) * 0.95)
+        self.train_dataset, self.valid_dataset = random_split(self.train, [num_train, len(self.train) - num_train])
         self.test_dataset = list(dataset['test'])
         self.augmentors = augmentors
         self.tokenize = tokenize

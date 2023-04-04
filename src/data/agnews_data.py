@@ -22,6 +22,8 @@ class AGNewsDataModule(pl.LightningDataModule):
         train_dataset = list(train_iter)
         random.shuffle(train_dataset)
         self.train = to_map_style_dataset(train_dataset[:int(len(train_dataset) * self.dataset_percentage)])
+        num_train = int(len(self.train) * 0.95)
+        self.train_dataset, self.valid_dataset = random_split(self.train, [num_train, len(self.train) - num_train])
         self.test_dataset = to_map_style_dataset(test_iter)
         self.tokenize = tokenize
         self.augmentors = augmentors

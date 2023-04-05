@@ -8,6 +8,6 @@ def set_seed(seed):
     g.manual_seed(seed)
     torch.cuda.manual_seed(seed)           
     torch.cuda.manual_seed_all(seed)
-    plseed.seed_everything(seed)
+    plseed.seed_everything(seed, workers = True)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True

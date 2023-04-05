@@ -9,7 +9,7 @@ def main():
     # add PROGRAM level args
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--learning_rate", type=str, default="5e-5")
-    parser.add_argument("--deterministic", type=bool, default=True)
+    # parser.add_argument("--deterministic", type=bool, default=True)
 
     parser.add_argument("--search", type=int, default=0)
     parser.add_argument("--to_search", type=str, default="aug")
@@ -32,9 +32,9 @@ def main():
     parser.add_argument("--embed_size", type=int, default=32)
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--dropout", type=float, default=0.5)
-    # parser.add_argument("--deterministic", type=bool, default=True)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+    print(args.deterministic)
     set_seed(args.seed)
 
     if args.search == 0:

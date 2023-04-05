@@ -84,7 +84,7 @@ class BiasDetectionDataModule(pl.LightningDataModule):
         # self.test_dataset = dataset['test']
 
     def train_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = False), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
 
     def val_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)

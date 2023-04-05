@@ -68,12 +68,7 @@ def seq2seq_translate_search_aug():
         )
         data.prepare_data()
         data.setup("fit")
-        filename = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
-        
-        try:
-            os.remove("search_translate/" + filename + ".ckpt")
-        except FileNotFoundError:
-            pass
+        filename = "translate_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_augmentation_params=" + str(augmentation_params)
         
         logger = TensorBoardLogger(
             "search_translate", name=filename
@@ -121,6 +116,12 @@ def seq2seq_translate_search_aug():
         trainer.fit(model, data)
         trainer.test(model, dataloaders = data.test_dataloader())
         test_accuracy = trainer.callback_metrics["test_bleu"].item()
+
+        try:
+            os.remove("search_translate/" + filename + ".ckpt")
+        except FileNotFoundError:
+            raise Exception("Could not reset checkpoint files across trials.")
+        
         return test_accuracy
 
     study = optuna.create_study(direction="maximize")
@@ -185,7 +186,7 @@ def seq2seq_translate_search_lr():
         )
         data.prepare_data()
         data.setup("fit")
-        filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
+        filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed) + "_lr=" + str(lr)
         
         try:
             os.remove("search_translate/" + filename + ".ckpt")
@@ -238,6 +239,12 @@ def seq2seq_translate_search_lr():
         trainer.fit(model, data)
         trainer.test(model, dataloaders = data.test_dataloader())
         test_bleu = trainer.callback_metrics["test_bleu"].item()
+        
+        try:
+            os.remove("search_translate/" + filename + ".ckpt")
+        except FileNotFoundError:
+            raise Exception("Could not reset checkpoint files across trials.")
+        
         return test_bleu
 
     study = optuna.create_study(direction="maximize")

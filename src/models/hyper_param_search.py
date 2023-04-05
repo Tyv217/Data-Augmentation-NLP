@@ -23,18 +23,24 @@ def hyper_param_search(args):
         text_classify_search(args)
     elif args.task == 'translate':
         seq2seq_translate_search(args)
+    else:
+        raise Exception("Unknown Task")
 
 def text_classify_search(args):
     if args.to_search == "lr":
         text_classify_search_lr(args)
     elif args.to_search == "aug":
         text_classify_search_aug(args)
+    else:
+        raise Exception("Unknown Search Parameter")
 
 def seq2seq_translate_search(args):
     if args.to_search == "lr":
         seq2seq_translate_search_lr(args)
     elif args.to_search == "aug":
         seq2seq_translate_search_aug(args)
+    else:
+        raise Exception("Unknown Search Parameter")
 
 def print_trial_stats(study):
     pruned_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.PRUNED])

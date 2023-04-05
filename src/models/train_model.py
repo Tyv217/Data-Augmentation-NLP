@@ -14,12 +14,14 @@ from .text_classifier_with_saliency import Text_Classifier_With_Saliency
 import signal, os
 
 def train_model(args):
-    if args.task == 'text_classify':
+    if args.task == 'classify':
         text_classify(args)
     elif args.task == 'translate':
         seq2seq_translate(args)
     elif args.task == 'language_model':
         language_model(args)
+    else:
+        raise Exception("Unknown Task")
 
 def seq2seq_translate(args):
     MODEL_NAME = "t5-small"

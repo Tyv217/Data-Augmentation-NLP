@@ -1,6 +1,8 @@
-def parse_augmentors(args, augmentator_mapping):
+from ..models.data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
+AUGMENTATOR_MAPPING = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
+
+def parse_augmentors(args):
     augmentor_names = filter(lambda x: x != "", (args.augmentors.split(",")))
-    augmentation_params = filter(lambda x: x != "", (args.augmentation_params.split(",")))
     task = args.task
 
     augmentation_param_mapping = {
@@ -70,7 +72,7 @@ def parse_augmentors(args, augmentator_mapping):
     augmentors_on_tokens = []
     
     for a in augmentor_names:
-        augmentor = augmentator_mapping[a]
+        augmentor = AUGMENTATOR_MAPPING[a]
         augmentor.set_augmentation_percentage(augmentation_param_mapping[task][a] / 100)
         if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)
@@ -79,14 +81,14 @@ def parse_augmentors(args, augmentator_mapping):
 
     return augmentors_on_words, augmentors_on_tokens
 
-def parse_augmentors_string(augmentor_names, augmentation_params, augmentator_mapping):
+def parse_augmentors_string(augmentor_names, augmentation_params):
     augmentor_names = filter(lambda x: x != "", (augmentor_names.split(",")))
     augmentation_params = filter(lambda x: x != "", (augmentation_params.split(",")))
 
     augmentors_on_words = []
     augmentors_on_tokens = []
     for a,p in zip(augmentor_names, augmentation_params):
-        augmentor = augmentator_mapping[a]
+        augmentor = AUGMENTATOR_MAPPING[a]
         augmentor.set_augmentation_percentage(int(p) / 100)
         if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)
@@ -95,11 +97,11 @@ def parse_augmentors_string(augmentor_names, augmentation_params, augmentator_ma
 
     return augmentors_on_words, augmentors_on_tokens
 
-def parse_augmentors_int(augmentor_names, augmentation_params, augmentator_mapping):
+def parse_augmentors_int(augmentor_names, augmentation_params):
     augmentors_on_words = []
     augmentors_on_tokens = []
     for a,p in zip(augmentor_names, augmentation_params):
-        augmentor = augmentator_mapping[a]
+        augmentor = AUGMENTATOR_MAPPING[a]
         augmentor.set_augmentation_percentage(int(p) / 100)
         if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)

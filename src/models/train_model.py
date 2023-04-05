@@ -5,49 +5,30 @@ from torchtext.data.functional import to_map_style_dataset
 from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
-from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
-from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
 from pytorch_lightning.loggers import TensorBoardLogger
-from .better_text_classifier import Better_Text_Classifier
-from .better_text_classifier_with_saliency import Better_Text_Classifier_With_Saliency
-from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
-from pytorch_lightning.plugins.environments import SLURMEnvironment
+from .text_classifier import Text_Classifier
+from .text_classifier_with_saliency import Text_Classifier_With_Saliency
 import signal, os
 
-def seq2seq_translate():
-    MODEL_NAME = "t5-small"
-    parser = ArgumentParser(conflict_handler = 'resolve')
+def train_model(args):
+    if args.task == 'text_classify':
+        text_classify(args)
+    elif args.task == 'translate':
+        seq2seq_translate(args)
+    elif args.task == 'language_model':
+        language_model(args)
 
-    # add PROGRAM level args
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--learning_rate", type=str, default="5e-5")
-    parser.add_argument("--augmentors", type=str, default="")
-    parser.add_argument("--dataset_percentage", type=int, default=100)
-    parser.add_argument("--augmentation_params", type=str, default="")
-    parser.add_argument("--N_samples", type=int, default=256 * 10)
-    parser.add_argument("--N_valid_size", type=int, default=32 * 10)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--embed_size", type=int, default=32)
-    parser.add_argument("--hidden_size", type=int, default=64)
-    parser.add_argument("--dropout", type=float, default=0.5)
-    parser.add_argument("--deterministic", type=bool, default=True)
-    parser.add_argument("--pretrain", default=True, action="store_false")
-    parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
-    parser.set_defaults(pretrain=False)
-    # parser.add_argument("--deterministic", type=bool, default=True)
-    parser = pl.Trainer.add_argparse_args(parser)
-    args = parser.parse_args()
-    set_seed(args.seed)
-    args.task = "translate"
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    word_augmentors, embed_augmentors = parse_augmentors(args, augmentator_mapping)
+def seq2seq_translate(args):
+    MODEL_NAME = "t5-small"
+    word_augmentors, embed_augmentors = parse_augmentors(args)
     try:
         learning_rate = float(args.learning_rate)
     except ValueError:
         raise Exception("Learning rate argument should be a float")
+    
     data = TranslationDataModule(
         model_name = MODEL_NAME,
         dataset_percentage = args.dataset_percentage / 100,
@@ -59,13 +40,8 @@ def seq2seq_translate():
     data.setup("fit")
     filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
     
-    try:
-        os.remove("runs_translate/" + filename + ".ckpt")
-    except FileNotFoundError:
-        pass
-    
     logger = TensorBoardLogger(
-        "runs_translate", name=filename
+        args.logger_dir, name=filename
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -79,7 +55,7 @@ def seq2seq_translate():
 
     checkpoint_callback = ModelCheckpoint(
         monitor='validation_bleu',
-        dirpath='runs_translate',
+        dirpath=args.logger_dir,
         save_last=True,
         save_top_k=1,
         save_weights_only=True,
@@ -108,51 +84,30 @@ def seq2seq_translate():
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
+        
+    try:
+        os.remove(args.logger_dir + "/" + filename + ".ckpt")
+    except FileNotFoundError:
+        pass
     
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
     print("Dataset Percentage:", args.dataset_percentage)
 
-def better_text_classify():
-    parser = ArgumentParser(conflict_handler = 'resolve')
-
-    # add PROGRAM level args
-    parser = pl.Trainer.add_argparse_args(parser)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--learning_rate", type=str, default="5e-5")
-    parser.add_argument("--task", type=str, default="bias_detection")
-    parser.add_argument("--augmentors", type=str, default="")
-    parser.add_argument("--augmentation_params", type=str, default="")
-    parser.add_argument("--dataset_percentage", type=int, default=100)
-    parser.add_argument("--N_samples", type=int, default=256 * 10)
-    parser.add_argument("--N_valid_size", type=int, default=32 * 10)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--embed_size", type=int, default=32)
-    parser.add_argument("--hidden_size", type=int, default=64)
-    parser.add_argument("--dropout", type=float, default=0.5)
-    parser.add_argument("--deterministic", type=bool, default=True)
-    parser.add_argument("--train", default=True)
-    parser.add_argument("--no_train",  dest='train', action="store_false")
-    parser.set_defaults(train=True)
-    parser.add_argument("--pretrain", default=True, action="store_false")
-    parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
-    parser.set_defaults(pretrain=True)
-    parser.add_argument("--samples_per_class", type=int)
-    args = parser.parse_args()
-    set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    word_augmentors, embed_augmentors = parse_augmentors(args, augmentator_mapping)
+def text_classify(args):
+    word_augmentors, embed_augmentors = parse_augmentors(args)
     try:
         learning_rate = float(args.learning_rate)
     except ValueError:
         raise Exception("Learning rate argument should be a float")
+    
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
     if args.samples_per_class is not None:
         args.dataset_percentage = 100
 
-    data = data_modules[args.task](
+    data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = word_augmentors,
         batch_size = args.batch_size
@@ -166,13 +121,8 @@ def better_text_classify():
 
     filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
-    try:
-        os.remove("runs_better_text_classify/" + filename + ".ckpt")
-    except FileNotFoundError:
-        pass
-
     logger = TensorBoardLogger(
-        "runs_better_text_classify", name=filename
+        args.logger_dir, name=filename
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -186,7 +136,7 @@ def better_text_classify():
 
     checkpoint_callback = ModelCheckpoint(
             monitor='validation_accuracy',
-            dirpath='runs_better_text_classify',
+            dirpath=args.logger_dir,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
@@ -204,7 +154,7 @@ def better_text_classify():
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = Better_Text_Classifier(
+    model = Text_Classifier(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
@@ -217,10 +167,14 @@ def better_text_classify():
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)
-    if args.train:
-        trainer.fit(model, data)
+    trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
-
+     
+    try:
+        os.remove(args.logger_dir + "/" + filename + ".ckpt")
+    except FileNotFoundError:
+        pass
+    
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
@@ -229,50 +183,22 @@ def better_text_classify():
     else:
         print("Dataset Percentage:", args.dataset_percentage)
 
-    print("Auto LR Finder Used:", args.auto_lr_find)
-
-def better_text_classify_with_saliency():
-    parser = ArgumentParser(conflict_handler = 'resolve')
-
-    # add PROGRAM level args
-    parser = pl.Trainer.add_argparse_args(parser)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--learning_rate", type=str, default="5e-5")
-    parser.add_argument("--task", type=str, default="bias_detection")
-    parser.add_argument("--augmentors", type=str, default="")
-    parser.add_argument("--augmentation_params", type=str, default="")
-    parser.add_argument("--dataset_percentage", type=int, default=100)
-    parser.add_argument("--N_samples", type=int, default=256 * 10)
-    parser.add_argument("--N_valid_size", type=int, default=32 * 10)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--embed_size", type=int, default=32)
-    parser.add_argument("--hidden_size", type=int, default=64)
-    parser.add_argument("--dropout", type=float, default=0.5)
-    parser.add_argument("--deterministic", type=bool, default=True)
-    parser.add_argument("--train", default=True)
-    parser.add_argument("--no_train",  dest='train', action="store_false")
-    parser.set_defaults(train=True)
-    parser.add_argument("--pretrain", default=True, action="store_false")
-    parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
-    parser.set_defaults(pretrain=True)
-    parser.add_argument("--samples_per_class", type=int)
-    args = parser.parse_args()
-    set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    word_augmentors, embed_augmentors = parse_augmentors(args, augmentator_mapping)
+def text_classify_with_saliency(args):
+    word_augmentors, embed_augmentors = parse_augmentors(args)
     try:
         learning_rate = float(args.learning_rate)
     except ValueError:
         raise Exception("Learning rate argument should be a float")
+    
     data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
     if args.samples_per_class is not None:
         args.dataset_percentage = 100
 
-    data = data_modules[args.task](
+    data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage / 100,
-        batch_size = args.batch_size,
-        tokenize = False
+        augmentors = word_augmentors,
+        batch_size = args.batch_size
     )
 
     if args.samples_per_class is not None:
@@ -283,13 +209,8 @@ def better_text_classify_with_saliency():
 
     filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
-    try:
-        os.remove("runs_better_text_classify/" + filename + ".ckpt")
-    except FileNotFoundError:
-        pass
-
     logger = TensorBoardLogger(
-        "runs_better_text_classify", name=filename
+        args.logger_dir, name=filename
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -303,7 +224,7 @@ def better_text_classify_with_saliency():
 
     checkpoint_callback = ModelCheckpoint(
             monitor='validation_accuracy',
-            dirpath='runs_better_text_classify',
+            dirpath=args.logger_dir,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
@@ -321,7 +242,7 @@ def better_text_classify_with_saliency():
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = Better_Text_Classifier_With_Saliency(
+    model = Text_Classifier(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
@@ -330,15 +251,18 @@ def better_text_classify_with_saliency():
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        word_augmentors = word_augmentors,
-        embed_augmentors  = embed_augmentors
+        augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)
-    if args.train:
-        trainer.fit(model, data)
+    trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
-
+     
+    try:
+        os.remove(args.logger_dir + "/" + filename + ".ckpt")
+    except FileNotFoundError:
+        pass
+    
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
@@ -346,8 +270,6 @@ def better_text_classify_with_saliency():
         print("FewShot Training Used. Samples per class:", args.samples_per_class)
     else:
         print("Dataset Percentage:", args.dataset_percentage)
-
-    print("Auto LR Finder Used:", args.auto_lr_find)
     
     saliency_scores = model.saliency_scores
     keys = list(saliency_scores.keys())
@@ -356,35 +278,10 @@ def better_text_classify_with_saliency():
         scores = saliency_scores[keys[i]]
         plot_saliency_scores(words, scores, "saliency_fig_" + str(i) + ".png")
 
-def language_model():
-    parser = ArgumentParser(conflict_handler = 'resolve')
-
-    # add PROGRAM level args
-    parser = pl.Trainer.add_argparse_args(parser)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--learning_rate", type=str, default="5e-5")
-    parser.add_argument("--task", type=str, default="bias_detection")
-    parser.add_argument("--augmentors", type=str, default="")
-    parser.add_argument("--augmentation_params", type=str, default="")
-    parser.add_argument("--dataset_percentage", type=int, default=100)
-    parser.add_argument("--N_samples", type=int, default=256 * 10)
-    parser.add_argument("--N_valid_size", type=int, default=32 * 10)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--embed_size", type=int, default=32)
-    parser.add_argument("--hidden_size", type=int, default=64)
-    parser.add_argument("--dropout", type=float, default=0.5)
-    parser.add_argument("--deterministic", type=bool, default=True)
-    parser.add_argument("--train", default=True)
-    parser.add_argument("--no_train",  dest='train', action="store_false")
-    parser.set_defaults(train=True)
-    parser.add_argument("--pretrain", default=True, action="store_false")
-    parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
-    parser.set_defaults(pretrain=True)
-    parser.add_argument("--samples_per_class", type=int)
-    args = parser.parse_args()
+def language_model(args):
+    
     set_seed(args.seed)
-    augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
-    word_augmentors, embed_augmentors = parse_augmentors(args, augmentator_mapping)
+    word_augmentors, embed_augmentors = parse_augmentors(args)
     try:
         learning_rate = float(args.learning_rate)
     except ValueError:
@@ -445,7 +342,7 @@ def language_model():
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = Better_Text_Classifier(
+    model = Text_Classifier(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,

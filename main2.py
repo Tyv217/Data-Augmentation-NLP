@@ -1,4 +1,4 @@
-from src.models import better_text_classify_with_saliency
+from src.models import text_classify_with_saliency
 
 if __name__ == "__main__":
-    better_text_classify_with_saliency()
+    text_classify_with_saliency()

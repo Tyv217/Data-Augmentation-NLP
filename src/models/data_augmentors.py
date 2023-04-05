@@ -5,9 +5,23 @@ import random, re, spacy
 import numpy as np
 from transformers import MarianMTModel, MarianTokenizer
 import math
+from abc import ABC, abstractmethod
 
-class Synonym_Replacer():
+class Augmentor(ABC):
+
+    def __init__(self):
+        self.augmentation_percentage = 0
+
+    def set_augmentation_percentage(self, augmentation_percentage):
+        self.augmentation_percentage = augmentation_percentage
+
+    @abstractmethod
+    def augment_dataset(self, inputs, attention_mask, labels):
+        pass
+
+class Synonym_Replacer(Augmentor):
     def __init__(self, stopword_language, word_to_replace_per_sentence = 2):
+        super().__init__()
         nltk.download('wordnet')
         nltk.download('omw-1.4')
         nltk.download('stopwords')
@@ -17,11 +31,7 @@ class Synonym_Replacer():
         self.nlp = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
-        self.augmentation_percentage = 0
         self.operate_on_embeddings = False
-
-    def set_augmentation_percentage(self, augmentation_percentage):
-        self.augmentation_percentage = augmentation_percentage
     
     def get_synonym(self, word, pos = None):
         if (pos):
@@ -91,8 +101,9 @@ class Synonym_Replacer():
         augmented_lines = [self.replace_with_synonyms_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
         return augmented_lines, attention_mask, labels
 
-class Back_Translator():
+class Back_Translator(Augmentor):
     def __init__(self, src):
+        super().__init__()
         self.src = src
         # self.device = torch.device("cpu")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -167,8 +178,9 @@ class Back_Translator():
         print("Augmentation took :", time.time() - start_time)
         return list(inputs), attention_mask, labels
 
-class Insertor():
+class Insertor(Augmentor):
     def __init__(self, stopword_language):
+        super().__init__()
         nltk.download('wordnet')
         nltk.download('omw-1.4')
         nltk.download('stopwords')
@@ -258,7 +270,7 @@ class Insertor():
         return augmented_lines, attention_mask, labels
 
 
-class Deletor():
+class Deletor(Augmentor):
 
     def __init__(self):
         super().__init__()
@@ -294,7 +306,7 @@ class Deletor():
             curr_sentence = sentence
             synonyms = self.get_synonym(word, pos)
             synonyms = list(filter(lambda x: '_' not in x, synonyms))
-            
+
             if(synonyms):
                 synonym = random.choice(synonyms)
                 curr_sentence = self.insert_randomly(synonym, curr_sentence)
@@ -309,7 +321,7 @@ class Deletor():
         augmented_lines = [self.delete_randomly_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
         return augmented_lines, attention_mask, labels
 
-class CutOut():
+class CutOut(Augmentor):
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
@@ -343,7 +355,7 @@ class CutOut():
         augmented_sentences = [self.cutout_randomly(sentence)for sentence in inputs]
         return torch.stack(augmented_sentences), attention_mask, labels
     
-class MixUp():
+class MixUp(Augmentor):
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0
@@ -411,7 +423,7 @@ class MixUp():
         return sentences, attention_masks, labels
 
 
-class CutMix():
+class CutMix(Augmentor):
     def __init__(self):
         super().__init__()
         self.augmentation_percentage = 0

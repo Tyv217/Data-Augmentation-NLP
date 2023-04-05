@@ -374,8 +374,7 @@ def better_text_classify_search_aug():
         try:
             os.remove("/home/x/xty20/runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
         except FileNotFoundError:
-            import pdb
-            pdb.set_trace()
+            raise Exception("Could not reset checkpoint files across trials.")
 
     
         return test_accuracy

@@ -314,13 +314,7 @@ def better_text_classify_search_aug():
         )
         data.setup("fit")
 
-        filename = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
-        
-        try:
-            os.remove("/home/x/xty20/runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
-        except FileNotFoundError:
-            import pdb
-            pdb.set_trace()
+        filename = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed) + "_augmentation_params=" +  str(augmentation_params)
         
         logger = TensorBoardLogger(
             "runs_hyperparam_search_better_text_classify", name=filename
@@ -375,6 +369,15 @@ def better_text_classify_search_aug():
         trainer.fit(model, data)
         trainer.test(model, dataloaders = data.test_dataloader())
         test_accuracy = trainer.callback_metrics["test_accuracy"].item()
+
+        
+        try:
+            os.remove("/home/x/xty20/runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
+        except FileNotFoundError:
+            import pdb
+            pdb.set_trace()
+
+    
         return test_accuracy
 
     study = optuna.create_study(direction="maximize")

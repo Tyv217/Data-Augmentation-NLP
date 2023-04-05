@@ -7,7 +7,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping
 from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, parse_augmentors_int, set_seed, PyTorchLightningPruningCallback
-from .text_classifier import TextClassifierEmbeddingModel
 from .seq2seq_translator import Seq2SeqTranslator
 from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule
 from pytorch_lightning.loggers import TensorBoardLogger

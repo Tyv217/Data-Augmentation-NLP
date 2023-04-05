@@ -11,7 +11,7 @@ import numpy as np, pandas as pd
 import random
 
 
-class BiasDetectionDataModule(pl.LightningDataModule):
+class BabeDataModule(pl.LightningDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32, tokenize = True):
         super().__init__()
         self.batch_size = batch_size

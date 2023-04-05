@@ -16,7 +16,7 @@ def parse_augmentors(args):
             "mu": 0,
             "cm": 0,
         },
-        "bias_detection": {
+        "babe": {
             "sr": 0,
             "in": 0,
             "de": 0,

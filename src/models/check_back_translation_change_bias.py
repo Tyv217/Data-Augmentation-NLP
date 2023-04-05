@@ -2,7 +2,7 @@ import torch, time, random
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 from ..helpers import set_seed, parse_augmentors, plot_and_compare_emb, plot_emb
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BiasDetectionDataModule
+from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
 from sentence_transformers import SentenceTransformer
 
@@ -12,7 +12,7 @@ def visualize_back_translation_embedding():
 
     # add PROGRAM level args
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--task", type=str, default="bias_detection")
+    parser.add_argument("--task", type=str, default="babe")
     parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--augmentor", type=str, default="bt")
@@ -24,7 +24,7 @@ def visualize_back_translation_embedding():
     augmentator_mapping = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor()}
     augmentor = augmentator_mapping[args.augmentor]
 
-    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule}
+    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule}
 
     data = data_modules[args.task](
         dataset_percentage = 1,

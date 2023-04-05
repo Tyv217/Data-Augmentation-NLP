@@ -312,7 +312,7 @@ def better_text_classify_search_aug():
         for name in augmentor_names:
             param_range = augmentation_param_range[name]
             augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
-        word_augmentors, embed_augmentors = parse_augmentors(arguments, augmentator_mapping)
+        word_augmentors, embed_augmentors = parse_augmentors_int(augmentor_names, augmentation_params, augmentator_mapping)
         data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "bias_detection": BiasDetectionDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
         data = data_modules[arguments.task](
             dataset_percentage = 1,

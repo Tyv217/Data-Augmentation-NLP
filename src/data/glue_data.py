@@ -62,7 +62,7 @@ class GlueDataModule(pl.LightningDataModule):
             input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
             for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
                 data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.float)})
-        else:
+        else: 
             for input_line, label in zip(input_lines, labels):
                 data_seq.append({"input_lines": input_line, "label": torch.tensor(label, dtype = torch.float)})
         return data_seq

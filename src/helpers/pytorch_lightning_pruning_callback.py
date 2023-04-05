@@ -3,6 +3,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import Callback
 import optuna
 
+
 class PyTorchLightningPruningCallback(Callback):
     """PyTorch Lightning callback to prune unpromising trials.
     See `the example <https://github.com/optuna/optuna-examples/blob/

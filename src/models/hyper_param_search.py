@@ -317,7 +317,7 @@ def better_text_classify_search_aug():
         filename = str(arguments.task) + "_" + arguments.augmentors + "_data=" + str(arguments.dataset_percentage) + "_seed=" + str(arguments.seed)
         
         try:
-            os.remove("runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
+            os.remove("/home/x/xty20/runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
         except FileNotFoundError:
             pass
         
@@ -377,7 +377,7 @@ def better_text_classify_search_aug():
         return test_accuracy
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials = 10, timeout = 32400)
+    study.optimize(objective, n_trials = 10, timeout = 129600)
 
     pruned_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy = False, states=[optuna.trial.TrialState.COMPLETE])

@@ -319,7 +319,8 @@ def better_text_classify_search_aug():
         try:
             os.remove("/home/x/xty20/runs_hyperparam_search_better_text_classify/" + filename + ".ckpt")
         except FileNotFoundError:
-            pass
+            import pdb
+            pdb.set_trace()
         
         logger = TensorBoardLogger(
             "runs_hyperparam_search_better_text_classify", name=filename

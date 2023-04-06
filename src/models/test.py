@@ -74,7 +74,8 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    from torch.nn import TransformerEncoderLayer, TransformerDecoderLayer
-    print(TransformerEncoderLayer(d_model=512, nhead=8))
-    print(TransformerDecoderLayer(d_model=512, nhead=8))
+    y = [1,(1,1)]
+    for x in y:
+        z = list(x)
+        print(z)
     

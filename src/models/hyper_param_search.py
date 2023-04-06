@@ -19,7 +19,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import os
 
 def hyper_param_search(args):
-    if args.task == 'text_classify':
+    if args.task == 'classify':
         text_classify_search(args)
     elif args.task == 'translate':
         seq2seq_translate_search(args)

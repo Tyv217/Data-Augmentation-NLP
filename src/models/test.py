@@ -10,6 +10,8 @@ def main():
     MODEL_NAME = "t5-small"
     config = AutoConfig.from_pretrained(MODEL_NAME)
     model = T5ForConditionalGeneration(config)
+    print(model)
+    raise Exception
     tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, model_max_length = 512)
 
     input_lines = ["I ate an apple.", "I fucked your mom."]
@@ -72,6 +74,7 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    pass
-
+    from torch.nn import TransformerEncoderLayer, TransformerDecoderLayer
+    print(TransformerEncoderLayer(d_model=512, nhead=8))
+    print(TransformerDecoderLayer(d_model=512, nhead=8))
     

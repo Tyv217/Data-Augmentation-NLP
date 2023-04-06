@@ -34,7 +34,7 @@ def main():
     parser.add_argument("--dropout", type=float, default=0.5)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    print(args.deterministic)
+    print(args)
     set_seed(args.seed)
 
     if args.search == 0:

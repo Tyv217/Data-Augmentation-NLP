@@ -6,7 +6,7 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import T5Tokenizer
 
 
-class TranslationDataModule(pl.LightningDataModule):
+class IWSLT17DataModule(pl.LightningDataModule):
     def __init__(self, model_name = "t5-small", dataset_percentage = 1,  augmentors = [], batch_size: int = 32, task_prefix = "translate English to German: ", input_language = "en", output_language = "de", model_max_length = 256, tokenize = True):
         super().__init__()
 

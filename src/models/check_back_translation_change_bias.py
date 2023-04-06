@@ -2,7 +2,7 @@ import torch, time, random
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 from ..helpers import set_seed, parse_augmentors, plot_and_compare_emb, plot_emb
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule
+from ..data import IWSLT17DataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor
 from sentence_transformers import SentenceTransformer
 

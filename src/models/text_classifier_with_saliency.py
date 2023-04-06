@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 import re
 
-class Text_Classifier_With_Saliency(pl.LightningModule):
+class TextClassifierSaliencyModule(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [], embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate

@@ -6,11 +6,11 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
-from .seq2seq_translator import Seq2SeqTranslator
-from ..data import TranslationDataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
+from .seq2seq_translator import TranslatorModule
+from ..data import IWSLT17DataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
 from pytorch_lightning.loggers import TensorBoardLogger
-from .text_classifier import Text_Classifier
-from .text_classifier_with_saliency import Text_Classifier_With_Saliency
+from .text_classifier import TextClassifierModule
+from .text_classifier_with_saliency import TextClassifierSaliencyModule
 import signal, os
 
 def train_model(args):
@@ -31,7 +31,7 @@ def seq2seq_translate(args):
     except ValueError:
         raise Exception("Learning rate argument should be a float")
     
-    data = TranslationDataModule(
+    data = IWSLT17DataModule(
         model_name = MODEL_NAME,
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = word_augmentors,
@@ -73,7 +73,7 @@ def seq2seq_translate(args):
     #     input_, output = batch
     #     print(input_['src_len'])
     
-    model = Seq2SeqTranslator(
+    model = TranslatorModule(
         model_name = MODEL_NAME,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
@@ -156,7 +156,7 @@ def text_classify(args):
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = Text_Classifier(
+    model = TextClassifierModule(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
@@ -244,7 +244,7 @@ def text_classify_with_saliency(args):
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = Text_Classifier(
+    model = TextClassifierSaliencyModule(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
@@ -344,7 +344,7 @@ def language_model(args):
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = Text_Classifier(
+    model = TextClassifierModule(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,

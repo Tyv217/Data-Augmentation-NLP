@@ -4,7 +4,7 @@ import torchmetrics.functional as plfunc
 from transformers import AutoConfig, T5ForConditionalGeneration, T5Model
 from datasets import load_metric
 
-class Seq2SeqTranslator(pl.LightningModule):
+class TranslatorModule(pl.LightningModule):
     def __init__(self, model_name, max_epochs, tokenizer, steps_per_epoch, pretrain, augmentors = [], learning_rate = 1e-4):
         super().__init__()
         self.learning_rate = learning_rate

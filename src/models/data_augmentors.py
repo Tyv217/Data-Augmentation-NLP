@@ -28,7 +28,7 @@ class Synonym_Replacer(Augmentor):
 
         self.stopwords = stopwords.words(stopword_language)
         self.word_to_replace_per_sentence = word_to_replace_per_sentence
-        self.nlp = spacy.load("en_core_web_sm")
+        self.pos_tagger = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
         self.operate_on_embeddings = False
@@ -170,8 +170,6 @@ class Back_Translator(Augmentor):
         inputs = list(inputs)
         
         for i1 in range(len(translated_data)):
-            import pdb
-            pdb.set_trace()
             i2 = inputs.index(to_augment[i1])
             inputs[i2] = translated_data[i1]
 
@@ -187,7 +185,7 @@ class Insertor(Augmentor):
         self.stopwords = stopwords.words(stopword_language)
         self.augmentation_percentage = 0
         self.preprocessor = None
-        self.nlp = spacy.load("en_core_web_sm")
+        self.pos_tagger = spacy.load("en_core_web_sm")
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
         self.operate_on_embeddings = False
@@ -208,7 +206,7 @@ class Insertor(Augmentor):
         
     def get_word_list(self, sentence):
         word_list = []
-        doc = self.nlp(sentence)
+        doc = self.pos_tagger(sentence)
         for token in doc:
             word = token.text
             if word not in self.stopwords and any(map(str.isupper, word)) is False and not any(char.isdigit() for char in word):

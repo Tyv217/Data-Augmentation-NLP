@@ -3,7 +3,7 @@ import numpy as np
 import pytorch_lightning as pl
 from transformers import DistilBertForMaskedLM, AutoConfig, DistilBertTokenizer
 
-class Text_Classifier(pl.LightningModule):
+class TextClassifierModule(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate

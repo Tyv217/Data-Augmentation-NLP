@@ -3,13 +3,13 @@ AUGMENTATOR_MAPPING = {"sr": Synonym_Replacer("english"), "bt": Back_Translator(
 
 def parse_augmentors(args):
     augmentor_names = filter(lambda x: x != "", (args.augmentors.split(",")))
-    task = args.task
+    dataset = args.dataset
 
     augmentation_param_mapping = {
         "ag_news": {
             "sr": 0,
             "in": 0,
-            "de": 0,
+            "de": 24,
             "sr,in,de": 0,
             "bt": 0,
             "co": 0,
@@ -73,7 +73,7 @@ def parse_augmentors(args):
     
     for a in augmentor_names:
         augmentor = AUGMENTATOR_MAPPING[a]
-        augmentor.set_augmentation_percentage(augmentation_param_mapping[task][a] / 100)
+        augmentor.set_augmentation_percentage(augmentation_param_mapping[dataset][a] / 100)
         if augmentor.operate_on_embeddings:
             augmentors_on_tokens.append(augmentor)
         else:

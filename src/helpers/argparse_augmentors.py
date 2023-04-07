@@ -14,14 +14,14 @@ def parse_augmentors(args):
 
     augmentation_param_mapping = {
         "ag_news": {
-            "sr": [0],
-            "in": [0],
-            "de": [24],
-            "sr,in,de": [0,0,0],
+            "sr": [30],
+            "in": [15],
+            "de": [25],
+            "sr,in,de": [40,10,5],
             "bt": [0],
-            "co": [0],
+            "co": [90],
             "mu": [0],
-            "cm": [0],
+            "cm": [65],
         },
         "babe": {
             "sr": [40],

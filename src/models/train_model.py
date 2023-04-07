@@ -185,7 +185,7 @@ def text_classify(args):
     else:
         print("Dataset Percentage:", args.dataset_percentage)
 
-    with open('results' + args.dataset + '.txt') as f:
+    with open('results_' + args.dataset + '.txt') as f:
         f.write("Seed:", args.seed)
         f.write("Augmentors:", args.augmentors)
         f.write("Augmentation params:", args.augmentation_params)

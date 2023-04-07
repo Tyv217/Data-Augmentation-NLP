@@ -3,6 +3,9 @@ AUGMENTATOR_MAPPING = {"sr": Synonym_Replacer("english"), "bt": Back_Translator(
 
 def parse_augmentors(args):
     augmentor_names = args.augmentors
+
+    if augmentor_names == '':
+        return []
     
     if args.task == "classify":
         task = args.dataset
@@ -75,7 +78,7 @@ def parse_augmentors(args):
     augmentors_on_words = []
     augmentors_on_tokens = []
     
-    augmentation_params = augmentation_param_mapping[augmentor_names]
+    augmentation_params = augmentation_param_mapping[task][augmentor_names]
 
     for p, n in zip(augmentation_params, list(filter(lambda x: x != "", (args.augmentors.split(","))))):
         augmentor = AUGMENTATOR_MAPPING[n]

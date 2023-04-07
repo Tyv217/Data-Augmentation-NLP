@@ -20,8 +20,6 @@ class TranslatorModule(pl.LightningModule):
         self.augmentors = augmentors
         
         num_params = sum(p.numel() for p in self.model.parameters())
-
-        print(num_params)
     
     def forward(self, input_id, attention_mask, label):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)

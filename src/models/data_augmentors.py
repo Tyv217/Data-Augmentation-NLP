@@ -47,7 +47,7 @@ class Synonym_Replacer(Augmentor):
         
     def get_word_list(self, sentence):
         word_list = []
-        doc = self.nlp(sentence)
+        doc = self.pos_tagger(sentence)
 
         for token in doc:
             word = token.text
@@ -172,8 +172,6 @@ class Back_Translator(Augmentor):
         for i1 in range(len(translated_data)):
             i2 = inputs.index(to_augment[i1])
             inputs[i2] = translated_data[i1]
-
-        print("Augmentation took :", time.time() - start_time)
         return list(inputs), attention_mask, labels
 
 class Insertor(Augmentor):

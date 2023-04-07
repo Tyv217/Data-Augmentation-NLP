@@ -5,7 +5,7 @@ def parse_augmentors(args):
     augmentor_names = args.augmentors
 
     if augmentor_names == '':
-        return []
+        return [], []
     
     if args.task == "classify":
         task = args.dataset

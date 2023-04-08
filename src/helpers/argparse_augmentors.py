@@ -35,12 +35,12 @@ def parse_augmentors(args):
         },
         "glue": {
             "sr": [0],
-            "in": [0],
+            "in": [45],
             "de": [45],
             "sr,in,de": [0,0,0],
             "bt": [200],
             "co": [30],
-            "mu": [0],
+            "mu": [94],
             "cm": [95],
         },
         "trec": {

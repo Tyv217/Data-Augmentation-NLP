@@ -250,7 +250,7 @@ def text_classify_search_aug(args):
         )
         data.setup("fit")
 
-        filename = str(args.task) + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed) + "_augmentation_params=" +  str(augmentation_params)
+        filename = str(args.dataset) + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed) + "_augmentation_params=" +  str(augmentation_params)
         
         logger = TensorBoardLogger(
             args.logger_dir, name=filename

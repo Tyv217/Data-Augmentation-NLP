@@ -11,6 +11,7 @@ from ..data import IWSLT17DataModule, AGNewsDataModule, GlueDataModule, TwitterD
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
 from .text_classifier_with_saliency import TextClassifierSaliencyModule
+from .language_model import LanguageModelModule
 import signal, os
 
 def train_model(args):
@@ -203,12 +204,8 @@ def text_classify_with_saliency(args):
     except ValueError:
         raise Exception("Learning rate argument should be a float")
     
-    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
-    if args.samples_per_class is not None:
-        args.dataset_percentage = 100
-
-    data = data_modules[args.dataset](
+    data = WikiText2DataModule(
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = word_augmentors,
         batch_size = args.batch_size
@@ -355,15 +352,11 @@ def language_model(args):
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = TextClassifierModule(
+    model = LanguageModelModule(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
         tokenizer = data.tokenizer,
         steps_per_epoch = int(len(data.train_dataloader())),
-        num_labels = len(data.id2label),
-        id2label = data.id2label,
-        label2id = data.label2id,
-        pretrain = args.pretrain,
         augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     

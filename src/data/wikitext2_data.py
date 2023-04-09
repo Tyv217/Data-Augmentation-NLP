@@ -27,20 +27,22 @@ class WikiText2DataModule(pl.LightningDataModule):
 
     def format_data(self, data):
         input_lines = []
-        labels = []
         for i in data:
-            input_lines.append(i['text'])
-            labels.append(i['coarse_label'])
-        return input_lines, np.identity(len(self.id2label))[labels]
+            text = i['text']
+            text = text.strip()
+            if len(text) == 0:  # skip empty strings
+                continue
+            input_lines.append(text)
+        return input_lines
 
     def split_and_tokenize(self, data, format = True, augment = False):
         if format:
-            input_lines, labels = self.format_data(data)
+            input_lines = self.format_data(data)
         else:
-            input_lines, labels = data
+            input_lines = data
         if augment and self.augmentors is not None:
             for augmentor in self.augmentors:
-                input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
+                input_lines, _, _ = augmentor.augment_dataset(input_lines, None, None)
         input_encoding = self.tokenizer.batch_encode_plus(
             input_lines,
             add_special_tokens = True,
@@ -53,8 +55,8 @@ class WikiText2DataModule(pl.LightningDataModule):
         input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
 
         data_seq = []
-        for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
-            data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.long)})
+        for input_id, attention_mask in zip(input_ids, attention_masks):
+            data_seq.append({"input_id": input_id, "attention_mask": attention_mask})
         return data_seq
 
     def shuffle_train_valid_iters(self):

@@ -139,17 +139,17 @@ def seq2seq_translate_search_aug(args):
         # most basic trainer, uses good defaults (1 gpu)
         trainer.fit(model, data)
         trainer.test(model, dataloaders = data.test_dataloader())
-        test_accuracy = trainer.callback_metrics["test_bleu"].item()
+        test_bleu = trainer.callback_metrics["test_bleu"].item()
 
         try:
             os.remove(args.logger_dir + "/" + filename + ".ckpt")
         except FileNotFoundError:
             raise Exception("Could not reset checkpoint files across trials.")
         
-        return test_accuracy
+        return test_bleu
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, args), timeout = 43200)
+    study.optimize(lambda trial: objective(trial, args), n_trails = 10, timeout = 129600)
     print_trial_stats(study)
 
 

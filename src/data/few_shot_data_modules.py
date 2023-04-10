@@ -23,7 +23,7 @@ class FewShotTextClassifyWrapperModule(pl.LightningDataModule):
         self.valid_dataset = data_module.valid_dataset
         self.test_dataset = data_module.test_dataset
         self.format_data = data_module.format_data
-        self.split_and_tokenize = data_module.split_and_tokenize
+        self.data_module = data_module
 
         self.use_train_valid = use_train_valid
         

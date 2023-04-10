@@ -3,18 +3,17 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from datasets import load_dataset
 from torch.nn.utils.rnn import pad_sequence
-from transformers import DistilBertTokenizer
-from torchtext.datasets import AG_NEWS as agnews
+from transformers import DistilBertTokenizer, DataCollatorForWholeWordMask
 from torch.utils.data.dataset import random_split
-from torchtext.data.functional import to_map_style_dataset
-import numpy as np
 import random
+from ..helpers import MLMCollator
 
 class WikiText2DataModule(pl.LightningDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
+        self.collator = MLMCollator(tokenizer=self.tokenizer, mlm_probability=0.15)
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
 
@@ -49,7 +48,6 @@ class WikiText2DataModule(pl.LightningDataModule):
             max_length = 400,
             padding = "max_length",
             truncation = True,
-            return_attention_mask = True,
             return_tensors = "pt",
         )
         input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
@@ -68,16 +66,16 @@ class WikiText2DataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         self.shuffle_train_valid_iters()
-        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True)
+        return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, collate_fn=self.collator.collate_fn, shuffle = True)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size, collate_fn=self.collator.collate_fn)
 
     def test_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size, collate_fn=self.collator.collate_fn)
 
     def predict_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size, collate_fn=self.collator.collate_fn)
 
     def teardown(self, stage: str):
         # Used to clean-up when the run is finished

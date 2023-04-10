@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import pytorch_lightning as pl
 from transformers import DistilBertForMaskedLM, AutoConfig, DistilBertTokenizer
+from torcheval.metrics.text import Perplexity
 
 class LanguageModelModule(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, augmentors = []):
@@ -15,9 +16,9 @@ class LanguageModelModule(pl.LightningModule):
         print(self.model)
         self.steps_per_epoch = steps_per_epoch
         self.augmentors = augmentors
+        self.metric = Perplexity(ignore_index = -100)
 
     def forward(self, input_id, attention_mask, label):
-        label = label.to(torch.float)
         return self.model(input_id, attention_mask = attention_mask, labels = label)
 
     def configure_optimizers(self):
@@ -42,7 +43,7 @@ class LanguageModelModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         input = batch['input_id']
         attention_mask = batch['attention_mask']
-        label = batch['label'].to(torch.float)
+        label = batch['label']
         
         inputs_embeds = self.model.distilbert.embeddings(input)
 
@@ -67,20 +68,8 @@ class LanguageModelModule(pl.LightningModule):
         output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
         loss = output.loss
         logits = output.logits
-        pred_flat = torch.argmax(logits, axis=1).flatten()
-        labels_flat = torch.argmax(batch['label'], axis=1).flatten()
-        acc = torch.sum(pred_flat == labels_flat) / len(labels_flat)
-
-        self.log(
-            "validation_accuracy",
-            acc.item(),
-            on_step = False,
-            on_epoch = True,
-            prog_bar = True,
-            logger = True,
-            sync_dist = True,
-        )
-
+        self.metric.update(logits, batch['input_id'])
+        
         self.log(
             "validation_loss",
             loss.item(),
@@ -91,19 +80,15 @@ class LanguageModelModule(pl.LightningModule):
             sync_dist = True,
         )
 
-        return loss, acc
-    
-    def test_step(self, batch, batch_idx):
-        with torch.no_grad():
-            output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
-        logits = output.logits
-        pred_flat = torch.argmax(logits, axis=1).flatten()
-        labels_flat = torch.argmax(batch['label'], axis=1).flatten()
-        acc = torch.sum(pred_flat == labels_flat) / len(labels_flat)
+        return loss
+        
+    def on_validation_epoch_end(self):
+        perplexity = self.metric.compute()
+        self.metric.reset()
 
         self.log(
-            "test_accuracy",
-            acc.item(),
+            "validation_perplexity",
+            perplexity.item(),
             on_step = False,
             on_epoch = True,
             prog_bar = True,
@@ -111,4 +96,26 @@ class LanguageModelModule(pl.LightningModule):
             sync_dist = True,
         )
 
-        return acc
+        return perplexity
+    
+    def test_step(self, batch, batch_idx):
+        with torch.no_grad():
+            output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
+        logits = output.logits
+        self.metric.update(logits, batch['input_id'])
+        
+    def on_test_epoch_end(self):
+        perplexity = self.metric.compute()
+        self.metric.reset()
+
+        self.log(
+            "test_perplexity",
+            perplexity.item(),
+            on_step = False,
+            on_epoch = True,
+            prog_bar = True,
+            logger = True,
+            sync_dist = True,
+        )
+
+        return perplexity

@@ -8,7 +8,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping
 from argparse import ArgumentParser
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, parse_augmentors_int, set_seed, PyTorchLightningPruningCallback
 from .seq2seq_translator import TranslatorModule
-from ..data import IWSLT17DataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule
+from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
 from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
@@ -238,7 +238,7 @@ def text_classify_search_aug(args):
             param_range = augmentation_param_range[name]
             augmentation_params.append(trial.suggest_int(f"{name} augmentation param", param_range[0], param_range[1]))
         word_augmentors, embed_augmentors = parse_augmentors_int(augmentor_names, augmentation_params)
-        data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+        data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
         
         if args.samples_per_class is not None:
             args.dataset_percentage = 100
@@ -322,7 +322,7 @@ def text_classify_search_lr(args):
 
     def objective(trial, args):
         lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
-        data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+        data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
         
         if args.samples_per_class is not None:
             args.dataset_percentage = 100

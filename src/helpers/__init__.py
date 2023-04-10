@@ -5,3 +5,4 @@ from .argparse_augmentors import parse_augmentors, parse_augmentors_string, pars
 from .set_seed import set_seed
 from .plots import plot_and_compare_emb, plot_emb, plot_saliency_scores
 from .pytorch_lightning_pruning_callback import PyTorchLightningPruningCallback
+from .mlm_collator import MLMCollator

@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
 from .seq2seq_translator import TranslatorModule
-from ..data import IWSLT17DataModule, AGNewsDataModule, GlueDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
+from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
 from .text_classifier_with_saliency import TextClassifierSaliencyModule
@@ -105,7 +105,7 @@ def text_classify(args):
     except ValueError:
         raise Exception("Learning rate argument should be a float")
     
-    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+    data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
     if args.samples_per_class is not None:
         args.dataset_percentage = 100
@@ -205,7 +205,7 @@ def text_classify_with_saliency(args):
         raise Exception("Learning rate argument should be a float")
     
 
-    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+    data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
     if args.samples_per_class is not None:
         args.dataset_percentage = 100

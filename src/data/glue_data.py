@@ -112,3 +112,55 @@ class ColaDataModule(GlueDataModule):
                 data_seq.append({"input_lines": input_line, "label": torch.tensor(label, dtype = torch.float)})
         return data_seq
 
+class MNLIDataModule(GlueDataModule):
+    def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32, tokenize = True):
+        super().__init__("mnli", dataset_percentage, augmentors, batch_size, tokenize)
+        self.load_dataset()
+        self.id2label =  {0: "entailment", 1: "neutral", 2: "contradiction"}
+        self.label2id = {"entailment": 0, "neutral": 1, "contradiction": 2}
+
+    def load_dataset(self):
+        train = list(self.dataset['train'])
+        random.shuffle(train)
+        self.train = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
+        num_train = int(len(self.train) * 0.95)
+        self.train_dataset, self.valid_dataset = random_split(self.train, [num_train, len(self.train) - num_train])
+        self.test_dataset = self.dataset['validation_matched']
+
+    def format_data(self, data):
+        input_lines = []
+        labels = []
+        for i in data:
+            input_lines.append(i['premise'] + ' ' + self.tokenizer.sep_token + ' ' + i['hypothesis'])
+            labels.append(i['label'])
+        import pdb
+        pdb.set_trace()
+        return input_lines, np.identity(len(self.id2label))[labels]
+
+    def split_and_tokenize(self, data, augment = False):
+        if format:
+            input_lines, labels = self.format_data(data)
+        else:
+            input_lines, labels = data
+        data_seq = []
+        
+        if self.tokenize:
+            if augment and self.augmentors is not None:
+                for augmentor in self.augmentors:
+                    input_lines, _, labels = augmentor.augment_dataset(input_lines, None, labels)
+            input_encoding = self.tokenizer.batch_encode_plus(
+                input_lines,
+                add_special_tokens = True,
+                max_length = 400,
+                padding = "max_length",
+                truncation = True,
+                return_attention_mask = True,
+                return_tensors = "pt",
+            )
+            input_ids, attention_masks = input_encoding.input_ids, input_encoding.attention_mask
+            for input_id, attention_mask, label in zip(input_ids, attention_masks, labels):
+                data_seq.append({"input_id": input_id, "attention_mask": attention_mask, "label": torch.tensor(label, dtype = torch.float)})
+        else: 
+            for input_line, label in zip(input_lines, labels):
+                data_seq.append({"input_lines": input_line, "label": torch.tensor(label, dtype = torch.float)})
+        return data_seq

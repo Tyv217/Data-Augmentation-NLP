@@ -1,6 +1,6 @@
 from .iwslt17_data import IWSLT17DataModule
 from .agnews_data import AGNewsDataModule
-from .glue_data import ColaDataModule
+from .glue_data import ColaDataModule, MNLIDataModule
 from .twitter_data import TwitterDataModule
 from .babe_data import BabeDataModule
 from .imdb_data import IMDBDataModule

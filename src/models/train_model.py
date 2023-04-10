@@ -205,7 +205,12 @@ def text_classify_with_saliency(args):
         raise Exception("Learning rate argument should be a float")
     
 
-    data = WikiText2DataModule(
+    data_modules = {"glue": GlueDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+
+    if args.samples_per_class is not None:
+        args.dataset_percentage = 100
+
+    data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = word_augmentors,
         batch_size = args.batch_size

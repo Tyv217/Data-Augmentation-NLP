@@ -21,7 +21,7 @@ def main():
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--samples_per_class", type=int)
 
-    parser.add_argument("--logger_dir", type=str)
+    parser.add_argument("--logger_dir", type=str, default="")
 
     parser.add_argument("--pretrain", default=True, action="store_false")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")

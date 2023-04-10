@@ -167,12 +167,14 @@ class MNLIDataModule(GlueDataModule):
     
 class SST2DataModule(GlueDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32, tokenize = True):
-        super().__init__("mnli", dataset_percentage, augmentors, batch_size, tokenize)
+        super().__init__("sst2", dataset_percentage, augmentors, batch_size, tokenize)
         self.load_dataset()
         self.id2label =  {0: "negative", 1: "positive"}
         self.label2id = {"negative": 0, "positive": 1}
 
     def load_dataset(self):
+        import pdb
+        pdb.set_trace()
         train = list(self.dataset['train'])
         random.shuffle(train)
         self.train = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])

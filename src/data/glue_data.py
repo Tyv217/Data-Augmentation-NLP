@@ -65,8 +65,6 @@ class ColaDataModule(GlueDataModule):
         self.load_dataset()
         self.id2label =  {0: "unacceptable", 1: "acceptable"}
         self.label2id = {"unacceptable": 0, "acceptable": 1}
-        import pdb
-        pdb.set_trace()
 
     def load_dataset(self):
         train = list(self.dataset['train'])
@@ -133,8 +131,6 @@ class MNLIDataModule(GlueDataModule):
         for i in data:
             input_lines.append(i['premise'] + ' ' + self.tokenizer.sep_token + ' ' + i['hypothesis'])
             labels.append(i['label'])
-        import pdb
-        pdb.set_trace()
         return input_lines, np.identity(len(self.id2label))[labels]
 
     def split_and_tokenize(self, data, augment = False):
@@ -173,8 +169,6 @@ class SST2DataModule(GlueDataModule):
         self.label2id = {"negative": 0, "positive": 1}
 
     def load_dataset(self):
-        import pdb
-        pdb.set_trace()
         train = list(self.dataset['train'])
         random.shuffle(train)
         self.train = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
@@ -188,8 +182,6 @@ class SST2DataModule(GlueDataModule):
         for i in data:
             input_lines.append(i['sentence'])
             labels.append(i['label'])
-        import pdb
-        pdb.set_trace()
         return input_lines, np.identity(len(self.id2label))[labels]
 
     def split_and_tokenize(self, data, augment = False):

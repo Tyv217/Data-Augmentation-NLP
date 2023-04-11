@@ -17,7 +17,7 @@ class WikiText2DataModule(pl.LightningDataModule):
         self.augmentors = augmentors
         self.dataset_percentage = dataset_percentage
 
-        dataset = load_dataset('wikitext', 'wikitext-2-raw-v1')
+        dataset = load_dataset('wikitext', 'wikitext-103-raw-v1')
 
         train = list(dataset['train'])
         random.shuffle(train)

@@ -4,7 +4,7 @@ from transformers import DataCollatorForWholeWordMask
 class MLMCollator(DataCollatorForWholeWordMask):
     
     def collate_fn(self, inputs):
-        device = input['input_id'][0].device
+        device = inputs[0]['input_id'].device
         input_ids = torch.stack([input['input_id'] for input in inputs])
         attention_masks = torch.stack([input['attention_mask'] for input in inputs])
 

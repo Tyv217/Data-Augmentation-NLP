@@ -13,7 +13,6 @@ class LanguageModelModule(pl.LightningModule):
         self.tokenizer = DistilBertTokenizer.from_pretrained(MODEL_NAME, do_lower_case=True)
         self.config = AutoConfig.from_pretrained(MODEL_NAME)
         self.model = DistilBertForMaskedLM(self.config)
-        print(self.model)
         self.steps_per_epoch = steps_per_epoch
         self.augmentors = augmentors
         self.metric = Perplexity(ignore_index = -100)

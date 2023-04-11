@@ -318,7 +318,7 @@ def text_classify_with_saliency(args):
 
     saliency_scores = model.saliency_scores
     keys = list(saliency_scores.keys())
-    batch_size = 1000
+    batch_size = 100
     fig_count = 0
     for i, key_batch in enumerate(batch(keys, batch_size)):
         score_batch = [saliency_scores[key] for key in key_batch]

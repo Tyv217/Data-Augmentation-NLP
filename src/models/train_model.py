@@ -184,6 +184,10 @@ def text_classify(args):
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
+    if args.pretrain:
+        print("Pretrained model used!")
+    else:
+        print("Trained from scratch!")
     if args.samples_per_class is not None:
         print("FewShot Training Used. Samples per class:", args.samples_per_class)
     else:
@@ -223,7 +227,7 @@ def text_classify_with_saliency(args):
     data.prepare_data()
     data.setup("fit")
 
-    filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+    filename = args.dataset + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
     logger = TensorBoardLogger(
         args.logger_dir, name=filename

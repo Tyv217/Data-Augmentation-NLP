@@ -8,7 +8,7 @@ from torch.utils.data.dataset import random_split
 import random
 from ..helpers import MLMCollator
 
-class WikiText2DataModule(pl.LightningDataModule):
+class WikiTextDataModule(pl.LightningDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32):
         super().__init__()
         self.batch_size = batch_size

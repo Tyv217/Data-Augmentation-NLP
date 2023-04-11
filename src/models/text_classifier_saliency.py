@@ -73,14 +73,26 @@ class TextClassifierSaliencyModule(pl.LightningModule):
             return []
 
         return word_weights / np.sum(word_weights)
+    
+    def adapt_scores_to_original_line(self, original_line, input_line, scores):
+        original_words = original_line.split(" ")
+        input_words = input_line.split(" ")
+        if len(original_line) == len(input_line):
+            return scores
+        else:
+            new_scores = []
+            for i in range(len(original_line)):
+                original_word = original_line
+            new_scores = np.array(new_scores)
+            return new_scores / np.sum(new_scores)
 
     
     def training_step(self, batch, batch_idx):
-        input_lines = batch['input_lines']
+        original_lines = batch['input_lines']
         label = batch['label'].to(torch.float)
-        saliency_scores = [self.saliency_scores.get(input_line, np.array([])) for input_line in input_lines]
+        saliency_scores = [self.saliency_scores.get(input_line, np.array([])) for input_line in original_lines]
         for augmentor in self.word_augmentors:
-                input_lines, _, label = augmentor.augment_dataset_with_saliency(input_lines, None, label, saliency_scores)
+                input_lines, _, label = augmentor.augment_dataset_with_saliency(original_lines, None, label, saliency_scores)
         input_encoding = self.tokenizer.batch_encode_plus(
             input_lines,
             add_special_tokens = True,
@@ -103,9 +115,10 @@ class TextClassifierSaliencyModule(pl.LightningModule):
 
         saliency_scores_tokens = attention_weights[0].detach().sum(dim=1).sum(dim=1)
         
-        for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
+        for lines, original_line, ids, attentions in zip(input_lines, original_lines, input_ids, saliency_scores_tokens):
             saliency_scores_words = self.get_saliency_scores(lines, ids.detach().cpu(), attentions.detach().cpu())
-            self.saliency_scores[lines] = saliency_scores_words
+            saliency_scores_words = self.adapt_scores_to_original_line(original_line, lines, saliency_scores_words )
+            self.saliency_scores[original_line] = saliency_scores_words
             for word, score in zip(re.sub(' +', ' ', lines).lstrip().rstrip()\
                                    .split(" "), saliency_scores_words):
                 if word in self.saliency_scores_per_word.keys():

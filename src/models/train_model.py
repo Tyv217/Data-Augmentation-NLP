@@ -6,11 +6,11 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
-from .seq2seq_translator import TranslatorModule
-from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, MNLIDataModule, SST2DataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiText2DataModule
+from .translator import TranslatorModule
+from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, MNLIDataModule, SST2DataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiTextDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
-from .text_classifier_with_saliency import TextClassifierSaliencyModule
+from .text_classifier_saliency import TextClassifierSaliencyModule
 from .language_model import LanguageModelModule
 import signal, os
 import statistics
@@ -286,20 +286,6 @@ def text_classify_with_saliency(args):
         print("FewShot Training Used. Samples per class:", args.samples_per_class)
     else:
         print("Dataset Percentage:", args.dataset_percentage)
-    
-    saliency_scores = model.saliency_scores
-    keys = list(saliency_scores.keys())
-    for i in range(len(keys)):
-        words = keys[i]
-        scores = saliency_scores[keys[i]]
-        plot_saliency_scores(words, scores, "saliency_fig_" + str(i) + ".png")
-    
-    saliency_scores_per_word = model.saliency_scores_per_word
-    mean_saliency = {key: statistics.mean(values) for key, values in saliency_scores_per_word.items() if len(values) > 10}
-    highest_means = sorted(mean_saliency.items(), key=lambda x: x[1], reverse=True)[:10]
-    lowest_means = sorted(mean_saliency.items(), key=lambda x: x[1])[:10]
-    print('Top 10 highest means:', highest_means)
-    print('Top 10 lowest means:', lowest_means)
 
     def batch(iterable, n=1):
         """Batch elements of an iterable into lists of size n."""
@@ -358,7 +344,7 @@ def language_model(args):
     if args.samples_per_class is not None:
         args.dataset_percentage = 100
 
-    data = WikiText2DataModule(
+    data = WikiTextDataModule(
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = word_augmentors,
         batch_size = args.batch_size

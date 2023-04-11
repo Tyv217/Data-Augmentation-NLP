@@ -20,10 +20,10 @@ class BabeDataModule(pl.LightningDataModule):
         self.id2label =  {0: "Non-biased", 1: "No agreement", 2: "Biased"}
         self.label2id = {"Non-biased": 0, "No agreement": 1, "Biased": 2}
         try:
-            PATH_sg2 = "src/data/bias_detection_data_files/final_labels_SG2.xlsx"
+            PATH_sg2 = "src/data/processed/bias_detection_data_files/final_labels_SG2.xlsx"
             df_sg2 = pd.read_excel(PATH_sg2)
         except FileNotFoundError:
-            PATH_sg2 = "project/src/data/bias_detection_data_files/final_labels_SG2.xlsx"
+            PATH_sg2 = "project/src/data/processed/bias_detection_data_files/final_labels_SG2.xlsx"
             df_sg2 = pd.read_excel(PATH_sg2)
         df_sg2 = df_sg2[["text", "label_bias"]]
 

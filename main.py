@@ -23,7 +23,7 @@ def main():
 
     parser.add_argument("--logger_dir", type=str, default="")
 
-    parser.add_argument("--pretrain", default=True, action="store_false")
+    parser.add_argument("--pretrain", action="store_true")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")
     parser.set_defaults(pretrain=False)
     parser.add_argument("--N_samples", type=int, default=256 * 10)

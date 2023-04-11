@@ -108,8 +108,10 @@ class TextClassifierSaliencyModule(pl.LightningModule):
             self.saliency_scores[lines] = saliency_scores_words
             for word, score in zip(re.sub(' +', ' ', lines).lstrip().rstrip()\
                                    .split(" "), saliency_scores_words):
-                self.saliency_scores_per_word[word] = self.saliency_scores_per_word.get(word, []).append(score)
-
+                if word in self.saliency_scores_per_word.keys():
+                    self.saliency_scores_per_word[word].append(score)
+                else:
+                    self.saliency_scores_per_word[word] = [score]
 
         # input_tokens = self.tokenizer.decode(encoded_input['input_ids'])
 

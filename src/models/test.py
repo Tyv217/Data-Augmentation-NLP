@@ -74,8 +74,8 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    y = [1,(1,1)]
-    for x in y:
-        z = list(x)
-        print(z)
+    x = {}
+    y = x.get("1", [])
+    y.append(3)
+    print(y)
     

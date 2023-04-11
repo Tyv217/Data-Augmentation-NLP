@@ -82,7 +82,7 @@ class Synonym_Replacer(Augmentor):
         word_list = self.get_word_list(sentence)
         num_replace = int(len(word_list) * self.augmentation_percentage)
         to_replace = np.random.choice(np.array(word_list), size=num_replace, replace=False, p = score)
-        for word,pos in to_replace:
+        for word, pos in to_replace:
             curr_sentence = sentence
             synonyms = self.get_synonym(word, pos)
             synonyms = list(filter(lambda x: '_' not in x, synonyms))

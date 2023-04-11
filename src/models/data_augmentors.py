@@ -159,7 +159,6 @@ class Back_Translator(Augmentor):
         count = 0
         translated_data = []
         BATCH_SIZE = 64
-        start_time = time.time()
         while(count < len(to_augment)):
             # torch.cuda.empty_cache()
             (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)

@@ -189,10 +189,8 @@ def text_classify(args):
     else:
         print("Dataset Percentage:", args.dataset_percentage)
 
-    with open('results_' + args.dataset + '.txt') as f:
+    with open('results_' + args.dataset + '.txt', 'a') as f:
         f.write("Seed:", args.seed)
-        f.write("Augmentors:", args.augmentors)
-        f.write("Augmentation params:", args.augmentation_params)
         if args.samples_per_class is not None:
             f.write("FewShot Training Used. Samples per class:", args.samples_per_class)
         else:
@@ -284,7 +282,6 @@ def text_classify_with_saliency(args):
     
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
-    print("Augmentation params:", args.augmentation_params)
     if args.samples_per_class is not None:
         print("FewShot Training Used. Samples per class:", args.samples_per_class)
     else:

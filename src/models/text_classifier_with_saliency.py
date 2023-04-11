@@ -19,7 +19,7 @@ class TextClassifierSaliencyModule(pl.LightningModule):
         self.word_augmentors = word_augmentors
         self.embed_augmentors = embed_augmentors
         self.saliency_scores = {}
-        self.new_saliency_scores = {}
+        self.saliency_scores_per_word = {}
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)
@@ -71,6 +71,7 @@ class TextClassifierSaliencyModule(pl.LightningModule):
                 token_index += 1
         except:
             return []
+
         return word_weights / np.sum(word_weights)
 
     
@@ -101,12 +102,14 @@ class TextClassifierSaliencyModule(pl.LightningModule):
         attention_weights = output.attentions
 
         saliency_scores_tokens = attention_weights[0].detach().sum(dim=1).sum(dim=1)
-
-        print(saliency_scores_tokens.size())
         
         for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
             saliency_scores_words = self.get_saliency_scores(lines, ids.detach().cpu(), attentions.detach().cpu())
             self.saliency_scores[lines] = saliency_scores_words
+            for word, score in zip(re.sub(' +', ' ', input_lines).lstrip().rstrip()\
+                                   .split(" "), saliency_scores_words):
+                self.saliency_scores_per_word[word] = self.saliency_scores_per_word.get(word, []).append(score)
+
 
         # input_tokens = self.tokenizer.decode(encoded_input['input_ids'])
 

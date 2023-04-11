@@ -15,7 +15,7 @@ class LanguageModelModule(pl.LightningModule):
         self.model = DistilBertForMaskedLM(self.config)
         self.steps_per_epoch = steps_per_epoch
         self.augmentors = augmentors
-        self.metric = Perplexity(ignore_index = -100)
+        self.metric = Perplexity(ignore_index = -100).to(self.device)
 
     def forward(self, input_id, attention_mask, label):
         return self.model(input_id, attention_mask = attention_mask, labels = label)

@@ -13,6 +13,7 @@ from .text_classifier import TextClassifierModule
 from .text_classifier_with_saliency import TextClassifierSaliencyModule
 from .language_model import LanguageModelModule
 import signal, os
+import statistics
 
 def train_model(args):
     if args.task == 'classify':
@@ -292,6 +293,14 @@ def text_classify_with_saliency(args):
         words = keys[i]
         scores = saliency_scores[keys[i]]
         plot_saliency_scores(words, scores, "saliency_fig_" + str(i) + ".png")
+    
+    saliency_scores_per_word = model.saliency_scores_per_word
+    mean_saliency = {key: statistics.mean(values) for key, values in saliency_scores_per_word.items() if len(values) > 10}
+    highest_means = sorted(mean_saliency.items(), key=lambda x: x[1], reverse=True)[:10]
+    lowest_means = sorted(mean_saliency.items(), key=lambda x: x[1])[:10]
+    print('Top 10 highest means:', highest_means)
+    print('Top 10 lowest means:', lowest_means)
+
 
 def language_model(args):
     

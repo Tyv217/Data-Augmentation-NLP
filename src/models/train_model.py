@@ -18,6 +18,8 @@ import statistics
 def train_model(args):
     if args.task == 'classify':
         text_classify(args)
+    elif args.task == 'classify_saliency':
+        text_classify_with_saliency(args)
     elif args.task == 'translate':
         seq2seq_translate(args)
     elif args.task == 'language_model':

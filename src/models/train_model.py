@@ -332,7 +332,7 @@ def language_model(args):
     filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
     try:
-        os.remove("runs_better_text_classify/" + filename + ".ckpt")
+        os.remove("runs_language_model/" + filename + ".ckpt")
     except FileNotFoundError:
         pass
 
@@ -350,8 +350,8 @@ def language_model(args):
     print(args)
 
     checkpoint_callback = ModelCheckpoint(
-            monitor='validation_accuracy',
-            dirpath='runs_better_text_classify',
+            monitor='validation_perplexity',
+            dirpath='runs_language_model',
             save_top_k=1,
             save_weights_only=True,
             filename=filename,

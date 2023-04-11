@@ -215,7 +215,6 @@ def text_classify_with_saliency(args):
 
     data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage / 100,
-        augmentors = word_augmentors,
         batch_size = args.batch_size,
         tokenize = False
     )
@@ -270,7 +269,8 @@ def text_classify_with_saliency(args):
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        augmentors = embed_augmentors
+        word_augmentors = word_augmentors,
+        embed_augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

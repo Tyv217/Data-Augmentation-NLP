@@ -106,7 +106,7 @@ class TextClassifierSaliencyModule(pl.LightningModule):
         for lines, ids, attentions in zip(input_lines, input_ids, saliency_scores_tokens):
             saliency_scores_words = self.get_saliency_scores(lines, ids.detach().cpu(), attentions.detach().cpu())
             self.saliency_scores[lines] = saliency_scores_words
-            for word, score in zip(re.sub(' +', ' ', input_lines).lstrip().rstrip()\
+            for word, score in zip(re.sub(' +', ' ', lines).lstrip().rstrip()\
                                    .split(" "), saliency_scores_words):
                 self.saliency_scores_per_word[word] = self.saliency_scores_per_word.get(word, []).append(score)
 

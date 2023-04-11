@@ -216,7 +216,8 @@ def text_classify_with_saliency(args):
     data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage / 100,
         augmentors = word_augmentors,
-        batch_size = args.batch_size
+        batch_size = args.batch_size,
+        tokenize = False
     )
 
     if args.samples_per_class is not None:

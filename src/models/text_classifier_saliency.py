@@ -85,11 +85,15 @@ class TextClassifierSaliencyModule(pl.LightningModule):
             return scores
         else:
             new_scores = []
-            for i in range(len(original_line)):
-                original_word = original_line
+            for i in range(len(original_words)):
+                original_word = original_words[i]
+                if original_word in input_words:
+                    index = input_words.index(original_word)
+                    new_scores.append(scores[index])
+                else:
+                    continue
             new_scores = np.array(new_scores)
             return new_scores / np.sum(new_scores)
-
     
     def training_step(self, batch, batch_idx):
         original_lines = batch['input_lines']

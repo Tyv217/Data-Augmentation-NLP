@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--augmentation_params", type=str, default="")
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--samples_per_class", type=int)
+    parser.add_argument("--invert_saliency", type=int, default = 0)
 
     parser.add_argument("--logger_dir", type=str, default="")
 

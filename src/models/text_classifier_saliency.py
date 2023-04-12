@@ -5,7 +5,7 @@ from transformers import AutoModelForSequenceClassification
 import re
 
 class TextClassifierSaliencyModule(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, word_augmentors = [],  embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, invert_saliency, pretrain = True, word_augmentors = [],  embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -20,6 +20,7 @@ class TextClassifierSaliencyModule(pl.LightningModule):
         self.embed_augmentors = embed_augmentors
         self.saliency_scores = {}
         self.saliency_scores_per_word = {}
+        self.invert_saliency = False if invert_saliency == 0 else True
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)
@@ -71,6 +72,9 @@ class TextClassifierSaliencyModule(pl.LightningModule):
                 token_index += 1
         except:
             return []
+        
+        if self.invert_saliency:
+            word_weights = 1 / word_weights
 
         return word_weights / np.sum(word_weights)
     

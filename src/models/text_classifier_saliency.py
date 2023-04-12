@@ -91,7 +91,7 @@ class TextClassifierSaliencyModule(pl.LightningModule):
                     index = input_words.index(original_word)
                     new_scores.append(scores[index])
                 else:
-                    continue
+                    new_scores.append(0)
             new_scores = np.array(new_scores)
             return new_scores / np.sum(new_scores)
     

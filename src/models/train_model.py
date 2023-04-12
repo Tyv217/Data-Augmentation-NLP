@@ -332,8 +332,9 @@ def text_classify_with_saliency(args):
 
     highest_means = sorted(highest, key=lambda x: x[1], reverse=True)[:10]
     lowest_means = sorted(lowest, key=lambda x: x[1])[:10]
-    print('Top 10 highest means:', highest_means)
-    print('Top 10 lowest means:', lowest_means)
+    print("Invert saliency used:", False if args.invert_saliency == 0 else True)
+    print('Top 10 highest saliency scores:', highest_means)
+    print('Top 10 lowest saliency scores:', lowest_means)
 
 
 def language_model(args):

@@ -13,7 +13,7 @@ def parse_augmentors(args):
         task = args.task
 
     augmentation_param_mapping = {
-        "ag_news": {
+        "ag_news": { 
             "sr": [30],
             "in": [15],
             "de": [25],

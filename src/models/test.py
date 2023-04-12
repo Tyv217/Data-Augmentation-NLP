@@ -74,46 +74,47 @@ def main():
     loss = model(**inputs, labels=labels).loss
 
 if __name__ == "__main__":
-    import statistics
-    def batch(iterable, n=1):
-        """Batch elements of an iterable into lists of size n."""
-        it = iter(iterable)
-        while True:
-            chunk = []
-            for i in range(n):
-                try:
-                    chunk.append(next(it))
-                except StopIteration:
-                    break
-            if chunk:
-                yield chunk
-            else:
-                return
+    main()
+    # import statistics
+    # def batch(iterable, n=1):
+    #     """Batch elements of an iterable into lists of size n."""
+    #     it = iter(iterable)
+    #     while True:
+    #         chunk = []
+    #         for i in range(n):
+    #             try:
+    #                 chunk.append(next(it))
+    #             except StopIteration:
+    #                 break
+    #         if chunk:
+    #             yield chunk
+    #         else:
+    #             return
 
-    saliency_scores = {"12345": 12345, "2345": 2345, "345": 345, "45": 45, "5": 5}
-    keys = list(saliency_scores.keys())
-    batch_size = 2
-    fig_count = 0
-    for i, key_batch in enumerate(batch(keys, batch_size)):
-        score_batch = [saliency_scores[key] for key in key_batch]
-        for j in range(len(key_batch)):
-            words = key_batch[j]
-            scores = score_batch[j]
-            import pdb
-            pdb.set_trace()
+    # saliency_scores = {"12345": 12345, "2345": 2345, "345": 345, "45": 45, "5": 5}
+    # keys = list(saliency_scores.keys())
+    # batch_size = 2
+    # fig_count = 0
+    # for i, key_batch in enumerate(batch(keys, batch_size)):
+    #     score_batch = [saliency_scores[key] for key in key_batch]
+    #     for j in range(len(key_batch)):
+    #         words = key_batch[j]
+    #         scores = score_batch[j]
+    #         import pdb
+    #         pdb.set_trace()
 
-    saliency_scores_per_word = {"12345": [1,2,3,4,5], "2345": [2,3,4,5], "345": [3,4,5], "45": [4,5], "5": [5]}
-    batch_size = 2
-    highest = []
-    lowest = []
-    for i, items in enumerate(batch(saliency_scores_per_word.items(), batch_size)):
-        mean_saliency = {key: statistics.mean(value) for key, value in items if len(value) > 2}
-        highest_means = sorted(mean_saliency.items(), key=lambda x: x[1], reverse=True)[:2]
-        lowest_means = sorted(mean_saliency.items(), key=lambda x: x[1])[:10]
-        highest += highest_means
-        lowest += lowest_means
+    # saliency_scores_per_word = {"12345": [1,2,3,4,5], "2345": [2,3,4,5], "345": [3,4,5], "45": [4,5], "5": [5]}
+    # batch_size = 2
+    # highest = []
+    # lowest = []
+    # for i, items in enumerate(batch(saliency_scores_per_word.items(), batch_size)):
+    #     mean_saliency = {key: statistics.mean(value) for key, value in items if len(value) > 2}
+    #     highest_means = sorted(mean_saliency.items(), key=lambda x: x[1], reverse=True)[:2]
+    #     lowest_means = sorted(mean_saliency.items(), key=lambda x: x[1])[:10]
+    #     highest += highest_means
+    #     lowest += lowest_means
 
-    highest_means = sorted(highest, key=lambda x: x[1], reverse=True)[:2]
-    lowest_means = sorted(lowest, key=lambda x: x[1])[:2]
-    print(f"Batch {i}: Top 10 highest means:", highest_means)
-    print(f"Batch {i}: Top 10 lowest means:", lowest_means)
+    # highest_means = sorted(highest, key=lambda x: x[1], reverse=True)[:2]
+    # lowest_means = sorted(lowest, key=lambda x: x[1])[:2]
+    # print(f"Batch {i}: Top 10 highest means:", highest_means)
+    # print(f"Batch {i}: Top 10 lowest means:", lowest_means)

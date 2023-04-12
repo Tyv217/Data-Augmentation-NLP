@@ -201,6 +201,7 @@ def text_classify(args):
             f.write("Dataset Percentage:", args.dataset_percentage)
         f.write("Test accuracy", trainer.callback_metrics['test_accuracy'])
         f.write("\n\n\n")
+        f.close()
 
 def text_classify_with_saliency(args):
     word_augmentors, embed_augmentors = parse_augmentors(args)

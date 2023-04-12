@@ -112,10 +112,10 @@ class ColaDataModule(GlueDataModule):
 
 class MNLIDataModule(GlueDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32, tokenize = True):
-        super().__init__("mnli", dataset_percentage, augmentors, batch_size, tokenize)
+        super().__init__("qnli", dataset_percentage, augmentors, batch_size, tokenize)
         self.load_dataset()
-        self.id2label =  {0: "entailment", 1: "neutral", 2: "contradiction"}
-        self.label2id = {"entailment": 0, "neutral": 1, "contradiction": 2}
+        self.id2label =  {0: "entailment", 1: "not_entailment"}
+        self.label2id = {"entailment": 0, "not_entailment": 1}
 
     def load_dataset(self):
         train = list(self.dataset['train'])
@@ -123,13 +123,13 @@ class MNLIDataModule(GlueDataModule):
         self.train = to_map_style_dataset(train[:int(len(train) * self.dataset_percentage)])
         num_train = int(len(self.train) * 0.95)
         self.train_dataset, self.valid_dataset = random_split(self.train, [num_train, len(self.train) - num_train])
-        self.test_dataset = self.dataset['validation_matched']
+        self.test_dataset = self.dataset['validation']
 
     def format_data(self, data):
         input_lines = []
         labels = []
         for i in data:
-            input_lines.append(i['premise'] + ' ' + self.tokenizer.sep_token + ' ' + i['hypothesis'])
+            input_lines.append(i['question'] + ' ' + self.tokenizer.sep_token + ' ' + i['sentence'])
             labels.append(i['label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 

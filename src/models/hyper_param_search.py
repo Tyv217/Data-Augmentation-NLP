@@ -149,7 +149,7 @@ def seq2seq_translate_search_aug(args):
         return test_bleu
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, args), n_trails = 10, timeout = 129600)
+    study.optimize(lambda trial: objective(trial, args), n_trials = 10, timeout = 129600)
     print_trial_stats(study)
 
 

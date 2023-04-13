@@ -110,7 +110,7 @@ class ColaDataModule(GlueDataModule):
                 data_seq.append({"input_lines": input_line, "label": torch.tensor(label, dtype = torch.float)})
         return data_seq
 
-class MNLIDataModule(GlueDataModule):
+class QNLIDataModule(GlueDataModule):
     def __init__(self, dataset_percentage, augmentors = [], batch_size: int = 32, tokenize = True):
         super().__init__("qnli", dataset_percentage, augmentors, batch_size, tokenize)
         self.load_dataset()

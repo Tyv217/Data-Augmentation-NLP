@@ -15,9 +15,28 @@ class Augmentor(ABC):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    @abstractmethod
+    def augment_one_sample(self, input):
+        raise Exception("Not implemented")
+
     def augment_dataset(self, inputs, attention_mask, labels):
-        pass
+        if isinstance(inputs, str):
+            return self.augment_one_sample(inputs), attention_mask, labels
+        else:
+            augmented_lines = [self.augment_one_sample(sentence) for sentence in inputs]
+            return augmented_lines, attention_mask, labels
+        
+    def augment_one_sample_with_saliency(self, input):
+        raise Exception("Not implemented")
+    
+    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
+        inputs = np.array(inputs)
+        if inputs.ndim > 1:
+            if len(saliency_scores) != len(inputs):
+                saliency_scores = [[] for _ in range(len(inputs))]
+            augmented_lines = [self.augment_one_sample_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
+            return augmented_lines, attention_mask, labels
+        else:
+            return self.augment_one_sample(inputs), attention_mask, labels
 
 class Synonym_Replacer(Augmentor):
     def __init__(self, stopword_language, word_to_replace_per_sentence = 2):
@@ -56,7 +75,7 @@ class Synonym_Replacer(Augmentor):
                     word_list.append((word, self.pos_mapper[token.pos_]))
         return word_list
 
-    def replace_with_synonyms(self, sentence):
+    def augment_one_sample(self, sentence):
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
             if(random.random() < self.augmentation_percentage):
@@ -70,12 +89,8 @@ class Synonym_Replacer(Augmentor):
 
                 sentence = curr_sentence
         return sentence
-
-    def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        augmented_lines = [self.replace_with_synonyms(sentence) for sentence in list(inputs)]
-        return augmented_lines, attention_mask, labels
     
-    def replace_with_synonyms_with_saliency(self, sentence, score):
+    def augment_one_sample_with_saliency(self, sentence, score):
         if len(sentence) != len(score):
             score = [1 / len(sentence) for _ in range(len(sentence))]
 
@@ -93,13 +108,6 @@ class Synonym_Replacer(Augmentor):
 
             sentence = curr_sentence
         return sentence
-    
-    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
-        if len(saliency_scores) != len(inputs):
-            saliency_scores = [[] for _ in range(len(inputs))]
-
-        augmented_lines = [self.replace_with_synonyms_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
-        return augmented_lines, attention_mask, labels
 
 class Back_Translator(Augmentor):
     def __init__(self, src):
@@ -113,7 +121,7 @@ class Back_Translator(Augmentor):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage / 100 # DONT CHANGE
 
-    def bulk_translate(self, sentences, model, tokenizer):
+    def translate(self, sentences, model, tokenizer):
         input_encoding = tokenizer(
                 text = sentences,
                 padding = "longest",
@@ -127,9 +135,9 @@ class Back_Translator(Augmentor):
         result = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
         return result
 
-    def bulk_back_translate(self, sentences, model1, model2, tokenizer1, tokenizer2):
-        intermediate = self.bulk_translate(sentences, model1, tokenizer1)
-        back_translated = self.bulk_translate(intermediate, model2, tokenizer2)
+    def back_translate(self, sentences, model1, model2, tokenizer1, tokenizer2):
+        intermediate = self.translate(sentences, model1, tokenizer1)
+        back_translated = self.translate(intermediate, model2, tokenizer2)
         return back_translated
 
     def get_translators(self):
@@ -150,28 +158,35 @@ class Back_Translator(Augmentor):
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
         if attention_mask is not None:
             raise Exception("Back Translation on Tokens Instead of Words") 
-        to_augment = []
-        for input in list(inputs):
-            if(random.random() < self.augmentation_percentage):
-                to_augment.append(input)
+        inputs = np.array(inputs)
+        if inputs.ndim > 1:
+            to_augment = []
+            for input in list(inputs):
+                if(random.random() < self.augmentation_percentage):
+                    to_augment.append(input)
 
-        translators = self.get_translators()
-        count = 0
-        translated_data = []
-        BATCH_SIZE = 64
-        while(count < len(to_augment)):
-            # torch.cuda.empty_cache()
-            (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)
-            text = to_augment[count:min(count + BATCH_SIZE, len(to_augment))]
-            translated_data += self.bulk_back_translate(text, model1, model2, tokenizer1, tokenizer2)
-            count += BATCH_SIZE
+            translators = self.get_translators()
+            count = 0
+            translated_data = []
+            BATCH_SIZE = 64
+            while(count < len(to_augment)):
+                # torch.cuda.empty_cache()
+                (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)
+                text = to_augment[count:min(count + BATCH_SIZE, len(to_augment))]
+                translated_data += self.back_translate(text, model1, model2, tokenizer1, tokenizer2)
+                count += BATCH_SIZE
 
-        inputs = list(inputs)
-        
-        for i1 in range(len(translated_data)):
-            i2 = inputs.index(to_augment[i1])
-            inputs[i2] = translated_data[i1]
-        return list(inputs), attention_mask, labels
+            inputs = list(inputs)
+            
+            for i1 in range(len(translated_data)):
+                i2 = inputs.index(to_augment[i1])
+                inputs[i2] = translated_data[i1]
+            return list(inputs), attention_mask, labels
+        else:
+            if random.random() < self.augmentation_percentage:
+                return self.back_translate(inputs), attention_mask, labels
+            else:
+                return inputs, attention_mask, labels
 
 class Insertor(Augmentor):
     def __init__(self, stopword_language):
@@ -219,7 +234,7 @@ class Insertor(Augmentor):
             sentence = sentence[:index] + " " + word +  sentence[index:]
         return sentence
     
-    def insert_synonyms(self, sentence):
+    def augment_one_sample(self, sentence):
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
             if(random.random() < self.augmentation_percentage):
@@ -232,13 +247,8 @@ class Insertor(Augmentor):
                     curr_sentence = self.insert_randomly(synonym, curr_sentence)
                 sentence = curr_sentence
         return sentence
-
-
-    def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        augmented_sentences = [self.insert_synonyms(sentence)for sentence in list(inputs)]
-        return list(augmented_sentences), attention_mask, labels
     
-    def insert_synonyms_with_saliency(self, sentence, score):
+    def augment_one_sample_with_saliency(self, sentence, score):
         if len(sentence) != len(score):
             score = [1 / len(sentence) for _ in range(len(sentence))]
 
@@ -256,13 +266,6 @@ class Insertor(Augmentor):
 
             sentence = curr_sentence
         return sentence
-    
-    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
-        if len(saliency_scores) != len(inputs):
-            saliency_scores = [[] for _ in range(len(inputs))]
-
-        augmented_lines = [self.insert_synonyms_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
-        return augmented_lines, attention_mask, labels
 
 
 class Deletor(Augmentor):
@@ -275,7 +278,7 @@ class Deletor(Augmentor):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def delete_randomly(self, sentence):
+    def augment_one_sample(self, sentence):
         word_list = sentence.split(" ")
         to_delete = []
         for word in word_list:
@@ -285,12 +288,8 @@ class Deletor(Augmentor):
             word_list.remove(word)
         sentence = " ".join(word_list)
         return sentence
-
-    def augment_dataset(self, inputs, attention_mask = None, labels = None):
-        augmented_sentences = [self.delete_randomly(sentence)for sentence in list(inputs)]
-        return list(augmented_sentences), attention_mask, labels
     
-    def delete_randomly_with_saliency(self, sentence, score):
+    def augment_one_sample_with_saliency(self, sentence, score):
         if len(sentence) != len(score):
             score = [1 / len(sentence) for _ in range(len(sentence))]
 
@@ -308,13 +307,6 @@ class Deletor(Augmentor):
 
             sentence = curr_sentence
         return sentence
-    
-    def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
-        if len(saliency_scores) != len(inputs):
-            saliency_scores = [[] for _ in range(len(inputs))]
-
-        augmented_lines = [self.delete_randomly_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
-        return augmented_lines, attention_mask, labels
 
 class CutOut(Augmentor):
     def __init__(self):
@@ -326,7 +318,7 @@ class CutOut(Augmentor):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def cutout_randomly(self, sentence: torch.Tensor):
+    def augment_one_sample(self, sentence: torch.Tensor):
         if(random.random() < self.augmentation_percentage):
             h, w = sentence.shape
 
@@ -345,10 +337,6 @@ class CutOut(Augmentor):
             mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
             return sentence * mask
         return sentence
-
-    def augment_dataset(self, inputs: torch.Tensor, attention_mask = None, labels = None):
-        augmented_sentences = [self.cutout_randomly(sentence)for sentence in inputs]
-        return torch.stack(augmented_sentences), attention_mask, labels
     
 class MixUp(Augmentor):
     def __init__(self):

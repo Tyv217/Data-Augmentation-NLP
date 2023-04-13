@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
 from .translator import TranslatorModule
-from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, MNLIDataModule, SST2DataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiTextDataModule
+from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, QNLIDataModule, SST2DataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiTextDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
 from .text_classifier_saliency import TextClassifierSaliencyModule
@@ -108,7 +108,7 @@ def text_classify(args):
     except ValueError:
         raise Exception("Learning rate argument should be a float")
     
-    data_modules = {"cola": ColaDataModule, "mnli": MNLIDataModule, "sst2": SST2DataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+    data_modules = {"cola": ColaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
     if args.samples_per_class is not None:
         args.dataset_percentage = 100
@@ -211,7 +211,7 @@ def text_classify_with_saliency(args):
         raise Exception("Learning rate argument should be a float")
     
 
-    data_modules = {"cola": ColaDataModule, "mnli": MNLIDataModule, "sst2": SST2DataModule,  "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+    data_modules = {"cola": ColaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule,  "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
 
     if args.samples_per_class is not None:
         args.dataset_percentage = 100

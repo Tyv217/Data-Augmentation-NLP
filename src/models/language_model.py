@@ -90,7 +90,7 @@ class LanguageModelModule(pl.LightningModule):
 
         self.log(
             "validation_perplexity",
-            perplexity.item(),
+            perplexity,
             on_step = False,
             on_epoch = True,
             prog_bar = True,
@@ -131,7 +131,7 @@ class LanguageModelModule(pl.LightningModule):
 
         self.log(
             "test_perplexity",
-            perplexity.item(),
+            perplexity,
             on_step = False,
             on_epoch = True,
             prog_bar = True,

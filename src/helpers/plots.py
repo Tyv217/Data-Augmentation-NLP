@@ -60,14 +60,13 @@ def plot_emb(embeddings, fig_name, datapoints):
     plt.show()
 
 def plot_saliency_scores(words, saliency_scores, fig_name):
-    fig, ax = plt.subplots(figsize=(100, 50))
 
-    ax.bar(words, saliency_scores)
+    plt.bar(words, saliency_scores)
+    plt.ylim([0, 1]) # Set the y-axis limit to 0 and 1
+    plt.xlabel('Words')
+    plt.ylabel('Saliency Scores')
+    plt.title('Word Saliency Scores')
 
-    # Set labels and title
-    ax.set_xlabel('Words')
-    ax.set_ylabel('Saliency Score')
-    ax.set_title('Saliency Scores of Words')
 
     plt.savefig(fig_name)
     plt.show()

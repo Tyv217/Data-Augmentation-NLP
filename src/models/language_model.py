@@ -10,6 +10,7 @@ class LanguageModelModule(pl.LightningModule):
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         MODEL_NAME = "distilbert-base-uncased"
+        self.pretrain = True
         self.tokenizer = DistilBertTokenizer.from_pretrained(MODEL_NAME, do_lower_case=True)
         self.config = AutoConfig.from_pretrained(MODEL_NAME)
         self.model = DistilBertForMaskedLM(self.config)

@@ -23,6 +23,7 @@ def main():
     parser.add_argument("--invert_saliency", type=int, default = 0)
 
     parser.add_argument("--logger_dir", type=str, default="")
+    parser.add_argument("--load_from_checkpoint", type = str)
 
     parser.add_argument("--pretrain", action="store_true")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")

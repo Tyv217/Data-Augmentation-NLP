@@ -171,6 +171,9 @@ def text_classify(args):
         pretrain = args.pretrain,
         augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+    if args.load_from_checkpoint is not None:
+        model.model.distilbert.load_state_dict(torch.load(args.load_from_checkpoint))
     
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
@@ -185,7 +188,10 @@ def text_classify(args):
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
     if args.pretrain:
-        print("Pretrained model used!")
+        if args.load_from_checkpoint is not None:
+            print("Pretrained model from my own pretraining used!")
+        else:
+            print("Pretrained model used!")
     else:
         print("Trained from scratch!")
     if args.samples_per_class is not None:
@@ -316,7 +322,7 @@ def text_classify_with_saliency(args):
         for j in range(len(key_batch)):
             words = key_batch[j]
             scores = score_batch[j]
-            if fig_count < 100:
+            if fig_count < 20:
                 plot_saliency_scores(words, scores, f"saliency_fig_{i*batch_size+j}.png")
                 fig_count += 1
 
@@ -365,12 +371,12 @@ def language_model(args):
     filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
     try:
-        os.remove("runs_language_model/" + filename + ".ckpt")
+        os.remove(args.logger_dir + "/" + filename + ".ckpt")
     except FileNotFoundError:
         pass
 
     logger = TensorBoardLogger(
-        "runs_better_text_classify", name=filename
+        args.logger_dir, name=filename
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -384,7 +390,7 @@ def language_model(args):
 
     checkpoint_callback = ModelCheckpoint(
             monitor='validation_perplexity',
-            dirpath='runs_language_model',
+            dirpath=args.logger_dir,
             save_top_k=1,
             save_weights_only=True,
             filename=filename,
@@ -413,13 +419,9 @@ def language_model(args):
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
+    model.save_pretrained_weights(args.logger_dir + "/" + filename + ".ckpt")
 
     print("Seed:", args.seed)
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
-    if args.samples_per_class is not None:
-        print("FewShot Training Used. Samples per class:", args.samples_per_class)
-    else:
-        print("Dataset Percentage:", args.dataset_percentage)
-
-    print("Auto LR Finder Used:", args.auto_lr_find)
+    print("Saved model in " + args.logger_dir + "/" + filename + ".ckpt")

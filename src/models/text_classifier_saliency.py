@@ -5,7 +5,7 @@ from transformers import AutoModelForSequenceClassification
 import re
 
 class TextClassifierSaliencyModule(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, invert_saliency, pretrain = True, word_augmentors = [],  embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, invert_saliency = 0, pretrain = True, word_augmentors = [],  embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs

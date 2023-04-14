@@ -277,6 +277,7 @@ def text_classify_with_saliency(args):
         num_labels = len(data.id2label),
         id2label = data.id2label,
         label2id = data.label2id,
+        invert_saliency = args.invert_saliency,
         pretrain = args.pretrain,
         word_augmentors = word_augmentors,
         embed_augmentors = embed_augmentors

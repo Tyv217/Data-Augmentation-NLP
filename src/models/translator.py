@@ -18,8 +18,6 @@ class TranslatorModule(pl.LightningModule):
         self.steps_per_epoch = steps_per_epoch
         self.model.resize_token_embeddings(len(tokenizer))
         self.augmentors = augmentors
-        
-        num_params = sum(p.numel() for p in self.model.parameters())
     
     def forward(self, input_id, attention_mask, label):
         return self.model(input_ids = input_id, attention_mask = attention_mask, labels = label)

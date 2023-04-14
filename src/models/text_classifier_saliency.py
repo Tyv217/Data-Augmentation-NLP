@@ -99,8 +99,9 @@ class TextClassifierSaliencyModule(pl.LightningModule):
         original_lines = batch['input_lines']
         label = batch['label'].to(torch.float)
         saliency_scores = [self.saliency_scores.get(input_line, np.array([])) for input_line in original_lines]
+        input_lines = original_lines
         for augmentor in self.word_augmentors:
-                input_lines, _, label = augmentor.augment_dataset_with_saliency(original_lines, None, label, saliency_scores)
+                input_lines, _, label = augmentor.augment_dataset_with_saliency(input_lines, None, label, saliency_scores)
         input_encoding = self.tokenizer.batch_encode_plus(
             input_lines,
             add_special_tokens = True,

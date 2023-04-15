@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class TextClassifierModule(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, augmentors = [], augment_validation = False):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -16,6 +16,7 @@ class TextClassifierModule(pl.LightningModule):
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
         self.augmentors = augmentors
+        self.augment_validation = augment_validation
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)
@@ -65,7 +66,13 @@ class TextClassifierModule(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        output = self.forward(input_id = batch['input_id'], attention_mask = batch['attention_mask'], label = batch['label'])
+        inputs_embeds = self.model.distilbert.embeddings(batch['input_id'])
+
+        if self.augment_validation:
+            for augmentor in self.augmentors:
+                inputs_embeds, attention_mask, label = augmentor.augment_dataset(inputs_embeds, batch['attention_mask'],  batch['label'])
+
+        output = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_mask, labels = label)
         loss = output.loss
         logits = output.logits
         pred_flat = torch.argmax(logits, axis=1).flatten()

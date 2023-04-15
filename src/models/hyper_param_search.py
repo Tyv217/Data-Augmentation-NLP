@@ -11,12 +11,21 @@ from .translator import TranslatorModule
 from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, QNLIDataModule, SST2DataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
-from .data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
+from .data_augmentors import AUGMENTOR_LIST_SINGLE
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 import optuna
 from pytorch_lightning.callbacks import ModelCheckpoint
 import os
+from hyperopt import hp
+from sklearn.model_selection import StratifiedShuffleSplit
+from .train_model import text_classify
+from ray import tune
+from ray.tune.search.hyperopt import HyperOptSearch
+from ray.tune.integration.pytorch_lightning import TuneReportCallback, \
+    TuneReportCheckpointCallback
+import numpy as np
+from torch.utils.data import DataLoader
 
 def hyper_param_search(args):
     if args.task == 'classify':
@@ -31,6 +40,8 @@ def text_classify_search(args):
         text_classify_search_lr(args)
     elif args.to_search == "aug":
         text_classify_search_aug(args)
+    elif args.to_search == "policy":
+        text_classify_search_policy(args)
     else:
         raise Exception("Unknown Search Parameter")
 
@@ -393,3 +404,176 @@ def text_classify_search_lr(args):
     study = optuna.create_study(direction="maximize")
     study.optimize(lambda trial: objective(trial, args), n_trials = 50, timeout = 14400)
     print_trial_stats(study)
+
+def text_classify_search_policy(args):
+    data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
+    
+    search_space = {}
+
+    for i in range(args.num_policy):
+        for j in range(args.num_op):
+            search_space['policy_%d_%d' % (i, j)] = hp.choice('policy_%d_%d' % (i, j), list(range(0, len(AUGMENTOR_LIST_SINGLE))))
+            search_space['aug_prob_%d_%d' % (i, j)] = hp.uniform('aug_prob_%d_ %d' % (i, j), 0.0, 1.0)
+
+    final_policies = []
+
+    data = data_modules[args.dataset](
+        dataset_percentage = args.dataset_percentage,
+        augmentors = [],
+        batch_size = args.batch_size
+    )
+    data.setup("fit")
+
+    valid_dataset = data.valid_dataset
+    test_dataset = data.test_dataset
+
+    n_splits = args.n_splits
+
+    train_samples, train_labels = data.format_data(data.train_dataset)
+
+    reward_attr = 'valid_loss'
+
+    sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.2, random_state=args.seed)
+    for i, (train_index, test_index) in enumerate(sss.split(train_samples, train_labels)):
+        config = {}
+        train_samples = train_samples[train_index]
+        train_labels =  train_labels[train_index]
+        valid_samples = train_samples[test_index]
+        valid_labels = train_labels[test_index]
+
+        algo = HyperOptSearch(search_space, max_concurrent=4*20, reward_attr=reward_attr)
+
+        try:
+            learning_rate = float(args.learning_rate)
+        except ValueError:
+            raise Exception("Learning rate argument should be a float")
+        
+        data_modules = {"cola": ColaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
+
+        if args.samples_per_class is not None:
+            args.dataset_percentage = 100
+
+        data = data_modules[args.dataset](
+            dataset_percentage = args.dataset_percentage / 100,
+            augmentors = word_augmentors,
+            batch_size = args.batch_size
+        )
+
+        if args.samples_per_class is not None:
+            data = FewShotTextClassifyWrapperModule(data, args.samples_per_class)
+
+        data.prepare_data()
+        data.setup("fit")
+
+        filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+
+        logger = TensorBoardLogger(
+            args.logger_dir, name=filename
+        )
+
+        lr_monitor = LearningRateMonitor(logging_interval="step")
+        early_stop_callback = early_stopping.EarlyStopping(
+            monitor='validation_loss_epoch',
+            min_delta=0,
+            patience=3,
+            mode='min',
+        )
+        print(args)
+
+        checkpoint_callback = ModelCheckpoint(
+                monitor='validation_accuracy',
+                dirpath=args.logger_dir,
+                save_top_k=1,
+                save_weights_only=True,
+                filename=filename,
+                auto_insert_metric_name=False
+            )
+
+        trainer = pl.Trainer.from_argparse_args(
+            args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback]
+        )  # , distributed_backend='ddp_cpu')
+        
+        # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
+        #     input_, output = batch
+        #     print(input_['src_len'])    
+
+        # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
+        # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
+
+        model = TextClassifierModule(
+            learning_rate = learning_rate,
+            max_epochs = args.max_epochs,
+            tokenizer = data.tokenizer,
+            steps_per_epoch = int(len(data.train_dataloader())),
+            num_labels = len(data.id2label),
+            id2label = data.id2label,
+            label2id = data.label2id,
+            pretrain = args.pretrain,
+            augmentors = embed_augmentors
+        ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+        if args.load_from_checkpoint is not None:
+            model.model.distilbert.load_state_dict(torch.load(args.load_from_checkpoint))
+        
+        # most basic trainer, uses good defaults (1 gpu)
+        trainer.fit(model, data)
+        trainer.test(model, dataloaders = data.test_dataloader())
+
+        config['data'] = data
+        config['model'] = model
+        config['trainer'] = trainer
+        config["augmentor_list"] = AUGMENTOR_LIST_SINGLE
+        
+        experiment_config = {
+            "name": "text_classify_hyperopt",
+            "run": train_and_eval,
+            "stop": {"training_iteration": 1},
+            "resources_per_trial": {"cpu": 1},
+            "config": config,
+            "num_samples": 50,
+            "search_alg": algo,
+        }
+
+        analysis = tune.run(**experiment_config)
+
+
+    def train_and_eval(config):
+        data = config["data"]
+        valid_samples, valid_labels = data.format_data(data.valid_dataset)
+        model = config["model"]
+        trainer = config["trainer"]
+        augmentor_list = config["augmentor_list"]
+        augmentor_policies = np.array([])
+        for i in range(args.num_policy):
+            augmentors = []
+            for j in range(args.num_op):
+                policy = search_space['policy_%d_%d' % (i, j)]
+                aug_prob = search_space['aug_prob_%d_%d' % (i, j)]
+                augmentor = augmentor_list[policy]
+                augmentor.set_augmentation_percentage(aug_prob)
+                augmentors.append(augmentor)
+            augmentor_policies.append(augmentors)
+        augmentor_policies = np.array(augmentor_policies)
+        augmented_samples = []
+        for sample in valid_samples:
+            policy = random.choice(augmentor_policies)
+            for augmentor in policy:
+                sample = augmentor.augment_one_sample(sample)
+                augmented_samples.append(sample)
+
+        valid_dataloader = DataLoader(data.split_and_tokenize((augmented_samples, valid_labels), batch_size=data.batch_size))
+
+        trainer.validate(model, valid_dataloader)
+
+        return {"valid_loss": trainer.callback_metrics['validation_loss_epoch']}
+        
+
+            
+
+
+        
+
+
+
+
+

@@ -10,7 +10,7 @@ import random
 
 
 class AGNewsDataModule(pl.LightningDataModule):
-    def __init__(self, dataset_percentage,  augmentors = [], batch_size: int = 32, tokenize = True):
+    def __init__(self, dataset_percentage,  augmentors = [], batch_size: int = 32, tokenize = True, augment_validation = False):
         super().__init__()
         self.batch_size = batch_size
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
@@ -27,6 +27,7 @@ class AGNewsDataModule(pl.LightningDataModule):
         self.test_dataset = to_map_style_dataset(test_iter)
         self.tokenize = tokenize
         self.augmentors = augmentors
+        self.augment_validation = augment_validation
 
     def format_data(self, data):
         labels, inputs = zip(*data)
@@ -73,7 +74,7 @@ class AGNewsDataModule(pl.LightningDataModule):
         return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True, num_workers = 42)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset, augment = self.augment_validation), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)

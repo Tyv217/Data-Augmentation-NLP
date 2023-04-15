@@ -101,7 +101,7 @@ def seq2seq_translate(args):
     print("Augmentation params:", args.augmentation_params)
     print("Dataset Percentage:", args.dataset_percentage)
 
-def text_classify(args):
+def text_classify(args, ret_metrics = []):
     word_augmentors, embed_augmentors = parse_augmentors(args)
     try:
         learning_rate = float(args.learning_rate)
@@ -208,6 +208,15 @@ def text_classify(args):
         f.write("Test accuracy", trainer.callback_metrics['test_accuracy'])
         f.write("\n\n\n")
         f.close()
+
+    if len(ret_metrics) > 0:
+        ret = {}
+        for metric in ret_metrics:
+            try:
+                ret[metric] = trainer.callback_metrics[metric]
+            except:
+                continue
+        return ret
 
 def text_classify_with_saliency(args):
     word_augmentors, embed_augmentors = parse_augmentors(args)

@@ -82,7 +82,7 @@ class ColaDataModule(GlueDataModule):
             labels.append(i['label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
-    def split_and_tokenize(self, data, augment = False):
+    def split_and_tokenize(self, data, format = True, augment = False):
         if format:
             input_lines, labels = self.format_data(data)
         else:
@@ -133,7 +133,7 @@ class QNLIDataModule(GlueDataModule):
             labels.append(i['label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
-    def split_and_tokenize(self, data, augment = False):
+    def split_and_tokenize(self, data, format = True, augment = False):
         if format:
             input_lines, labels = self.format_data(data)
         else:
@@ -184,7 +184,7 @@ class SST2DataModule(GlueDataModule):
             labels.append(i['label'])
         return input_lines, np.identity(len(self.id2label))[labels]
 
-    def split_and_tokenize(self, data, augment = False):
+    def split_and_tokenize(self, data, format = True, augment = False):
         if format:
             input_lines, labels = self.format_data(data)
         else:

@@ -24,6 +24,10 @@ def main():
 
     parser.add_argument("--logger_dir", type=str, default="")
     parser.add_argument("--load_from_checkpoint", type = str)
+    
+    parser.add_argument("--num_policy", type=int, default=5)
+    parser.add_argument("--num_op", type=int, default=2)
+    parser.add_argument("--n_splits", type=int, default=5)
 
     parser.add_argument("--pretrain", action="store_true")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")

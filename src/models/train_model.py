@@ -44,6 +44,7 @@ def seq2seq_translate(args):
 
     data.prepare_data()
     data.setup("fit")
+
     filename = "translate_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "_seed=" + str(args.seed)
     
     logger = TensorBoardLogger(
@@ -124,7 +125,7 @@ def text_classify(args, ret_metrics = []):
 
     data.prepare_data()
     data.setup("fit")
-
+    
     filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
     logger = TensorBoardLogger(
@@ -171,6 +172,7 @@ def text_classify(args, ret_metrics = []):
         pretrain = args.pretrain,
         augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+   
 
     if args.load_from_checkpoint is not None:
         model.model.distilbert.load_state_dict(torch.load(args.load_from_checkpoint))

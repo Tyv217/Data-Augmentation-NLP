@@ -67,10 +67,12 @@ class TextClassifierModule(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         inputs_embeds = self.model.distilbert.embeddings(batch['input_id'])
+        attention_mask = batch['attention_mask']
+        label = batch['label']
 
         if self.augment_validation:
             for augmentor in self.augmentors:
-                inputs_embeds, attention_mask, label = augmentor.augment_dataset(inputs_embeds, batch['attention_mask'],  batch['label'])
+                inputs_embeds, attention_mask, label = augmentor.augment_dataset(inputs_embeds, attention_mask, label)
 
         output = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_mask, labels = label)
         loss = output.loss

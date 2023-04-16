@@ -424,9 +424,6 @@ def text_classify_search_policy(args):
     )
     data.setup("fit")
 
-    valid_dataset = data.valid_dataset
-    test_dataset = data.test_dataset
-
     n_splits = args.n_splits
 
     train_samples, train_labels = data.format_data(data.train_dataset)
@@ -436,10 +433,13 @@ def text_classify_search_policy(args):
     sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.2, random_state=args.seed)
     for i, (train_index, test_index) in enumerate(sss.split(train_samples, train_labels)):
         config = {}
-        train_samples = train_samples[train_index]
+        train = train_samples[train_index]
         train_labels =  train_labels[train_index]
-        valid_samples = train_samples[test_index]
+        valid = train_samples[test_index]
         valid_labels = train_labels[test_index]
+
+        train_dataloader = DataLoader(data.split_and_tokenize((train, train_labels), batch_size=data.batch_size))
+        valid_dataloader = DataLoader(data.split_and_tokenize((valid, valid_labels), batch_size=data.batch_size))
 
         algo = HyperOptSearch(search_space, max_concurrent=4*20, reward_attr=reward_attr)
 
@@ -452,18 +452,6 @@ def text_classify_search_policy(args):
 
         if args.samples_per_class is not None:
             args.dataset_percentage = 100
-
-        data = data_modules[args.dataset](
-            dataset_percentage = args.dataset_percentage / 100,
-            augmentors = word_augmentors,
-            batch_size = args.batch_size
-        )
-
-        if args.samples_per_class is not None:
-            data = FewShotTextClassifyWrapperModule(data, args.samples_per_class)
-
-        data.prepare_data()
-        data.setup("fit")
 
         filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
 
@@ -509,15 +497,11 @@ def text_classify_search_policy(args):
             id2label = data.id2label,
             label2id = data.label2id,
             pretrain = args.pretrain,
-            augmentors = embed_augmentors
+            augmentors = []
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
-        if args.load_from_checkpoint is not None:
-            model.model.distilbert.load_state_dict(torch.load(args.load_from_checkpoint))
         
         # most basic trainer, uses good defaults (1 gpu)
-        trainer.fit(model, data)
-        trainer.test(model, dataloaders = data.test_dataloader())
+        trainer.fit(model, train_dataloader = train_dataloader, valid_dataloader = valid_dataloader)
 
         config['data'] = data
         config['model'] = model
@@ -527,7 +511,7 @@ def text_classify_search_policy(args):
         experiment_config = {
             "name": "text_classify_hyperopt",
             "run": train_and_eval,
-            "stop": {"training_iteration": 1},
+            "stop": {"training_iteration": 50},
             "resources_per_trial": {"cpu": 1},
             "config": config,
             "num_samples": 50,
@@ -535,6 +519,19 @@ def text_classify_search_policy(args):
         }
 
         analysis = tune.run(**experiment_config)
+
+        best_config = analysis.get_best_config(metric = "valid_loss", mode = "min")
+        for i in range(args.num_policy):
+            augmentors = []
+            for j in range(args.num_op):
+                policy = search_space['policy_%d_%d' % (i, j)]
+                aug_prob = search_space['aug_prob_%d_%d' % (i, j)]
+                augmentor = config["augmentor_list"][policy]
+                augmentor.set_augmentation_percentage(aug_prob)
+                augmentors.append(augmentor)
+            final_policies.append(augmentors)
+        
+    
 
 
     def train_and_eval(config):

@@ -2,6 +2,8 @@ from ..models.data_augmentors import Synonym_Replacer, Back_Translator, Insertor
 AUGMENTATOR_MAPPING = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
 
 def parse_augmentors(args):
+    if args.use_default_augmentation_params != 0:
+        return parse_augmentors_string(args.augmentors, args.augmentation_params)
     augmentor_names = args.augmentors
 
     if augmentor_names == '':

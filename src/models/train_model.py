@@ -200,12 +200,12 @@ def text_classify(args, ret_metrics = []):
         print("Dataset Percentage:", args.dataset_percentage)
 
     with open('results_' + args.dataset + '.txt', 'a') as f:
-        f.write("Seed:", args.seed)
+        f.write("Seed: " + str(args.seed))
         if args.samples_per_class is not None:
-            f.write("FewShot Training Used. Samples per class:", args.samples_per_class)
+            f.write("FewShot Training Used. Samples per class: " + str(args.samples_per_class))
         else:
-            f.write("Dataset Percentage:", args.dataset_percentage)
-        f.write("Test accuracy", trainer.callback_metrics['test_accuracy'])
+            f.write("Dataset Percentage: " + str(args.dataset_percentage))
+        f.write("Test accuracy " + str(trainer.callback_metrics['test_accuracy']))
         f.write("\n\n\n")
         f.close()
 

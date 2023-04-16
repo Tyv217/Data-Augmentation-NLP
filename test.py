@@ -1,19 +1,31 @@
-import os
 import subprocess
+from datetime import datetime, timedelta
 
-def get_libraries(directory):
-    """
-    Returns a list of all external Python libraries used in a directory.
-    """
-    libraries = set()
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith(".py"):
-                file_path = os.path.join(root, file)
-                result = subprocess.check_output(["python", "-c", "import os, sys; sys.path.append(os.path.dirname('" + file_path + "')); import pkgutil; print([name for _, name, _ in pkgutil.iter_modules()])"])
-                libraries.update(eval(result))
-    return list(libraries)
+def git_log_summary():
+    two_months_ago = datetime.now() - timedelta(days=60)
+    git_log = subprocess.check_output(["git", "log", "--numstat", "--pretty=format:'%H %ct'", "--since='2 months ago'"]).decode("utf-8")
+    lines = git_log.split('\n')
+    commit_summaries = []
+    commit = None
+    for line in lines:
+        if line.startswith("'"):
+            commit_hash, commit_time = line[1:-1].split(' ')
+            commit_datetime = datetime.fromtimestamp(int(commit_time))
+            if commit_datetime > two_months_ago:
+                if commit:
+                    commit_summaries.append(commit)
+                commit = {'commit_hash': commit_hash, 'changes': 0, 'files_changed': 0}
+        elif line:
+            commit['files_changed'] += 1
+            if line.split()[0] != '-':
+                commit['changes'] += int(line.split()[0])
+            if line.split()[1] != '-':
+                commit['changes'] += int(line.split()[1])
+    if commit:
+        commit_summaries.append(commit)
+    commit_summaries.sort(key=lambda c: c['files_changed'], reverse=True)
+    return commit_summaries
 
-if __name__ == '__main__':
-    libraries = get_libraries("src")
-    print(libraries)
+x = git_log_summary()
+for i in x:
+    print(i)

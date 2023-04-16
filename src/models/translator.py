@@ -10,11 +10,8 @@ class TranslatorModule(pl.LightningModule):
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         self.tokenizer = tokenizer
-        if pretrain:
-            self.model = T5Model.from_pretrained()
-        else:
-            self.config = AutoConfig.from_pretrained(model_name)
-            self.model = T5ForConditionalGeneration(self.config)
+        self.config = AutoConfig.from_pretrained(model_name)
+        self.model = T5ForConditionalGeneration(self.config)
         self.steps_per_epoch = steps_per_epoch
         self.model.resize_token_embeddings(len(tokenizer))
         self.augmentors = augmentors

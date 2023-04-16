@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--dataset", type=str)
     parser.add_argument("--augmentors", type=str, default="")
     parser.add_argument("--augmentation_params", type=str, default="")
+    parser.add_argument("--use_default_augmentation_params", type = int)
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--samples_per_class", type=int)
     parser.add_argument("--invert_saliency", type=int, default = 0)

@@ -1,1 +1,1 @@
-from .visualize import plot_and_compare_emb, plot_emb, plot_saliency_scores, plot_results
+from .visualize import plot_and_compare_emb, plot_emb, plot_saliency_scores, visualize_data

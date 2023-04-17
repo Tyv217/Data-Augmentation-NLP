@@ -2,7 +2,7 @@ import pytorch_lightning as pl
 from argparse import ArgumentParser
 from src.models import train_model, hyper_param_search
 from src.helpers import set_seed
-from src.visualization import plot_results
+from src.visualization import visualize_data
 
 def main():
     parser = ArgumentParser(conflict_handler = 'resolve')
@@ -26,7 +26,6 @@ def main():
     parser.add_argument("--invert_saliency", type=int, default = 0)
 
     parser.add_argument("--logger_dir", type=str, default="")
-    parser.add_argument("--load_from_checkpoint", type = str)
     
     parser.add_argument("--num_policy", type=int, default=5)
     parser.add_argument("--num_op", type=int, default=2)
@@ -50,7 +49,7 @@ def main():
         if args.visualize == 0:
             train_model(args)
         else:
-            plot_results(args)
+            visualize_data(args)
     else:
         hyper_param_search(args)
 

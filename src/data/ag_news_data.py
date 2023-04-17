@@ -74,7 +74,7 @@ class AGNewsDataModule(pl.LightningDataModule):
         return DataLoader(self.split_and_tokenize(self.train_dataset, augment = True), batch_size=self.batch_size, shuffle = True, num_workers = 42)
 
     def val_dataloader(self):
-        return DataLoader(self.split_and_tokenize(self.valid_dataset, augment = self.augment_validation), batch_size=self.batch_size)
+        return DataLoader(self.split_and_tokenize(self.valid_dataset), batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.split_and_tokenize(self.test_dataset), batch_size=self.batch_size)

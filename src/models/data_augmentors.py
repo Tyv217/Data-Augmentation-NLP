@@ -29,14 +29,14 @@ class Augmentor(ABC):
         raise Exception("Not implemented")
     
     def augment_dataset_with_saliency(self, inputs, attention_mask = None, labels = None, saliency_scores = []):
-        inputs = np.array(inputs)
-        if inputs.ndim > 1:
+        if isinstance(inputs, str):
+            return self.augment_one_sample_with_saliency(inputs, saliency_scores), attention_mask, labels
+        else:
             if len(saliency_scores) != len(inputs):
                 saliency_scores = [[] for _ in range(len(inputs))]
             augmented_lines = [self.augment_one_sample_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
             return augmented_lines, attention_mask, labels
-        else:
-            return self.augment_one_sample(inputs), attention_mask, labels
+        
 
 class Synonym_Replacer(Augmentor):
     def __init__(self, stopword_language, word_to_replace_per_sentence = 2):
@@ -91,13 +91,23 @@ class Synonym_Replacer(Augmentor):
         return sentence
     
     def augment_one_sample_with_saliency(self, sentence, score):
-        if len(sentence) != len(score):
-            score = [1 / len(sentence) for _ in range(len(sentence))]
+        word_list = sentence.split(" ")
+        if len(word_list) != len(score):
+            score = [1 / len(word_list) for _ in range(len(word_list))]
+        filtered_word_list = self.get_word_list(sentence)
+        filtered_word_scores = np.zeros(len(filtered_word_list))
+        for i in range(len(word_list)):
+            for j in range(len(filtered_word_list)):
+                if filtered_word_list[j][0] in word_list[i]:
+                    filtered_word_scores[j] = score[i]
+        
+        filtered_word_scores = filtered_word_scores / np.sum(filtered_word_scores)
+        num_replace = int(len(filtered_word_list) * self.augmentation_percentage)
+        
+        to_replace = np.random.choice(np.arange(len(filtered_word_list)), size=num_replace, replace=False, p = filtered_word_scores)
 
-        word_list = self.get_word_list(sentence)
-        num_replace = int(len(word_list) * self.augmentation_percentage)
-        to_replace = np.random.choice(np.array(word_list), size=num_replace, replace=False, p = score)
-        for word, pos in to_replace:
+        for index in to_replace:
+            word, pos = filtered_word_list[index]
             curr_sentence = sentence
             synonyms = self.get_synonym(word, pos)
             synonyms = list(filter(lambda x: '_' not in x, synonyms))
@@ -249,13 +259,23 @@ class Insertor(Augmentor):
         return sentence
     
     def augment_one_sample_with_saliency(self, sentence, score):
-        if len(sentence) != len(score):
-            score = [1 / len(sentence) for _ in range(len(sentence))]
+        word_list = sentence.split(" ")
+        if len(word_list) != len(score):
+            score = [1 / len(word_list) for _ in range(len(word_list))]
+        filtered_word_list = self.get_word_list(sentence)
+        filtered_word_scores = np.zeros(len(filtered_word_list))
+        for i in range(len(word_list)):
+            for j in range(len(filtered_word_list)):
+                if filtered_word_list[j][0] in word_list[i]:
+                    filtered_word_scores[j] = score[i]
+        
+        filtered_word_scores = filtered_word_scores / np.sum(filtered_word_scores)
+        num_insert = int(len(filtered_word_list) * self.augmentation_percentage)
 
-        word_list = self.get_word_list(sentence)
-        num_insert = int(len(word_list) * self.augmentation_percentage)
-        to_insert = np.random.choice(np.array(word_list), size=num_insert, replace=False, p = score)
-        for word,pos in to_insert:
+        to_insert = np.random.choice(np.arange(len(filtered_word_list)), size=num_insert, replace=False, p = filtered_word_scores)
+        
+        for index in to_insert:
+            word, pos = filtered_word_list[index]
             curr_sentence = sentence
             synonyms = self.get_synonym(word, pos)
             synonyms = list(filter(lambda x: '_' not in x, synonyms))
@@ -290,22 +310,13 @@ class Deletor(Augmentor):
         return sentence
     
     def augment_one_sample_with_saliency(self, sentence, score):
-        if len(sentence) != len(score):
-            score = [1 / len(sentence) for _ in range(len(sentence))]
-
         word_list = sentence.split(" ")
+        if len(word_list) != len(score):
+            score = [1 / len(word_list) for _ in range(len(word_list))]
         num_delete = int(len(word_list) * self.augmentation_percentage)
-        to_delete = np.random.choice(np.array(word_list), size=num_delete, replace=False, p = score)
-        for word,pos in to_delete:
-            curr_sentence = sentence
-            synonyms = self.get_synonym(word, pos)
-            synonyms = list(filter(lambda x: '_' not in x, synonyms))
-
-            if(synonyms):
-                synonym = random.choice(synonyms)
-                curr_sentence = self.insert_randomly(synonym, curr_sentence)
-
-            sentence = curr_sentence
+        to_delete = np.random.choice(np.arange(len(word_list)), size=num_delete, replace=False, p = score)
+        word_list = np.delete(np.array(word_list), to_delete)
+        sentence = " ".join(word_list)
         return sentence
 
 class CutOut(Augmentor):

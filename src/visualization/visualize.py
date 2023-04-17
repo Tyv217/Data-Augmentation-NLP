@@ -2,6 +2,18 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterDataModule, BabeDataModule
+from sentence_transformers import SentenceTransformer
+from ..helpers import parse_augmentors
+import torch
+
+def visualize_data(args):
+    if args.visualize == 1:
+        plot_results(args)
+    elif args.visualize == 2:
+        visualize_augmentor_change_data(args)
+    else:
+        raise Exception("Incorrect visualize argument")
 
 def plot_and_compare_emb(embeddings1, embeddings2, fig_name):
     pca = PCA(n_components=2)
@@ -28,10 +40,13 @@ def plot_emb(embeddings, fig_name, datapoints):
     y_mean = np.mean(reduced[1])
 
     dist = np.sqrt(np.square(reduced[0] - x_mean) + np.square(reduced[1] - y_mean))
-    dist1 = np.copy(dist)
-    dist1 = np.sort(dist1)
-    num_samples = min(datapoints, len(dist1))
-    cutoff = dist1[len(dist1) - num_samples]
+    if datapoints > 0:
+        dist1 = np.copy(dist)
+        dist1 = np.sort(dist1)
+        num_samples = min(datapoints, len(dist1))
+        cutoff = dist1[len(dist1) - num_samples]
+    else:
+        cutoff = -1
 
     x_coords = np.array(reduced[0])[dist >= cutoff]
     y_coords = np.array(reduced[1])[dist >= cutoff]
@@ -93,3 +108,49 @@ def plot_results(args):
     plt.ylabel('Accuracy')
     plt.legend()
     plt.savefig("reports/figures/results/" +filename + ".png")
+
+def visualize_augmentor_change_data(args):
+
+    word_augmentors, _ = parse_augmentors(args)
+
+    data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "iwslt": IWSLT17DataModule}
+
+    data = data_modules[args.task](
+        dataset_percentage = 1,
+        augmentors = [],
+        batch_size = args.batch_size
+    )
+
+    data.prepare_data()
+    data.setup("fit")
+
+    train_data1 = list(data.get_dataset_text())
+    # random.shuffle(train_data1)
+    # train_data1 = train_data1[:1000]
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    AUGMENT_LOOPS = 1
+    train_data2 = train_data1.copy()
+    print("Start augmenting!")
+    for augmentor in word_augmentors:
+        augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
+    # start_time = time.time()
+        for i in range(AUGMENT_LOOPS):
+            train_data2 = augmentor.augment_dataset(train_data2)
+
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
+
+    embeddings1 = model.encode(train_data1)
+    embeddings2 = model.encode(train_data2)
+
+    difference = []
+    
+    for e1, e2 in zip(embeddings1, embeddings2):
+        difference.append(e2 - e1)
+
+    # cosine_similarities = cosine_similarity(embeddings1, embeddings2)
+
+    # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
+
+    plot_emb(difference, args.task + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.png', args.datapoints)

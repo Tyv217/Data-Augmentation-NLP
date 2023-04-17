@@ -72,7 +72,7 @@ def seq2seq_translate(args):
     )
 
     trainer = pl.Trainer.from_argparse_args(
-        args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback] #, plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
+        args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback]#, plugins=[SLURMEnvironment(requeue_signal=signal.SIGUSR1)]
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
@@ -150,9 +150,13 @@ def text_classify(args, ret_metrics = []):
             filename=filename,
             auto_insert_metric_name=False
         )
+    callbacks = [lr_monitor, early_stop_callback]
+
+    if args.use_default_augmentation_params == 0:
+        callbacks.append(checkpoint_callback)
 
     trainer = pl.Trainer.from_argparse_args(
-        args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback]
+        args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks = callbacks
     )  # , distributed_backend='ddp_cpu')
     
     # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):

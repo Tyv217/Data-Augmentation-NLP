@@ -134,7 +134,6 @@ def visualize_augmentor_change_data(args):
     train_data2 = train_data1.copy()
     print("Start augmenting!")
     for augmentor in word_augmentors:
-        augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
     # start_time = time.time()
         for i in range(AUGMENT_LOOPS):
             train_data2, _, _ = augmentor.augment_dataset(train_data2, None, None)

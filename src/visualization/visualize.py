@@ -137,7 +137,7 @@ def visualize_augmentor_change_data(args):
         augmentor.set_augmentation_percentage(args.augmentation_params) # So guaranteed augmentation
     # start_time = time.time()
         for i in range(AUGMENT_LOOPS):
-            train_data2 = augmentor.augment_dataset(train_data2)
+            train_data2, _, _ = augmentor.augment_dataset(train_data2, None, None)
 
     model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
 

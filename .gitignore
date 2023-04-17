@@ -7,3 +7,5 @@ runs*/
 anaconda3/
 *.sh
 logs/
+figs/data_for_plotting
+figs/plotted_data

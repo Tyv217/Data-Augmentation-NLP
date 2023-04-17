@@ -5,7 +5,8 @@ from torchtext.data.functional import to_map_style_dataset
 from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
-from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, plot_saliency_scores
+from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
+from ..visualization import plot_saliency_scores
 from .translator import TranslatorModule
 from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, QNLIDataModule, SST2DataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiTextDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -172,10 +173,6 @@ def text_classify(args, ret_metrics = []):
         pretrain = args.pretrain,
         augmentors = embed_augmentors
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-   
-
-    if args.load_from_checkpoint is not None:
-        model.model.distilbert.load_state_dict(torch.load(args.load_from_checkpoint))
     
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
@@ -190,10 +187,7 @@ def text_classify(args, ret_metrics = []):
     print("Augmentors:", args.augmentors)
     print("Augmentation params:", args.augmentation_params)
     if args.pretrain:
-        if args.load_from_checkpoint is not None:
-            print("Pretrained model from my own pretraining used!")
-        else:
-            print("Pretrained model used!")
+        print("Pretrained model used!")
     else:
         print("Trained from scratch!")
     if args.samples_per_class is not None:

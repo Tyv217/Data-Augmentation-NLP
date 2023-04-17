@@ -2,6 +2,7 @@ import pytorch_lightning as pl
 from argparse import ArgumentParser
 from src.models import train_model, hyper_param_search
 from src.helpers import set_seed
+from src.visualization import plot_results
 
 def main():
     parser = ArgumentParser(conflict_handler = 'resolve')
@@ -10,6 +11,7 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--learning_rate", type=str, default="5e-5")
     # parser.add_argument("--deterministic", type=bool, default=True)
+    parser.add_argument("--visualize", type=int, default=0)
 
     parser.add_argument("--search", type=int, default=0)
     parser.add_argument("--to_search", type=str, default="aug")
@@ -45,7 +47,10 @@ def main():
     set_seed(args.seed)
 
     if args.search == 0:
-        train_model(args)
+        if args.visualize == 0:
+            train_model(args)
+        else:
+            plot_results(args)
     else:
         hyper_param_search(args)
 

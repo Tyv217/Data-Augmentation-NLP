@@ -115,7 +115,7 @@ def visualize_augmentor_change_data(args):
 
     data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "iwslt": IWSLT17DataModule}
 
-    data = data_modules[args.task](
+    data = data_modules[args.dataset](
         dataset_percentage = 1,
         augmentors = [],
         batch_size = args.batch_size

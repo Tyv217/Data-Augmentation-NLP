@@ -54,7 +54,7 @@ def seq2seq_translate(args):
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     early_stop_callback = early_stopping.EarlyStopping(
-        monitor='validation_loss_epoch',
+        monitor='validation_loss_epoch' if args.use_default_augmentation_params == 0 else "validation_loss",
         min_delta=0,
         patience=3,
         mode='min',
@@ -135,7 +135,7 @@ def text_classify(args, ret_metrics = []):
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     early_stop_callback = early_stopping.EarlyStopping(
-        monitor='validation_loss_epoch',
+        monitor='validation_loss_epoch'  if args.use_default_augmentation_params == 0 else "validation_loss",
         min_delta=0,
         patience=3,
         mode='min',

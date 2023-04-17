@@ -152,4 +152,4 @@ def visualize_augmentor_change_data(args):
 
     # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 
-    plot_emb(difference, args.dataset + '_' + args.augmentor + str(AUGMENT_LOOPS) + '.png', args.datapoints)
+    plot_emb(difference, args.dataset + '_' + args.augmentors + str(AUGMENT_LOOPS) + '.png', args.datapoints)

@@ -168,8 +168,14 @@ class Back_Translator(Augmentor):
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
         if attention_mask is not None:
             raise Exception("Back Translation on Tokens Instead of Words") 
-        inputs = np.array(inputs)
-        if inputs.ndim > 1:
+        
+        if isinstance(inputs, str):
+            if random.random() < self.augmentation_percentage:
+                return self.back_translate(inputs), attention_mask, labels
+            else:
+                return inputs, attention_mask, labels
+            
+        else:
             to_augment = []
             for input in list(inputs):
                 if(random.random() < self.augmentation_percentage):
@@ -186,17 +192,15 @@ class Back_Translator(Augmentor):
                 translated_data += self.back_translate(text, model1, model2, tokenizer1, tokenizer2)
                 count += BATCH_SIZE
 
+            import pdb
+            pdb.set_trace()
+
             inputs = list(inputs)
             
             for i1 in range(len(translated_data)):
                 i2 = inputs.index(to_augment[i1])
                 inputs[i2] = translated_data[i1]
             return list(inputs), attention_mask, labels
-        else:
-            if random.random() < self.augmentation_percentage:
-                return self.back_translate(inputs), attention_mask, labels
-            else:
-                return inputs, attention_mask, labels
 
 class Insertor(Augmentor):
     def __init__(self, stopword_language):

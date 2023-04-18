@@ -45,6 +45,8 @@ def plot_emb(embeddings, fig_name, datapoints):
         dist1 = np.sort(dist1)
         num_samples = min(datapoints, len(dist1))
         cutoff = dist1[len(dist1) - num_samples]
+    elif datapoints == -1:
+        cutoff = np.median(dist)
     else:
         cutoff = -1
 
@@ -107,7 +109,7 @@ def plot_results(args):
     plt.xlabel('Dataset Percentage')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.savefig("reports/figures/results/" +filename + ".png")
+    plt.savefig("reports/figures/results/" + filename + ".png")
 
 def visualize_augmentor_change_data(args):
 
@@ -135,7 +137,7 @@ def visualize_augmentor_change_data(args):
     print("Start augmenting!")
     for augmentor in word_augmentors:
     # start_time = time.time()
-        for i in range(AUGMENT_LOOPS):
+        for _ in range(AUGMENT_LOOPS):
             train_data2, _, _ = augmentor.augment_dataset(train_data2, None, None)
 
     model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)

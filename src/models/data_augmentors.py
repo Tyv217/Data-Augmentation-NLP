@@ -192,9 +192,6 @@ class Back_Translator(Augmentor):
                 translated_data += self.back_translate(text, model1, model2, tokenizer1, tokenizer2)
                 count += BATCH_SIZE
 
-            import pdb
-            pdb.set_trace()
-
             inputs = list(inputs)
             
             for i1 in range(len(translated_data)):

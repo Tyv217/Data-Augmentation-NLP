@@ -23,8 +23,12 @@ class BabeDataModule(pl.LightningDataModule):
             PATH_sg2 = "src/data/external/bias_detection_data_files/final_labels_SG2.xlsx"
             df_sg2 = pd.read_excel(PATH_sg2)
         except FileNotFoundError:
-            PATH_sg2 = "project/src/data/external/bias_detection_data_files/final_labels_SG2.xlsx"
-            df_sg2 = pd.read_excel(PATH_sg2)
+            try:
+                PATH_sg2 = "project/src/data/external/bias_detection_data_files/final_labels_SG2.xlsx"
+                df_sg2 = pd.read_excel(PATH_sg2)
+            except FileNotFoundError:
+                PATH_sg2 = "Data-Augmentation-NLP/src/data/external/bias_detection_data_files/final_labels_SG2.xlsx"
+                df_sg2 = pd.read_excel(PATH_sg2)
         df_sg2 = df_sg2[["text", "label_bias"]]
 
         df = df_sg2

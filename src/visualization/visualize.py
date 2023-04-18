@@ -102,7 +102,7 @@ def plot_results(args):
     for col in results.columns[1:]:
         plt.plot(results[first_col], results[col], label=col)
         plt.errorbar(results[first_col], results[col], error_bars[col], marker='x', mfc='red',
-         mec='red', ms=0, mew=1, capsize=10, elinewidth=2)
+         mec='red', ms=0, mew=1, capsize=10, elinewidth=2, capthick=1, markeredgewidth=1)
     plt.title(filename.replace("_", " "))
     plt.xlabel('Dataset Percentage')
     plt.ylabel('Accuracy')

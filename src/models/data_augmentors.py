@@ -91,8 +91,10 @@ class Synonym_Replacer(Augmentor):
         return sentence
     
     def augment_one_sample_with_saliency(self, sentence, score):
-        word_list = sentence.split(" ")
         filtered_word_list = self.get_word_list(sentence)
+        if len(filtered_word_list) == 0:
+            return []
+        word_list = sentence.split(" ")
         if len(word_list) != len(score):
             filtered_word_scores = np.full((len(filtered_word_list),), 1/len(filtered_word_list))
         else:
@@ -264,8 +266,10 @@ class Insertor(Augmentor):
         return sentence
     
     def augment_one_sample_with_saliency(self, sentence, score):
-        word_list = sentence.split(" ")
         filtered_word_list = self.get_word_list(sentence)
+        if len(filtered_word_list) == 0:
+            return []
+        word_list = sentence.split(" ")
         if len(word_list) != len(score):
             filtered_word_scores = np.full((len(filtered_word_list),), 1/len(filtered_word_list))
         else:

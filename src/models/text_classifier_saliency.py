@@ -74,7 +74,7 @@ class TextClassifierSaliencyModule(pl.LightningModule):
             return []
         
         if self.invert_saliency:
-            word_weights = 1 / word_weights
+            word_weights = np.divide(1, word_weights, where = word_weights != 0, out = np.zeros_like(word_weights))
 
         return word_weights / np.sum(word_weights)
     

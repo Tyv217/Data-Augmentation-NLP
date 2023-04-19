@@ -106,7 +106,7 @@ class Synonym_Replacer(Augmentor):
             else:
                 filtered_word_scores = filtered_word_scores / np.sum(filtered_word_scores)
 
-            num_replace = int(len(filtered_word_list) * self.augmentation_percentage)
+        num_replace = int(len(filtered_word_list) * self.augmentation_percentage)
         
         to_replace = np.random.choice(np.arange(len(filtered_word_list)), size=num_replace, replace=False, p = filtered_word_scores)
 
@@ -279,7 +279,7 @@ class Insertor(Augmentor):
             else:
                 filtered_word_scores = filtered_word_scores / np.sum(filtered_word_scores)
                 
-            num_insert = int(len(filtered_word_list) * self.augmentation_percentage)
+        num_insert = int(len(filtered_word_list) * self.augmentation_percentage)
 
         to_insert = np.random.choice(np.arange(len(filtered_word_list)), size=num_insert, replace=False, p = filtered_word_scores)
         

@@ -11,7 +11,7 @@ from .translator import TranslatorModule
 from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, QNLIDataModule, SST2DataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
-from .data_augmentors import AUGMENTOR_LIST_SINGLE
+from .data_augmentors import AUGMENTOR_LIST_SINGLE, AUGMENTOR_LIST
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
 import optuna
@@ -26,6 +26,7 @@ from ray.tune.integration.pytorch_lightning import TuneReportCallback, \
     TuneReportCheckpointCallback
 import numpy as np
 from torch.utils.data import DataLoader
+from optuna import distributions
 
 def hyper_param_search(args):
     if args.task == 'classify':
@@ -407,13 +408,7 @@ def text_classify_search_lr(args):
 
 def text_classify_search_policy(args):
     data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
-    
-    search_space = {}
 
-    for i in range(args.num_policy):
-        for j in range(args.num_op):
-            search_space['policy_%d_%d' % (i, j)] = hp.choice('policy_%d_%d' % (i, j), list(range(0, len(AUGMENTOR_LIST_SINGLE))))
-            search_space['aug_prob_%d_%d' % (i, j)] = hp.uniform('aug_prob_%d_ %d' % (i, j), 0.0, 1.0)
 
     final_policies = []
 
@@ -427,21 +422,32 @@ def text_classify_search_policy(args):
     n_splits = args.n_splits
 
     train_samples, train_labels = data.format_data(data.train_dataset)
+    valid_samples, valid_labels = data.format_data(data.valid_dataset)
+
+    train_samples = np.array(train_samples)
+    valid_samples = np.array(valid_samples)
+
+    train_samples = train_samples.append(valid_samples)
+    train_labels = train_labels.append(valid_labels)
 
     reward_attr = 'valid_loss'
 
-    sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.2, random_state=args.seed)
+    sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.1, random_state=args.seed)
     for i, (train_index, test_index) in enumerate(sss.split(train_samples, train_labels)):
         config = {}
         train = train_samples[train_index]
         train_labels =  train_labels[train_index]
-        valid = train_samples[test_index]
-        valid_labels = train_labels[test_index]
+        test = train_samples[test_index]
+        test_labels = train_labels[test_index]
 
-        train_dataloader = DataLoader(data.split_and_tokenize((train, train_labels), batch_size=data.batch_size))
-        valid_dataloader = DataLoader(data.split_and_tokenize((valid, valid_labels), batch_size=data.batch_size))
-
-        algo = HyperOptSearch(search_space, max_concurrent=4*20, reward_attr=reward_attr)
+        train_model_split = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=args.seed)
+        for train_index, test_index in train_model_split.split(train, train_labels):
+            model_train, model_train_labels = train[train_index], train_labels[train_index]
+            model_valid, model_valid_labels = train[test_index], train_labels[test_index]
+        
+        train_dataloader = DataLoader(data.split_and_tokenize((model_train, model_train_labels), batch_size=data.batch_size))
+        valid_dataloader = DataLoader(data.split_and_tokenize((model_valid, model_valid_labels), batch_size=data.batch_size))
+        test_dataloader = DataLoader(data.split_and_tokenize((test, test_labels), batch_size=data.batch_size))
 
         try:
             learning_rate = float(args.learning_rate)
@@ -453,7 +459,7 @@ def text_classify_search_policy(args):
         if args.samples_per_class is not None:
             args.dataset_percentage = 100
 
-        filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed)
+        filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "_fast_aa_search_" + str(i)
 
         logger = TensorBoardLogger(
             args.logger_dir, name=filename
@@ -503,66 +509,45 @@ def text_classify_search_policy(args):
         # most basic trainer, uses good defaults (1 gpu)
         trainer.fit(model, train_dataloader = train_dataloader, valid_dataloader = valid_dataloader)
 
-        config['data'] = data
-        config['model'] = model
-        config['trainer'] = trainer
-        config["augmentor_list"] = AUGMENTOR_LIST_SINGLE
+        study = optuna.create_study(direction="maximize")
+        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = 1, timeout = 30000)
+        for key, value in study.best_params.items():
+            print(f"    {key}: {value}")
+
+
+
+
+
+    def train_and_eval(trial, args, dataloader, model, trainer):
+        policies = suggest_policies(trial, args)
         
-        experiment_config = {
-            "name": "text_classify_hyperopt",
-            "run": train_and_eval,
-            "stop": {"training_iteration": 50},
-            "resources_per_trial": {"cpu": 1},
-            "config": config,
-            "num_samples": 50,
-            "search_alg": algo,
-        }
+        validation_policy = suggest_policies(trial, args) 
+        model.set_validation_policy(validation_policy)
 
-        analysis = tune.run(**experiment_config)
+        trainer.validate(model, dataloader)
 
-        best_config = analysis.get_best_config(metric = "valid_loss", mode = "min")
+        return trainer.callback_metrics['validation_loss_epoch']
+
+    def suggest_policies(trial, args):
+        policies = []
+
         for i in range(args.num_policy):
             augmentors = []
             for j in range(args.num_op):
-                policy = search_space['policy_%d_%d' % (i, j)]
-                aug_prob = search_space['aug_prob_%d_%d' % (i, j)]
-                augmentor = config["augmentor_list"][policy]
-                augmentor.set_augmentation_percentage(aug_prob)
+                # Sample from a categorical distribution that represents a possible augmentation method
+                aug_dist = distributions.CategoricalDistribution(AUGMENTOR_LIST)
+
+                augmentor = trial.suggest_categorical(f"augmentor_{i}", aug_dist)
+
+                lam = trial.suggest_float(f"{str(augmentor)}_prob", distributions.UniformDistribution(0, 1))
+                
+                # Append the selected augmentation method and its associated probability to the list
+                augmentor.set_augmentation_percentage(lam)
                 augmentors.append(augmentor)
-            final_policies.append(augmentors)
-        
-    
-
-
-    def train_and_eval(config):
-        data = config["data"]
-        valid_samples, valid_labels = data.format_data(data.valid_dataset)
-        model = config["model"]
-        trainer = config["trainer"]
-        augmentor_list = config["augmentor_list"]
-        augmentor_policies = np.array([])
-        for i in range(args.num_policy):
-            augmentors = []
-            for j in range(args.num_op):
-                policy = search_space['policy_%d_%d' % (i, j)]
-                aug_prob = search_space['aug_prob_%d_%d' % (i, j)]
-                augmentor = augmentor_list[policy]
-                augmentor.set_augmentation_percentage(aug_prob)
-                augmentors.append(augmentor)
-            augmentor_policies.append(augmentors)
-        augmentor_policies = np.array(augmentor_policies)
-        augmented_samples = []
-        for sample in valid_samples:
-            policy = random.choice(augmentor_policies)
-            for augmentor in policy:
-                sample = augmentor.augment_one_sample(sample)
-                augmented_samples.append(sample)
-
-        valid_dataloader = DataLoader(data.split_and_tokenize((augmented_samples, valid_labels), batch_size=data.batch_size))
-
-        trainer.validate(model, valid_dataloader)
-
-        return {"valid_loss": trainer.callback_metrics['validation_loss_epoch']}
+            
+            policies.append(augmentors)
+            
+        return policies
         
 
             

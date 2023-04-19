@@ -360,7 +360,7 @@ class CutOut(Augmentor):
 
             mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
             return sentence * mask
-        return sentence
+        return [sentence]
     
 class MixUp(Augmentor):
     def __init__(self):
@@ -390,6 +390,14 @@ class MixUp(Augmentor):
         label = label1 * lam + label2 * (1- lam)
 
         return sentence, attention_mask, label
+    
+    def augment_one_sample(self, sentence, attention_mask, label, other_samples):
+        if random.random() < self.augmentation_percentage:
+            sentence2, attention_mask2, label2 = np.random.choice(other_samples, 1)
+            return [(sentence, attention_mask, label), (self.mixup_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]
+        else:
+            
+            return None
 
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         generated_sentences = []
@@ -484,6 +492,13 @@ class CutMix(Augmentor):
         label = lam * label1 + (1- lam)* label2
 
         return sentence, attention_mask, label
+    
+    def augment_one_sample(self, sentence, attention_mask, label, other_samples):
+        if random.random() < self.augmentation_percentage:
+            sentence2, attention_mask2, label2 = np.random.choice(other_samples, 1)
+            return [(sentence, attention_mask, label), (self.mixup_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]
+        else:
+            return None
 
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         generated_sentences = []

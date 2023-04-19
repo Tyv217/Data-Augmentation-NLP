@@ -20,9 +20,9 @@ def parse_augmentors(args):
             "in": [15],
             "de": [25],
             "sr,in,de": [40,10,5],
-            "bt": [0],
+            "bt": [500],
             "co": [90],
-            "mu": [0],
+            "mu": [90],
             "cm": [65],
         },
         "babe": {

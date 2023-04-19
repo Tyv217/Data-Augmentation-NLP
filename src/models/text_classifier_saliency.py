@@ -79,8 +79,10 @@ class TextClassifierSaliencyModule(pl.LightningModule):
         return word_weights / np.sum(word_weights)
     
     def adapt_scores_to_original_line(self, original_line, input_line, scores):
-        original_words = original_line.lower().split(" ")
         input_words = input_line.split(" ")
+        if(len(scores) != len(input_line)):
+            return []
+        original_words = original_line.lower().split(" ")
         if len(original_words) == len(input_words):
             return scores
         else:

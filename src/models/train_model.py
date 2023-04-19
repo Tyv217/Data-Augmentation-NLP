@@ -309,50 +309,52 @@ def text_classify_with_saliency(args):
     else:
         print("Dataset Percentage:", args.dataset_percentage)
 
-    def batch(iterable, n=1):
-        """Batch elements of an iterable into lists of size n."""
-        it = iter(iterable)
-        while True:
-            chunk = []
-            for i in range(n):
-                try:
-                    chunk.append(next(it))
-                except StopIteration:
-                    break
-            if chunk:
-                yield chunk
-            else:
-                return
+    if args.output_saliency_results != 0:
 
-    saliency_scores = model.saliency_scores
-    keys = list(saliency_scores.keys())
-    batch_size = 100
-    fig_count = 0
-    for i, key_batch in enumerate(batch(keys, batch_size)):
-        score_batch = [saliency_scores[key] for key in key_batch]
-        for j in range(len(key_batch)):
-            words = key_batch[j]
-            scores = score_batch[j]
-            if fig_count < 20:
-                plot_saliency_scores(words, scores, f"saliency_fig_{i*batch_size+j}.png")
-                fig_count += 1
+        def batch(iterable, n=1):
+            """Batch elements of an iterable into lists of size n."""
+            it = iter(iterable)
+            while True:
+                chunk = []
+                for i in range(n):
+                    try:
+                        chunk.append(next(it))
+                    except StopIteration:
+                        break
+                if chunk:
+                    yield chunk
+                else:
+                    return
 
-    saliency_scores_per_word = model.saliency_scores_per_word
-    batch_size = 1000
-    highest = []
-    lowest = []
-    for i, items in enumerate(batch(saliency_scores_per_word.items(), batch_size)):
-        mean_saliency = {key: statistics.mean(value) for key, value in items if len(value) > 10}
-        highest_means = sorted(mean_saliency.items(), key=lambda x: x[1], reverse=True)[:10]
-        lowest_means = sorted(mean_saliency.items(), key=lambda x: x[1])[:10]
-        highest += highest_means
-        lowest += lowest_means
+        saliency_scores = model.saliency_scores
+        keys = list(saliency_scores.keys())
+        batch_size = 100
+        fig_count = 0
+        for i, key_batch in enumerate(batch(keys, batch_size)):
+            score_batch = [saliency_scores[key] for key in key_batch]
+            for j in range(len(key_batch)):
+                words = key_batch[j]
+                scores = score_batch[j]
+                if fig_count < 20:
+                    plot_saliency_scores(words, scores, f"saliency_fig_{i*batch_size+j}.png")
+                    fig_count += 1
 
-    highest_means = sorted(highest, key=lambda x: x[1], reverse=True)[:10]
-    lowest_means = sorted(lowest, key=lambda x: x[1])[:10]
-    print("Invert saliency used:", False if args.invert_saliency == 0 else True)
-    print('Top 10 highest saliency scores:', highest_means)
-    print('Top 10 lowest saliency scores:', lowest_means)
+        saliency_scores_per_word = model.saliency_scores_per_word
+        batch_size = 1000
+        highest = []
+        lowest = []
+        for i, items in enumerate(batch(saliency_scores_per_word.items(), batch_size)):
+            mean_saliency = {key: statistics.mean(value) for key, value in items if len(value) > 10}
+            highest_means = sorted(mean_saliency.items(), key=lambda x: x[1], reverse=True)[:10]
+            lowest_means = sorted(mean_saliency.items(), key=lambda x: x[1])[:10]
+            highest += highest_means
+            lowest += lowest_means
+
+        highest_means = sorted(highest, key=lambda x: x[1], reverse=True)[:10]
+        lowest_means = sorted(lowest, key=lambda x: x[1])[:10]
+        print("Invert saliency used:", False if args.invert_saliency == 0 else True)
+        print('Top 10 highest saliency scores:', highest_means)
+        print('Top 10 lowest saliency scores:', lowest_means)
 
 
 def language_model(args):

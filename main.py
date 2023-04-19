@@ -25,6 +25,7 @@ def main():
     parser.add_argument("--dataset_percentage", type=int, default=100)
     parser.add_argument("--samples_per_class", type=int)
     parser.add_argument("--invert_saliency", type=int, default = 0)
+    parser.add_argument("--output_saliency_results", type=int, default = 0)
 
     parser.add_argument("--logger_dir", type=str, default="")
     

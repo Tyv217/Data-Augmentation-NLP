@@ -92,17 +92,21 @@ class Synonym_Replacer(Augmentor):
     
     def augment_one_sample_with_saliency(self, sentence, score):
         word_list = sentence.split(" ")
-        if len(word_list) != len(score):
-            score = [1 / len(word_list) for _ in range(len(word_list))]
         filtered_word_list = self.get_word_list(sentence)
-        filtered_word_scores = np.zeros(len(filtered_word_list))
-        for i in range(len(word_list)):
-            for j in range(len(filtered_word_list)):
-                if filtered_word_list[j][0] in word_list[i]:
-                    filtered_word_scores[j] = score[i]
-        
-        filtered_word_scores = filtered_word_scores / np.sum(filtered_word_scores)
-        num_replace = int(len(filtered_word_list) * self.augmentation_percentage)
+        if len(word_list) != len(score):
+            filtered_word_scores = np.full((len(filtered_word_list),), 1/len(filtered_word_list))
+        else:
+            filtered_word_scores = np.zeros(len(filtered_word_list))
+            for i in range(len(word_list)):
+                for j in range(len(filtered_word_list)):
+                    if filtered_word_list[j][0] in word_list[i]:
+                        filtered_word_scores[j] = score[i]
+            if np.sum(filtered_word_scores) == 0:
+                filtered_word_scores = np.full((len(filtered_word_list),), 1/len(filtered_word_list))
+            else:
+                filtered_word_scores = filtered_word_scores / np.sum(filtered_word_scores)
+                
+            num_replace = int(len(filtered_word_list) * self.augmentation_percentage)
         
         to_replace = np.random.choice(np.arange(len(filtered_word_list)), size=num_replace, replace=False, p = filtered_word_scores)
 

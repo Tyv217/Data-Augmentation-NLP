@@ -4,6 +4,7 @@ from torch.utils.data.dataset import random_split
 from torchtext.data.functional import to_map_style_dataset
 from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
+from pytorch_lightning.plugins.environments import SLURMEnvironment
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
 from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
 from ..visualization import plot_saliency_scores

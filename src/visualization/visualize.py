@@ -77,8 +77,9 @@ def plot_emb(embeddings, fig_name, datapoints):
     plt.show()
 
 def plot_saliency_scores(words, saliency_scores, fig_name):
+    plt.figure()
 
-    plt.bar(words, saliency_scores)
+    plt.bar(words.split(" "), saliency_scores)
     plt.ylim([0, 1]) # Set the y-axis limit to 0 and 1
     plt.xlabel('Words')
     plt.ylabel('Saliency Scores')

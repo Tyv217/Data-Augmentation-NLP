@@ -17,7 +17,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
         self.training_policies = training_policies
-        self.validation_policies = []
+        self.validation_policy = []
         self.embed_augmentors = embed_augmentors
         self.saliency_scores = {}
         self.saliency_scores_per_word = {}
@@ -129,10 +129,10 @@ class TextClassifierPolicyModule(pl.LightningModule):
         augmentors_on_words = [[] for i in range(len(original_lines))]
         augmentors_on_embeddings = [[] for i in range(len(original_lines))]
         has_embedding_augmentors = False
-        if len(self.validation_policies) > 0:
+        if len(self.validation_policy) > 0:
             import pdb
             pdb.set_trace()
-            policies = np.random.choice(self.validation_policies, len(original_lines))
+            policies = np.random.choice(self.validation_policy, len(original_lines))
             for i, row in enumerate(policies):
                 for augmentor in row:
                     if augmentor.operate_on_embeddings:

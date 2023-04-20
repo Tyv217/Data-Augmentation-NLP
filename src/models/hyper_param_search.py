@@ -432,7 +432,7 @@ def suggest_policies(trial, args):
             augmentor.set_augmentation_percentage(lam)
             augmentors.append(augmentor)
         
-        policies.append(augmentors)
+        policy.append(tuple(augmentors))
         
     return policies
 
@@ -548,7 +548,7 @@ def text_classify_search_policy(args):
                 
                 augmentors.append(augmentor)
             
-            policy.append(augmentors)
+            policy.append(tuple(augmentors))
 
         policies.append(policy)
 

@@ -535,7 +535,7 @@ def text_classify_search_policy(args):
         trainer.fit(model, train_dataloader, valid_dataloader)
 
         study = optuna.create_study(direction="minimize")
-        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = 50, timeout = 30000)
+        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = 20, timeout = 30000)
         for key, value in study.best_params.items():
             print(f"    {key}: {value}")
         

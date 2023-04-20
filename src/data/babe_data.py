@@ -17,8 +17,8 @@ class BabeDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         self.dataset_percentage = dataset_percentage
-        self.id2label =  {0: "Non-biased", 1: "No agreement", 2: "Biased"}
-        self.label2id = {"Non-biased": 0, "No agreement": 1, "Biased": 2}
+        self.id2label =  {0: "Non-biased", 1: "Biased"}
+        self.label2id = {"Non-biased": 0, "Biased": 1}
         try:
             PATH_sg2 = "src/data/external/bias_detection_data_files/final_labels_SG2.xlsx"
             df_sg2 = pd.read_excel(PATH_sg2)
@@ -33,6 +33,9 @@ class BabeDataModule(pl.LightningDataModule):
 
         df = df_sg2
         df = df.sample(frac=1).reset_index() # Shuffles df
+        df = df.drop(df[df['label_bias'] == 'No agreement'].index)
+        
+        df['label_bias'] = df['label_bias'].map(self.label2id)
 
         df['label_bias'] = df['label_bias'].map(self.label2id)
         

@@ -95,12 +95,11 @@ class TextClassifierPolicyModule(pl.LightningModule):
                         sentence, attention_mask, label = new_lines[0]
                     else: # Mixup or CutMix
                         new_samples_curr.append(new_lines[1])
-                else:
-                    continue
 
             new_samples_curr.append((sentence, attention_mask, label))
             new_samples.extend(new_samples_curr)
-        
+        import pdb
+        pdb.set_trace()
         inputs_embeds, attention_masks, label = zip(*new_samples)
         inputs_embeds = torch.stack(inputs_embeds)
         attention_masks = torch.stack(attention_masks)

@@ -83,7 +83,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         inputs_embeds = self.model.distilbert.embeddings(input_ids)
 
         new_samples = []
-        all_samples = zip(inputs_embeds, attention_masks, label)
+        all_samples = list(zip(inputs_embeds, attention_masks, label))
 
         for sample, augmentors in zip(all_samples, augmentors_on_embeddings):
             sentence, attention_mask, label = sample
@@ -159,7 +159,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         inputs_embeds = self.model.distilbert.embeddings(input_ids)
 
         new_samples = []
-        all_samples = zip(inputs_embeds, attention_masks, label)
+        all_samples = list(zip(inputs_embeds, attention_masks, label))
 
         for sample, augmentors in zip(all_samples, augmentors_on_embeddings):
             sentence, attention_mask, label = sample

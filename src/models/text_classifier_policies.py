@@ -125,7 +125,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        # self.valdation_policy = [[AUGMENTOR_LIST[4], AUGMENTOR_LIST[5]], [AUGMENTOR_LIST[5], AUGMENTOR_LIST[6]], [AUGMENTOR_LIST[6], AUGMENTOR_LIST[4]]]
+        self.valdation_policy = [[AUGMENTOR_LIST[6], AUGMENTOR_LIST[6]], [AUGMENTOR_LIST[6], AUGMENTOR_LIST[6]], [AUGMENTOR_LIST[6], AUGMENTOR_LIST[6]]]
 
         original_lines = batch['input_lines']
         label = batch['label'].to(torch.float)
@@ -170,6 +170,8 @@ class TextClassifierPolicyModule(pl.LightningModule):
             new_samples_curr = []
             for augmentor in augmentors:
                 new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
+                import pdb
+                pdb.set_trace()
                 if(new_lines is not None):
                     if(len(new_lines) == 1): # Cutout
                         sentence, attention_mask, label = new_lines[0]

@@ -507,7 +507,7 @@ def text_classify_search_policy(args):
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         
         # most basic trainer, uses good defaults (1 gpu)
-        trainer.fit(model, train_dataloader = train_dataloader, valid_dataloader = valid_dataloader)
+        trainer.fit(model, train_dataloader, valid_dataloader)
 
         study = optuna.create_study(direction="minimize")
         study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = 1, timeout = 30000)

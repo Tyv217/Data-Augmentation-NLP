@@ -430,7 +430,7 @@ class MixUp(Augmentor):
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         new_samples = []
 
-        all_samples = zip(sentences, attention_masks, labels)
+        all_samples = list(zip(sentences, attention_masks, labels))
 
         for sample in all_samples:
             sentence, attention_mask, label = sample
@@ -529,7 +529,7 @@ class CutMix(Augmentor):
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
         new_samples = []
 
-        all_samples = zip(sentences, attention_masks, labels)
+        all_samples = list(zip(sentences, attention_masks, labels))
 
         for sample in all_samples:
             sentence, attention_mask, label = sample

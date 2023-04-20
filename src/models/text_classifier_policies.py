@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 import re
 
-class TextClassifierPoliciesModule(pl.LightningModule):
+class TextClassifierPolicyModule(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, training_policies = [], embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate

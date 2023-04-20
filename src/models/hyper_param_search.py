@@ -408,7 +408,6 @@ def text_classify_search_lr(args):
     print_trial_stats(study)
 
 def train_and_eval(trial, args, dataloader, model, trainer):
-    policies = suggest_policies(trial, args)
     
     validation_policy = suggest_policies(trial, args) 
     model.set_validation_policy(validation_policy)
@@ -425,9 +424,9 @@ def suggest_policies(trial, args):
         for j in range(args.num_op):
             # Sample from a categorical distribution that represents a possible augmentation method
 
-            augmentor = trial.suggest_categorical(f"augmentor_{i}", AUGMENTOR_LIST)
+            augmentor = trial.suggest_categorical(f"augmentor_{i}_{j}", AUGMENTOR_LIST)
 
-            lam = trial.suggest_float(f"{str(augmentor)}_prob", 0, 1)
+            lam = trial.suggest_float(f"augmentor_{i}_{j}_prob", 0, 1)
             
             # Append the selected augmentation method and its associated probability to the list
             augmentor.set_augmentation_percentage(lam)

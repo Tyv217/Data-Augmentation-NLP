@@ -407,6 +407,37 @@ def text_classify_search_lr(args):
     study.optimize(lambda trial: objective(trial, args), n_trials = 50, timeout = 14400)
     print_trial_stats(study)
 
+def train_and_eval(trial, args, dataloader, model, trainer):
+    policies = suggest_policies(trial, args)
+    
+    validation_policy = suggest_policies(trial, args) 
+    model.set_validation_policy(validation_policy)
+
+    trainer.validate(model, dataloader)
+
+    return trainer.callback_metrics['validation_loss_epoch']
+
+def suggest_policies(trial, args):
+    policies = []
+
+    for i in range(args.num_policy):
+        augmentors = []
+        for j in range(args.num_op):
+            # Sample from a categorical distribution that represents a possible augmentation method
+            aug_dist = distributions.CategoricalDistribution(AUGMENTOR_LIST)
+
+            augmentor = trial.suggest_categorical(f"augmentor_{i}", aug_dist)
+
+            lam = trial.suggest_float(f"{str(augmentor)}_prob", distributions.UniformDistribution(0, 1))
+            
+            # Append the selected augmentation method and its associated probability to the list
+            augmentor.set_augmentation_percentage(lam)
+            augmentors.append(augmentor)
+        
+        policies.append(augmentors)
+        
+    return policies
+
 def text_classify_search_policy(args):
     data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
 
@@ -522,36 +553,7 @@ def text_classify_search_policy(args):
 
 
 
-    def train_and_eval(trial, args, dataloader, model, trainer):
-        policies = suggest_policies(trial, args)
-        
-        validation_policy = suggest_policies(trial, args) 
-        model.set_validation_policy(validation_policy)
 
-        trainer.validate(model, dataloader)
-
-        return trainer.callback_metrics['validation_loss_epoch']
-
-    def suggest_policies(trial, args):
-        policies = []
-
-        for i in range(args.num_policy):
-            augmentors = []
-            for j in range(args.num_op):
-                # Sample from a categorical distribution that represents a possible augmentation method
-                aug_dist = distributions.CategoricalDistribution(AUGMENTOR_LIST)
-
-                augmentor = trial.suggest_categorical(f"augmentor_{i}", aug_dist)
-
-                lam = trial.suggest_float(f"{str(augmentor)}_prob", distributions.UniformDistribution(0, 1))
-                
-                # Append the selected augmentation method and its associated probability to the list
-                augmentor.set_augmentation_percentage(lam)
-                augmentors.append(augmentor)
-            
-            policies.append(augmentors)
-            
-        return policies
         
 
             

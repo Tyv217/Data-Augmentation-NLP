@@ -11,6 +11,7 @@ from .translator import TranslatorModule
 from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, QNLIDataModule, SST2DataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from .text_classifier import TextClassifierModule
+from .text_classifier_policies import TextClassifierPolicyModule
 from .data_augmentors import AUGMENTOR_LIST_SINGLE, AUGMENTOR_LIST
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 import signal
@@ -494,7 +495,7 @@ def text_classify_search_policy(args):
         # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
         # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-        model = TextClassifierModule(
+        model = TextClassifierPolicyModule(
             learning_rate = learning_rate,
             max_epochs = args.max_epochs,
             tokenizer = data.tokenizer,
@@ -509,10 +510,13 @@ def text_classify_search_policy(args):
         # most basic trainer, uses good defaults (1 gpu)
         trainer.fit(model, train_dataloader = train_dataloader, valid_dataloader = valid_dataloader)
 
-        study = optuna.create_study(direction="maximize")
+        study = optuna.create_study(direction="minimize")
         study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = 1, timeout = 30000)
         for key, value in study.best_params.items():
             print(f"    {key}: {value}")
+        
+        import pdb
+        pdb.set_trace()
 
 
 

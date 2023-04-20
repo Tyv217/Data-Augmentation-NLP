@@ -435,9 +435,8 @@ def text_classify_search_policy(args):
 
     sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.1, random_state=args.seed)
     for i, (train_index, test_index) in enumerate(sss.split(train_samples, train_labels)):
-        config = {}
         train = train_samples[train_index]
-        train_labels =  train_labels[train_index]
+        train_labels = train_labels[train_index]
         test = train_samples[test_index]
         test_labels = train_labels[test_index]
 

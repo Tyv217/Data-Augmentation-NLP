@@ -408,7 +408,7 @@ class MixUp(Augmentor):
     def augment_one_sample(self, sentence, attention_mask, label, other_samples):
         if random.random() < self.augmentation_percentage:
 
-            index = np.randint(0, len(other_samples))
+            index = np.random.randint(0, len(other_samples))
             sentence2, attention_mask2, label2 = other_samples[index]
             
             return [(sentence, attention_mask, label), (self.mixup_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]
@@ -512,7 +512,7 @@ class CutMix(Augmentor):
     
     def augment_one_sample(self, sentence, attention_mask, label, other_samples):
         if random.random() < self.augmentation_percentage:
-            index = np.randint(0, len(other_samples))
+            index = np.random.randint(0, len(other_samples))
             sentence2, attention_mask2, label2 = other_samples[index]
             return [(sentence, attention_mask, label), (self.mixup_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]
         else:

@@ -503,8 +503,7 @@ def text_classify_search_policy(args):
             num_labels = len(data.id2label),
             id2label = data.id2label,
             label2id = data.label2id,
-            pretrain = args.pretrain,
-            augmentors = []
+            pretrain = args.pretrain
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         
         # most basic trainer, uses good defaults (1 gpu)

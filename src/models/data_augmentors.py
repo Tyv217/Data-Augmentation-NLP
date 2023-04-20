@@ -373,7 +373,7 @@ class CutOut(Augmentor):
             mask[y1: y2, x1: x2] = 0.
 
             mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
-            return sentence * mask
+            return [(sentence * mask, attention_mask, label)]
         return [(sentence, attention_mask, label)]
     
 class MixUp(Augmentor):

@@ -17,6 +17,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
         self.training_policies = training_policies
+        self.validation_policies = []
         self.embed_augmentors = embed_augmentors
         self.saliency_scores = {}
         self.saliency_scores_per_word = {}

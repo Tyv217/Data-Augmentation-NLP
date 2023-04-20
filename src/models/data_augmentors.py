@@ -138,6 +138,9 @@ class Back_Translator(Augmentor):
         self.augmentation_percentage = augmentation_percentage / 100 # DONT CHANGE
 
     def translate(self, sentences, model, tokenizer):
+        if isinstance(sentences, str):
+            sentences = [sentences]
+
         input_encoding = tokenizer(
                 text = sentences,
                 padding = "longest",
@@ -170,6 +173,13 @@ class Back_Translator(Augmentor):
             model2 = MarianMTModel.from_pretrained(model2_name).to(self.device)
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
+    
+    def augment_one_sample(self, sentence):
+        if(random.random() < self.augmentation_percentage):
+            translators = self.get_translators()
+            (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)
+            return self.back_translate(sentence, model1, model2, tokenizer1, tokenizer2)
+        return sentence
 
     def augment_dataset(self, inputs, attention_mask = None, labels = None):
         if attention_mask is not None:

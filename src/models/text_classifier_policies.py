@@ -175,6 +175,9 @@ class TextClassifierPolicyModule(pl.LightningModule):
             new_samples.extend(new_samples_curr)
         
         inputs_embeds, attention_masks, label = zip(*new_samples)
+        inputs_embeds = list(inputs_embeds)
+        attention_masks = list(attention_masks)
+        label = list(label)
 
         import pdb
         pdb.set_trace()

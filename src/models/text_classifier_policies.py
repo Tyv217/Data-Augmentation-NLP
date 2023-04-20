@@ -89,7 +89,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             sentence, attention_mask, label = sample
             new_samples_curr = []
             for augmentor in augmentors:
-                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label)
+                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
                 if(new_lines is not None):
                     if(len(new_lines) == 1): # Cutout
                         sentence, attention_mask, label = new_lines[0]
@@ -165,7 +165,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             sentence, attention_mask, label = sample
             new_samples_curr = []
             for augmentor in augmentors:
-                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label)
+                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
                 if(new_lines is not None):
                     if(len(new_lines) == 1): # Cutout
                         sentence, attention_mask, label = new_lines[0]

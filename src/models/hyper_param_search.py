@@ -416,7 +416,8 @@ def text_classify_search_policy(args):
     data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage,
         augmentors = [],
-        batch_size = args.batch_size
+        batch_size = args.batch_size,
+        tokenize = False
     )
     data.setup("fit")
 

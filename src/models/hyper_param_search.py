@@ -424,9 +424,8 @@ def suggest_policies(trial, args):
         augmentors = []
         for j in range(args.num_op):
             # Sample from a categorical distribution that represents a possible augmentation method
-            aug_dist = distributions.CategoricalDistribution(AUGMENTOR_LIST)
 
-            augmentor = trial.suggest_categorical(f"augmentor_{i}", aug_dist)
+            augmentor = trial.suggest_categorical(f"augmentor_{i}", AUGMENTOR_LIST)
 
             lam = trial.suggest_float(f"{str(augmentor)}_prob", distributions.UniformDistribution(0, 1))
             

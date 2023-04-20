@@ -356,7 +356,7 @@ class CutOut(Augmentor):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def augment_one_sample(self, sentence: torch.Tensor):
+    def augment_one_sample(self, sentence: torch.Tensor, attention_mask, label):
         if(random.random() < self.augmentation_percentage):
             h, w = sentence.shape
 
@@ -374,7 +374,7 @@ class CutOut(Augmentor):
 
             mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
             return sentence * mask
-        return [sentence]
+        return [(sentence, attention_mask, label)]
     
 class MixUp(Augmentor):
     def __init__(self):

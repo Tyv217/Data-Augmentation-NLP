@@ -182,7 +182,11 @@ class TextClassifierPolicyModule(pl.LightningModule):
             new_samples.extend(new_samples_curr)
 
         inputs_embeds, attention_masks, label = zip(*new_samples)
-        inputs_embeds = torch.stack(inputs_embeds)
+        try:
+            inputs_embeds = torch.stack(inputs_embeds)
+        except:
+            import pdb
+            pdb.set_trace()
         attention_masks = torch.stack(attention_masks)
         label = torch.stack(label)
 

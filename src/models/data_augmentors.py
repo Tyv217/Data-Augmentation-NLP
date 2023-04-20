@@ -539,5 +539,5 @@ class CutMix(Augmentor):
         sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs_embeds, attention_masks, labels)
         return sentences, attention_masks, labels
     
-AUGMENTOR_LIST = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
+AUGMENTOR_LIST = [Synonym_Replacer("english"), Back_Translator("en"), Insertor("english"), Deletor(), CutOut(), CutMix(), MixUp()]
 AUGMENTOR_LIST_SINGLE = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut()}

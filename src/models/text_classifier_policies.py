@@ -101,7 +101,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             new_samples_curr.append((sentence, attention_mask, label))
             new_samples.extend(new_samples_curr)
         
-        inputs_embeds, attention_masks, label = zip(**new_samples)
+        inputs_embeds, attention_masks, label = zip(*new_samples)
 
         output = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = label)
 
@@ -174,7 +174,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             new_samples_curr.append((sentence, attention_mask, label))
             new_samples.extend(new_samples_curr)
         
-        inputs_embeds, attention_masks, label = zip(**new_samples)
+        inputs_embeds, attention_masks, label = zip(*new_samples)
 
         output = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = label)
         loss = output.loss

@@ -428,8 +428,8 @@ def text_classify_search_policy(args):
     train_samples = np.array(train_samples)
     valid_samples = np.array(valid_samples)
 
-    train_samples = train_samples.append(valid_samples)
-    train_labels = train_labels.append(valid_labels)
+    train_samples = np.concatenate((train_samples, valid_samples))
+    train_labels = np.concatenate((train_labels, valid_labels))
 
     reward_attr = 'valid_loss'
 

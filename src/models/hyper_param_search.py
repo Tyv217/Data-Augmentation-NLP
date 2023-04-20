@@ -432,7 +432,7 @@ def suggest_policies(trial, args):
             augmentor.set_augmentation_percentage(lam)
             augmentors.append(augmentor)
         
-        policy.append(tuple(augmentors))
+        policies.append(tuple(augmentors))
         
     return policies
 

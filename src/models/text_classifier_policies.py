@@ -130,8 +130,6 @@ class TextClassifierPolicyModule(pl.LightningModule):
         augmentors_on_embeddings = [[] for i in range(len(original_lines))]
         has_embedding_augmentors = False
         if len(self.validation_policy) > 0:
-            import pdb
-            pdb.set_trace()
             policies = self.validation_policy[np.random.choice(self.validation_policy.shape[0], len(original_lines), replace = True)]
             for i, row in enumerate(policies):
                 for augmentor in row:

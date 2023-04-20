@@ -446,9 +446,9 @@ def text_classify_search_policy(args):
             model_train, model_train_labels = splitted_train[train_index], splitted_train_labels[train_index]
             model_valid, model_valid_labels = splitted_train[test_index], splitted_train_labels[test_index]
         
-        train_dataloader = DataLoader(data.split_and_tokenize((model_train, model_train_labels), batch_size=data.batch_size))
-        valid_dataloader = DataLoader(data.split_and_tokenize((model_valid, model_valid_labels), batch_size=data.batch_size))
-        test_dataloader = DataLoader(data.split_and_tokenize((test, test_labels), batch_size=data.batch_size))
+        train_dataloader = DataLoader(data.split_and_tokenize((model_train, model_train_labels)), batch_size=data.batch_size, shuffle = True)
+        valid_dataloader = DataLoader(data.split_and_tokenize((model_valid, model_valid_labels)), batch_size=data.batch_size)
+        test_dataloader = DataLoader(data.split_and_tokenize((test, test_labels)), batch_size=data.batch_size)
 
         try:
             learning_rate = float(args.learning_rate)

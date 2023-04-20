@@ -427,7 +427,7 @@ def suggest_policies(trial, args):
 
             augmentor = trial.suggest_categorical(f"augmentor_{i}", AUGMENTOR_LIST)
 
-            lam = trial.suggest_float(f"{str(augmentor)}_prob", distributions.UniformDistribution(0, 1))
+            lam = trial.suggest_float(f"{str(augmentor)}_prob", 0, 1)
             
             # Append the selected augmentation method and its associated probability to the list
             augmentor.set_augmentation_percentage(lam)

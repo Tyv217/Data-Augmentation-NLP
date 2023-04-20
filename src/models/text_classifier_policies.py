@@ -205,7 +205,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             self.log(
                 "validation_accuracy",
                 acc.item(),
-                on_step = True,
+                on_step = False,
                 on_epoch = True,
                 prog_bar = True,
                 logger = True,

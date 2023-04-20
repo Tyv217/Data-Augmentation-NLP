@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 
 class TextClassifierModule(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, policies = [], augment_validation = False):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, augmentors = [], augment_validation = False):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -15,7 +15,7 @@ class TextClassifierModule(pl.LightningModule):
         if not pretrain:
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
-        self.policies = policies
+        self.augmentors = augmentors
         self.augment_validation = augment_validation
 
     def forward(self, input_id, attention_mask, label):

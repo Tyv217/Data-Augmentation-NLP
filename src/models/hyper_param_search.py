@@ -435,15 +435,16 @@ def text_classify_search_policy(args):
 
     sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.1, random_state=args.seed)
     for i, (train_index, test_index) in enumerate(sss.split(train_samples, train_labels)):
-        train = train_samples[train_index]
-        train_labels = train_labels[train_index]
+
+        splitted_train = train_samples[train_index]
+        splitted_train_labels = train_labels[train_index]
         test = train_samples[test_index]
         test_labels = train_labels[test_index]
 
         train_model_split = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=args.seed)
-        for train_index, test_index in train_model_split.split(train, train_labels):
-            model_train, model_train_labels = train[train_index], train_labels[train_index]
-            model_valid, model_valid_labels = train[test_index], train_labels[test_index]
+        for train_index, test_index in train_model_split.split(splitted_train, splitted_train_labels):
+            model_train, model_train_labels = splitted_train[train_index], splitted_train_labels[train_index]
+            model_valid, model_valid_labels = splitted_train[test_index], splitted_train_labels[test_index]
         
         train_dataloader = DataLoader(data.split_and_tokenize((model_train, model_train_labels), batch_size=data.batch_size))
         valid_dataloader = DataLoader(data.split_and_tokenize((model_valid, model_valid_labels), batch_size=data.batch_size))

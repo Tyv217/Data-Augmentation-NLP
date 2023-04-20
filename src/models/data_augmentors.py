@@ -138,8 +138,10 @@ class Back_Translator(Augmentor):
         self.augmentation_percentage = augmentation_percentage / 100 # DONT CHANGE
 
     def translate(self, sentences, model, tokenizer):
+        is_string = False
         if isinstance(sentences, str):
             sentences = [sentences]
+            is_string = True
 
         input_encoding = tokenizer(
                 text = sentences,
@@ -152,6 +154,8 @@ class Back_Translator(Augmentor):
         with torch.no_grad():
             output_ids = model.generate(input_ids, attention_mask = attention_mask, max_new_tokens = 256).to(self.device)
         result = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+        if is_string:
+            return result[0]
         return result
 
     def back_translate(self, sentences, model1, model2, tokenizer1, tokenizer2):

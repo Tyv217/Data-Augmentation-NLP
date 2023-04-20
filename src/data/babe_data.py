@@ -33,6 +33,8 @@ class BabeDataModule(pl.LightningDataModule):
 
         df = df_sg2
         df = df.sample(frac=1).reset_index() # Shuffles df
+        import pdb
+        pdb.set_trace()
         df = df.drop(df[df['label_bias'] == 'No agreement'].index)
         
         df['label_bias'] = df['label_bias'].map(self.label2id)

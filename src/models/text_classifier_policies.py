@@ -170,8 +170,6 @@ class TextClassifierPolicyModule(pl.LightningModule):
             new_samples_curr = []
             for augmentor in augmentors:
                 new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
-                import pdb
-                pdb.set_trace()
                 if(new_lines is not None):
                     if(len(new_lines) == 1): # Cutout
                         sentence, attention_mask, label = new_lines[0]

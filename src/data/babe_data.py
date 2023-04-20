@@ -51,8 +51,6 @@ class BabeDataModule(pl.LightningDataModule):
 
 
     def format_data(self, data):
-        import pdb
-        pdb.set_trace()
         return data['text'], np.identity(len(self.id2label))[data['label_bias']]
 
     def split_and_tokenize(self, data, format = True, augment = False):

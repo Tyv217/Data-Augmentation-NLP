@@ -13,6 +13,10 @@ def main():
     # parser.add_argument("--deterministic", type=bool, default=True)
     parser.add_argument("--visualize", type=int, default=0)
     parser.add_argument("--datapoints", type=int, default=-1)
+    parser.add_argument("--filename", type=str)
+    parser.add_argument("--xlabel", type=str)
+    parser.add_argument("--ylabel", type=str)
+
 
     parser.add_argument("--search", type=int, default=0)
     parser.add_argument("--to_search", type=str, default="aug")

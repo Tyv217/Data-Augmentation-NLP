@@ -90,26 +90,27 @@ def plot_saliency_scores(words, saliency_scores, fig_name):
     plt.show()
     
 def plot_results(args):
-    task = args.task
-    if task == "classify" or task == "classify_saliency":
-        task = args.dataset + task.replace("classify", "")
-    pretrain = "pretrain" if args.pretrain else "no_pretrain"
-    default_aug_params = "default_aug_params" if args.use_default_augmentation_params != 0 else "no_default_aug_params"
-    filename = task + "_" + pretrain + "_" + default_aug_params
+    filename = args.filename
     file = filename + ".csv"
     error_file = filename + "_error_bars.csv"
     results = pd.read_csv("reports/data_for_plotting/" + file)
-    error_bars = pd.read_csv("reports/data_for_plotting/" + error_file)
+    try:
+        error_bars = pd.read_csv("reports/data_for_plotting/" + error_file)
+    except:
+        error_bars = None
     first_col = results.columns[0]
     fig = plt.figure(figsize=(8,5))
     for col in results.columns[1:]:
         plt.plot(results[first_col], results[col], label=col)
-        plt.errorbar(results[first_col], results[col], error_bars[col], marker='x', mfc='red',
-         mec='red', ms=0, mew=1, capsize=10, elinewidth=2, capthick=1, markeredgewidth=1)
-    plt.title(filename.replace("_", " "))
-    plt.xlabel('Dataset Percentage')
-    plt.ylabel('Accuracy')
+        
+    for col in results.columns[1:]:
+        if error_bars is not None:
+                plt.errorbar(results[first_col], results[col], error_bars[col],ecolor = 'red', marker='x', mfc='red',
+                mec='red', ms=2, mew=1, capsize=5, elinewidth=1, fmt='none')
+    plt.xlabel(args.xlabel)
+    plt.ylabel(args.ylabel)
     plt.legend()
+    plt.grid()
     plt.savefig("reports/figures/results/" + filename + ".png")
 
 def visualize_augmentor_change_data(args):

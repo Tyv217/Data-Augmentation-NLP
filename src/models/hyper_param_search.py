@@ -334,7 +334,7 @@ def text_classify_search_aug(args):
 def text_classify_search_lr(args):
 
     def objective(trial, args):
-        lr = trial.suggest_float("learning_rate", 4e-5, 1e-2, log=True)
+        lr = trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True)
         data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule}
         
         if args.samples_per_class is not None:

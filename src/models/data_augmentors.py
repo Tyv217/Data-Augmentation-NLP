@@ -415,38 +415,35 @@ class MixUp(Augmentor):
         else:
             
             return None
+        
+    def augment_one_sample_ret_original(self, sentence, attention_mask, label, other_samples):
+        if random.random() < self.augmentation_percentage:
+
+            index = np.random.randint(0, len(other_samples))
+            sentence2, attention_mask2, label2 = other_samples[index]
+            
+            return [(sentence, attention_mask, label), (self.mixup_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]
+        else:
+            
+            return [(sentence, attention_mask, label)]
 
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
-        generated_sentences = []
-        generated_attention_masks = []
-        generated_labels = []
+        new_samples = []
 
-        to_generate = int(len(sentences) * self.augmentation_percentage)
-        
-        for i in range(to_generate):
-            choices = np.random.choice(len(sentences), 2, replace = False)
-            sentence1 = sentences[choices[0]]
-            attention_mask1 = attention_masks[choices[0]]
-            label1 = labels[choices[0]]
-            sentence2 = sentences[choices[1]]
-            attention_mask2 = attention_masks[choices[1]]
-            label2 = labels[choices[1]]
-            sentence, attention_mask, label = self.mixup_randomly(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
-            generated_sentences.append(sentence)
-            generated_attention_masks.append(attention_mask)
-            generated_labels.append(label)
+        all_samples = zip(sentences, attention_masks, labels)
 
-        if(to_generate > 0):
-            new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
-            new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
-            new_labels = torch.cat([labels, torch.stack(generated_labels)])
+        for sample in all_samples:
+            sentence, attention_mask, label = sample
+            new_samples.extend(self.augment_one_sample_ret_original(sentence, attention_mask, label, all_samples))
 
-            indices = torch.randperm(new_sentences.size()[0])
-            new_sentences = new_sentences[indices]
-            new_attention_masks = new_attention_masks[indices]
-            new_labels = new_labels[indices]
+        new_sentences, new_attention_masks, new_labels = zip(*new_samples)
 
-            return new_sentences, new_attention_masks, new_labels
+        sentences = torch.stack(new_sentences)
+        attention_masks = torch.stack(new_attention_masks)
+        labels = torch.stack(new_labels)
+
+        import pdb
+        pdb.set_trace()
 
         return sentences, attention_masks, labels
 
@@ -518,43 +515,39 @@ class CutMix(Augmentor):
         else:
             return None
 
+    def augment_one_sample_ret_original(self, sentence, attention_mask, label, other_samples):
+        if random.random() < self.augmentation_percentage:
+
+            index = np.random.randint(0, len(other_samples))
+            sentence2, attention_mask2, label2 = other_samples[index]
+            
+            return [(sentence, attention_mask, label), (self.cutmix_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]
+        else:
+            
+            return [(sentence, attention_mask, label)]
+
     def generate_pairwise_and_augment(self, sentences, attention_masks, labels):
-        generated_sentences = []
-        generated_attention_masks = []
-        generated_labels = []
+        new_samples = []
 
-        to_generate = int(len(sentences) * self.augmentation_percentage)
-        
-        for i in range(to_generate):
-            choices = np.random.choice(len(sentences), 2, replace = False)
-            sentence1 = sentences[choices[0]]
-            attention_mask1 = attention_masks[choices[0]]
-            label1 = labels[choices[0]]
-            sentence2 = sentences[choices[1]]
-            attention_mask2 = attention_masks[choices[1]]
-            label2 = labels[choices[1]]
-            sentence, attention_mask, label = self.cutmix_randomly(sentence1, sentence2, attention_mask1, attention_mask2, label1, label2)
-            generated_sentences.append(sentence)
-            generated_attention_masks.append(attention_mask)
-            generated_labels.append(label)
+        all_samples = zip(sentences, attention_masks, labels)
 
-        if(to_generate > 0):
+        for sample in all_samples:
+            sentence, attention_mask, label = sample
+            new_samples.extend(self.augment_one_sample_ret_original(sentence, attention_mask, label, all_samples))
 
-            new_sentences = torch.cat([sentences, torch.stack(generated_sentences)])
-            new_attention_masks = torch.cat([attention_masks, torch.stack(generated_attention_masks)])
-            new_labels = torch.cat([labels, torch.stack(generated_labels)])
+        new_sentences, new_attention_masks, new_labels = zip(*new_samples)
 
-            indices = torch.randperm(new_sentences.size()[0])
-            new_sentences = new_sentences[indices]
-            new_attention_masks = new_attention_masks[indices]
-            new_labels = new_labels[indices]
+        sentences = torch.stack(new_sentences)
+        attention_masks = torch.stack(new_attention_masks)
+        labels = torch.stack(new_labels)
 
-            return new_sentences, new_attention_masks, new_labels
+        import pdb
+        pdb.set_trace()
 
         return sentences, attention_masks, labels
 
-    def augment_dataset(self, inputs_embeds, attention_masks = None, labels = None):
-        sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs_embeds, attention_masks, labels)
+    def augment_dataset(self, inputs, attention_masks = None, labels = None):
+        sentences, attention_masks, labels = self.generate_pairwise_and_augment(inputs, attention_masks, labels)
         return sentences, attention_masks, labels
     
 AUGMENTOR_LIST = [Synonym_Replacer("english"), Back_Translator("en"), Insertor("english"), Deletor(), CutOut(), CutMix(), MixUp()]

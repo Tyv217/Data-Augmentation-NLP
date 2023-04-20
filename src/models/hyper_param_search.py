@@ -447,7 +447,7 @@ def text_classify_search_policy(args):
     )
     data.setup("fit")
 
-    n_splits = args.n_splits
+    num_splits = args.num_splits
 
     train_samples, train_labels = data.format_data(data.train_dataset)
     valid_samples, valid_labels = data.format_data(data.valid_dataset)
@@ -460,7 +460,7 @@ def text_classify_search_policy(args):
 
     policies = []
 
-    sss = StratifiedShuffleSplit(n_splits=n_splits, test_size=0.1, random_state=args.seed)
+    sss = StratifiedShuffleSplit(n_splits=num_splits, test_size=0.1, random_state=args.seed)
     for i, (train_index, test_index) in enumerate(sss.split(train_samples, train_labels)):
 
         splitted_train = train_samples[train_index]
@@ -535,7 +535,7 @@ def text_classify_search_policy(args):
         trainer.fit(model, train_dataloader, valid_dataloader)
 
         study = optuna.create_study(direction="minimize")
-        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = 20, timeout = 30000)
+        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = args.num_trials, timeout = 30000)
         for key, value in study.best_params.items():
             print(f"    {key}: {value}")
         

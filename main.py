@@ -31,7 +31,8 @@ def main():
     
     parser.add_argument("--num_policy", type=int, default=5)
     parser.add_argument("--num_op", type=int, default=2)
-    parser.add_argument("--n_splits", type=int, default=3)
+    parser.add_argument("--num_splits", type=int, default=3)
+    parser.add_argument("--num_trials", type=int, default=3)
 
     parser.add_argument("--pretrain", action="store_true")
     parser.add_argument("--no_pretrain",  dest='pretrain', action="store_false")

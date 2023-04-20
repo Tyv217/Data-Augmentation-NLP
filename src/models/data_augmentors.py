@@ -374,7 +374,7 @@ class CutOut(Augmentor):
 
             mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
             return [(sentence * mask, attention_mask, label)]
-        return [(sentence, attention_mask, label)]
+        return None
     
 class MixUp(Augmentor):
     def __init__(self):

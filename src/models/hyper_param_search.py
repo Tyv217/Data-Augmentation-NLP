@@ -432,9 +432,9 @@ def suggest_policies(trial, args):
             augmentor.set_augmentation_percentage(lam)
             augmentors.append(augmentor)
         
-        policies.append(tuple(augmentors))
+        policies.append(augmentors)
         
-    return policies
+    return np.array(policies)
 
 def text_classify_search_policy(args):
     data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
@@ -548,9 +548,11 @@ def text_classify_search_policy(args):
                 
                 augmentors.append(augmentor)
             
-            policy.append(tuple(augmentors))
+            policy.append(augmentors)
 
         policies.append(policy)
+
+        policies = np.array(policies)
 
     
     data = data_modules[args.dataset](
@@ -613,7 +615,7 @@ def text_classify_search_policy(args):
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        training_policies = policies
+        training_policy = policies
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

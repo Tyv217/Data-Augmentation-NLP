@@ -5,7 +5,7 @@ from transformers import AutoModelForSequenceClassification
 import re
 
 class TextClassifierPolicyModule(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, training_policies = [], embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, training_policy = [], embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -16,7 +16,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         if not pretrain:
             self.model.init_weights()
         self.steps_per_epoch = steps_per_epoch
-        self.training_policies = training_policies
+        self.training_policy = training_policy
         self.validation_policy = []
         self.embed_augmentors = embed_augmentors
         self.saliency_scores = {}
@@ -54,8 +54,8 @@ class TextClassifierPolicyModule(pl.LightningModule):
         
         augmentors_on_words = [[] for i in range(len(original_lines))]
         augmentors_on_embeddings = [[] for i in range(len(original_lines))]
-        if len(self.training_policies) > 0:
-            policies = np.random.choice(self.training_policies, len(original_lines))
+        if len(self.training_policy) > 0:
+            policies = self.training_policy[np.random.choice(self.training_policy.shape[0], len(original_lines), replace = True)]
             for i, row in enumerate(policies):
                 for augmentor in row:
                     if augmentor.operate_on_embeddings:
@@ -132,7 +132,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         if len(self.validation_policy) > 0:
             import pdb
             pdb.set_trace()
-            policies = np.random.choice(self.validation_policy, len(original_lines))
+            policies = self.validation_policy[np.random.choice(self.validation_policy.shape[0], len(original_lines), replace = True)]
             for i, row in enumerate(policies):
                 for augmentor in row:
                     if augmentor.operate_on_embeddings:

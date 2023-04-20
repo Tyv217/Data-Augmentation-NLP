@@ -356,7 +356,7 @@ class CutOut(Augmentor):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def augment_one_sample(self, sentence: torch.Tensor, attention_mask, label):
+    def augment_one_sample(self, sentence: torch.Tensor, attention_mask, label, other_samples):
         if(random.random() < self.augmentation_percentage):
             h, w = sentence.shape
 

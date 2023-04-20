@@ -176,6 +176,9 @@ class TextClassifierPolicyModule(pl.LightningModule):
         
         inputs_embeds, attention_masks, label = zip(*new_samples)
 
+        import pdb
+        pdb.set_trace()
+
         output = self.model(inputs_embeds = inputs_embeds, attention_mask = attention_masks, labels = label)
         loss = output.loss
 

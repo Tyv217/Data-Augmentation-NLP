@@ -442,9 +442,6 @@ class MixUp(Augmentor):
         attention_masks = torch.stack(new_attention_masks)
         labels = torch.stack(new_labels)
 
-        import pdb
-        pdb.set_trace()
-
         return sentences, attention_masks, labels
 
     def augment_dataset(self, inputs, attention_masks = None, labels = None):
@@ -540,9 +537,6 @@ class CutMix(Augmentor):
         sentences = torch.stack(new_sentences)
         attention_masks = torch.stack(new_attention_masks)
         labels = torch.stack(new_labels)
-
-        import pdb
-        pdb.set_trace()
 
         return sentences, attention_masks, labels
 

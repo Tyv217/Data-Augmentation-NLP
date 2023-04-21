@@ -417,7 +417,7 @@ class CutOut(Augmentor):
         return sentence
     
     def augment_dataset(self, inputs, attention_masks = None, labels = None):
-        sentences, attention_masks, labels = self.augment_one_sample_ret_original(inputs, attention_masks, labels)
+        sentences = self.augment_one_sample_ret_original(inputs)
         return sentences, attention_masks, labels
     
 class MixUp(Augmentor):

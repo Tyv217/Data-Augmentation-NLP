@@ -535,7 +535,7 @@ def text_classify_search_policy(args):
         trainer.fit(model, train_dataloader, valid_dataloader)
 
         study = optuna.create_study(direction="minimize")
-        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = args.num_trials, timeout = 14400)
+        study.optimize(lambda trial: train_and_eval(trial, args, test_dataloader, model, trainer), n_trials = args.num_trials, timeout = 21600)
         for key, value in study.best_params.items():
             print(f"    {key}: {value}")
         
@@ -553,8 +553,10 @@ def text_classify_search_policy(args):
         policies.extend(policy)
 
     with open('fast_aa_search_policies' + str(args.dataset) + "_seed=" + str(args.seed) + '.txt', 'a') as f:
-        for augmentor in policies:
-            f.write(augmentor.name + "," + str(augmentor.augmentation_percentage) + "\n")
+        for augmentors in policies:
+            for augmentor in augmentors:
+                f.write(augmentor.name + "," + str(augmentor.augmentation_percentage) + ";")
+            f.write("\n")
     
     policies = np.array(policies)
 

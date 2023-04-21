@@ -51,6 +51,7 @@ class Synonym_Replacer(Augmentor):
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
         self.operate_on_embeddings = False
+        self.name = "sr"
     
     def get_synonym(self, word, pos = None):
         if (pos):
@@ -133,6 +134,7 @@ class Back_Translator(Augmentor):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.augmentation_percentage = 0
         self.operate_on_embeddings = False
+        self.name = "bt"
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage / 100 # DONT CHANGE
@@ -232,6 +234,7 @@ class Insertor(Augmentor):
         self.pos_mapper = {'VERB': wn.VERB, 'NOUN': wn.NOUN, 'ADJ': wn.ADJ, 'ADV': wn.ADV}
         self.stemmer = SnowballStemmer("english")
         self.operate_on_embeddings = False
+        self.name = "in"
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -321,6 +324,7 @@ class Deletor(Augmentor):
         super().__init__()
         self.augmentation_percentage = 0
         self.operate_on_embeddings = False
+        self.name = "de"
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -351,7 +355,8 @@ class CutOut(Augmentor):
         super().__init__()
         self.augmentation_percentage = 0
         self.cutout_percentage = 0.5
-        self.operate_on_embeddings = True
+        self.operate_on_embeddings = True        
+        self.name = "co"
 
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
@@ -427,6 +432,7 @@ class MixUp(Augmentor):
         self.operate_on_embeddings = True
         self.weight_sampling_distribution = 'beta'
         self.mixup_percentage = 0.5
+        self.name = "mu"
 
     def sample_weight(self):
         if self.weight_sampling_distribution == 'beta':
@@ -518,6 +524,7 @@ class CutMix(Augmentor):
         self.weight_sampling_distribution = 'beta'
         self.upper_limit = 0.7
         self.lower_limit = 0.3
+        self.name = "cm"
 
     def sample_weight(self):
         return np.random.uniform(self.lower_limit, self.upper_limit)

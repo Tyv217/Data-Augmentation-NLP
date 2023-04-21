@@ -550,7 +550,7 @@ def text_classify_search_policy(args):
             
             policy.append(augmentors)
 
-        policies.append(policy)
+        policies.extend(policy)
 
     with open('fast_aa_search_policies' + str(args.dataset) + "_seed=" + str(args.seed) + '.txt', 'a') as f:
         for augmentor in policies:

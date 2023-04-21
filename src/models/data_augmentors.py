@@ -376,6 +376,50 @@ class CutOut(Augmentor):
             return [(sentence * mask, attention_mask, label)]
         return None
     
+    def augment_one_sample(self, sentence: torch.Tensor, attention_mask, label, other_samples):
+        if(random.random() < self.augmentation_percentage):
+            h, w = sentence.shape
+
+            mask = np.ones((h, w), np.float32)
+
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            x1 = np.clip(x - int(w * self.cutout_percentage / 2), 0, w)
+            x2 = np.clip(x + int(w * self.cutout_percentage / 2), 0, w)
+            y1 = np.clip(y - int(h * self.cutout_percentage / 2), 0, h)
+            y2 = np.clip(y + int(h * self.cutout_percentage / 2), 0, h)
+
+            mask[y1: y2, x1: x2] = 0.
+
+            mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
+            return [(sentence * mask, attention_mask, label)]
+        return None
+    
+    def augment_one_sample_ret_original(self, sentence: torch.Tensor):
+        if(random.random() < self.augmentation_percentage):
+            h, w = sentence.shape
+
+            mask = np.ones((h, w), np.float32)
+
+            y = np.random.randint(h)
+            x = np.random.randint(w)
+
+            x1 = np.clip(x - int(w * self.cutout_percentage / 2), 0, w)
+            x2 = np.clip(x + int(w * self.cutout_percentage / 2), 0, w)
+            y1 = np.clip(y - int(h * self.cutout_percentage / 2), 0, h)
+            y2 = np.clip(y + int(h * self.cutout_percentage / 2), 0, h)
+
+            mask[y1: y2, x1: x2] = 0.
+
+            mask = torch.tensor(mask, requires_grad = False).to(sentence.device)
+            return sentence * mask
+        return sentence
+    
+    def augment_dataset(self, inputs, attention_masks = None, labels = None):
+        sentences, attention_masks, labels = self.augment_one_sample_ret_original(inputs, attention_masks, labels)
+        return sentences, attention_masks, labels
+    
 class MixUp(Augmentor):
     def __init__(self):
         super().__init__()

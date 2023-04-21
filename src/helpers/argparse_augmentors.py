@@ -42,7 +42,7 @@ def parse_augmentors(args):
             "sr,in,de": [0,0,0],
             "bt": [200],
             "co": [30],
-            "mu": [94],
+            "mu": [95],
             "cm": [95],
         },
         "sst2": {

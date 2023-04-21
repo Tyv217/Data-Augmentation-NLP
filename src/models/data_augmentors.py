@@ -37,6 +37,9 @@ class Augmentor(ABC):
             augmented_lines = [self.augment_one_sample_with_saliency(sentence, score) for sentence, score in zip(list(inputs), saliency_scores)]
             return augmented_lines, attention_mask, labels
         
+    def __str__(self):
+        return f"{self.name}"
+        
 
 class Synonym_Replacer(Augmentor):
     def __init__(self, stopword_language, word_to_replace_per_sentence = 2):

@@ -426,6 +426,9 @@ class CutOut(Augmentor):
     
     def augment_dataset(self, inputs, attention_masks = None, labels = None):
         sentences = [self.augment_one_sample_ret_original(sentence) for sentence in inputs]
+        import pdb
+        pdb.set_trace()
+        sentences = torch.stack(sentences)
         return sentences, attention_masks, labels
     
 class MixUp(Augmentor):

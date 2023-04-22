@@ -61,7 +61,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
                 augmentor.augmentation_percentage = augmentation_prob
                 subpolicy.append(augmentor)
             policy.append(subpolicy)
-        self.training_policy = policy
+        self.training_policy = np.array(policy)
     
     def training_step(self, batch, batch_idx):
         original_lines = batch['input_lines']

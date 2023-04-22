@@ -558,74 +558,74 @@ def text_classify_search_policy(args):
                 f.write(augmentor.name + "," + str(augmentor.augmentation_percentage) + ";")
             f.write("\n")
     
-    policies = np.array(policies)
+    # policies = np.array(policies)
 
-    data = data_modules[args.dataset](
-        dataset_percentage = args.dataset_percentage,
-        augmentors = [],
-        batch_size = args.batch_size,
-        tokenize = False
-    )
-    data.setup("fit")
+    # data = data_modules[args.dataset](
+    #     dataset_percentage = args.dataset_percentage,
+    #     augmentors = [],
+    #     batch_size = args.batch_size,
+    #     tokenize = False
+    # )
+    # data.setup("fit")
     
-    try:
-        learning_rate = float(args.learning_rate)
-    except ValueError:
-        raise Exception("Learning rate argument should be a float")
+    # try:
+    #     learning_rate = float(args.learning_rate)
+    # except ValueError:
+    #     raise Exception("Learning rate argument should be a float")
 
-    if args.samples_per_class is not None:
-        args.dataset_percentage = 100
+    # if args.samples_per_class is not None:
+    #     args.dataset_percentage = 100
 
-    filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "_fast_aa_search_" + str(i)
+    # filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "_fast_aa_search_" + str(i)
 
-    logger = TensorBoardLogger(
-        args.logger_dir, name=filename
-    )
+    # logger = TensorBoardLogger(
+    #     args.logger_dir, name=filename
+    # )
 
-    lr_monitor = LearningRateMonitor(logging_interval="step")
-    early_stop_callback = early_stopping.EarlyStopping(
-        monitor='validation_loss_epoch',
-        min_delta=0,
-        patience=3,
-        mode='min',
-    )
-    print(args)
+    # lr_monitor = LearningRateMonitor(logging_interval="step")
+    # early_stop_callback = early_stopping.EarlyStopping(
+    #     monitor='validation_loss_epoch',
+    #     min_delta=0,
+    #     patience=3,
+    #     mode='min',
+    # )
+    # print(args)
 
-    checkpoint_callback = ModelCheckpoint(
-            monitor='validation_accuracy',
-            dirpath=args.logger_dir,
-            save_top_k=1,
-            save_weights_only=True,
-            filename=filename,
-            auto_insert_metric_name=False
-        )
+    # checkpoint_callback = ModelCheckpoint(
+    #         monitor='validation_accuracy',
+    #         dirpath=args.logger_dir,
+    #         save_top_k=1,
+    #         save_weights_only=True,
+    #         filename=filename,
+    #         auto_insert_metric_name=False
+    #     )
 
-    trainer = pl.Trainer.from_argparse_args(
-        args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback]
-    )  # , distributed_backend='ddp_cpu')
+    # trainer = pl.Trainer.from_argparse_args(
+    #     args, deterministic=True, logger=logger, replace_sampler_ddp=False, callbacks=[lr_monitor, early_stop_callback, checkpoint_callback]
+    # )  # , distributed_backend='ddp_cpu')
     
-    # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
-    #     input_, output = batch
-    #     print(input_['src_len'])    
+    # # for batch_idx, batch in enumerate(data.split_and_pad_data(data.dataset['train'])):
+    # #     input_, output = batch
+    # #     print(input_['src_len'])    
 
-    # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
-    # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
+    # # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
+    # # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
-    model = TextClassifierPolicyModule(
-        learning_rate = learning_rate,
-        max_epochs = args.max_epochs,
-        tokenizer = data.tokenizer,
-        steps_per_epoch = int(len(data.train_dataloader())),
-        num_labels = len(data.id2label),
-        id2label = data.id2label,
-        label2id = data.label2id,
-        pretrain = args.pretrain,
-        training_policy = policies
-    ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    # model = TextClassifierPolicyModule(
+    #     learning_rate = learning_rate,
+    #     max_epochs = args.max_epochs,
+    #     tokenizer = data.tokenizer,
+    #     steps_per_epoch = int(len(data.train_dataloader())),
+    #     num_labels = len(data.id2label),
+    #     id2label = data.id2label,
+    #     label2id = data.label2id,
+    #     pretrain = args.pretrain,
+    #     training_policy = policies
+    # ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
-    # most basic trainer, uses good defaults (1 gpu)
-    trainer.fit(model, data)
-    trainer.test(model, dataloaders = data.test_dataloader())
+    # # most basic trainer, uses good defaults (1 gpu)
+    # trainer.fit(model, data)
+    # trainer.test(model, dataloaders = data.test_dataloader())
     
 
     

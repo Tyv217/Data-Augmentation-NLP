@@ -112,15 +112,17 @@ def parse_policy(file_name):
     with open(file_name, 'r') as f:
         for line in f:
             augmentors = line.split(";")
-            subpolicy = []
-            for augmentor_details in augmentors:
-                augmentor_details = augmentor_details.split(",")
-                aug_name = augmentor_details[0]
-                aug_prob = augmentor_details[1]
-                augmentor = deepcopy(AUGMENTATOR_MAPPING[aug_name])
-                augmentor.augmentation_percentage = float(aug_prob)
-                subpolicy.append(augmentor)
-            policy.append(subpolicy)
+            if(len(augmentors) > 0):
+                subpolicy = []
+                for augmentor_details in augmentors:
+                    augmentor_details = augmentor_details.split(",")
+                    if(len(augmentor_details > 1)):
+                        aug_name = augmentor_details[0]
+                        aug_prob = augmentor_details[1]
+                        augmentor = deepcopy(AUGMENTATOR_MAPPING[aug_name])
+                        augmentor.augmentation_percentage = float(aug_prob)
+                        subpolicy.append(augmentor)
+                policy.append(subpolicy)
     return policy
 
 def parse_augmentors_string(augmentor_names, augmentation_params):

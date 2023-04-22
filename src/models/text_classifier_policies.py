@@ -4,6 +4,8 @@ import pytorch_lightning as pl
 from transformers import AutoModelForSequenceClassification
 import re
 from .data_augmentors import AUGMENTOR_LIST
+from copy import deepcopy
+import random
 
 class TextClassifierPolicyModule(pl.LightningModule):
     def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, training_policy = [], embed_augmentors = []):
@@ -48,6 +50,18 @@ class TextClassifierPolicyModule(pl.LightningModule):
         }
 
         return [optimizer], [lr_scheduler]
+    
+    def sample_policies(self, num_policies, num_ops):
+        policy = []
+        for i in num_policies:
+            subpolicy = []
+            for j in num_ops:
+                augmentor = deepcopy(np.random.choice())
+                augmentation_prob = random.uniform(0, 0.3)
+                augmentor.augmentation_percentage = augmentation_prob
+                subpolicy.append(augmentor)
+            policy.append(subpolicy)
+        self.training_policy = policy
     
     def training_step(self, batch, batch_idx):
         original_lines = batch['input_lines']
@@ -125,7 +139,6 @@ class TextClassifierPolicyModule(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
-        self.valdation_policy = [[AUGMENTOR_LIST[6], AUGMENTOR_LIST[6]], [AUGMENTOR_LIST[6], AUGMENTOR_LIST[6]], [AUGMENTOR_LIST[6], AUGMENTOR_LIST[6]]]
 
         original_lines = batch['input_lines']
         label = batch['label'].to(torch.float)

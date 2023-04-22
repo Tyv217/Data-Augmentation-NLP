@@ -434,9 +434,6 @@ def suggest_policies(trial, args):
             augmentors.append(augmentor)
         
         policies.append(augmentors)
-    
-    import pdb
-    pdb.set_trace()
 
     return np.array(policies)
 

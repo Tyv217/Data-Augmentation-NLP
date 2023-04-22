@@ -56,7 +56,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         for i in range(num_policies):
             subpolicy = []
             for j in range(num_ops):
-                augmentor = deepcopy(np.random.choice(augmentors, 1))
+                augmentor = deepcopy(np.random.choice(augmentors))
                 augmentation_prob = random.uniform(0, 0.3)
                 augmentor.augmentation_percentage = augmentation_prob
                 subpolicy.append(augmentor)

@@ -546,8 +546,9 @@ def text_classify_search_policy(args):
             for j in range(args.num_op):
 
                 augmentor = study.best_params[f"augmentor_{i}_{j}"]
+                prob = study.best_params[f"augmentor_{i}_{j}_prob"]
                 
-                augmentors.append(augmentor)
+                augmentors.append((augmentor, prob))
             
             policy.append(augmentors)
 
@@ -556,7 +557,7 @@ def text_classify_search_policy(args):
     with open('fast_aa_search_policies_' + str(args.dataset) + '.txt', 'a') as f:
         for augmentors in policies:
             for augmentor in augmentors:
-                f.write(augmentor.name + "," + str(augmentor.augmentation_percentage) + ";")
+                f.write(augmentor[0].name + "," + str(augmentor[1]) + ";")
             f.write("\n")
     
     # policies = np.array(policies)

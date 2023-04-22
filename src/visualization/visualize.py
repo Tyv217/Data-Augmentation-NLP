@@ -6,6 +6,8 @@ from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, TwitterD
 from sentence_transformers import SentenceTransformer
 from ..helpers import parse_augmentors
 import torch
+import heapq
+from transformers import AutoModelForSequenceClassification
 
 def visualize_data(args):
     if args.visualize == 1:
@@ -142,18 +144,38 @@ def visualize_augmentor_change_data(args):
         for _ in range(AUGMENT_LOOPS):
             train_data2, _, _ = augmentor.augment_dataset(train_data2, None, None)
 
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
-
-    embeddings1 = model.encode(train_data1)
-    embeddings2 = model.encode(train_data2)
-
-    difference = []
+    if args.task == "classify":
+        model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = len(data.id2label), id2label = data.id2label, label2id = data.label2id, problem_type="multi_label_classification", output_attentions=True).distilbert.embeddings
+    elif args.task == "translate":
+        model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2').to(device)
+    else:
+        raise Exception("Incorrect task")
     
-    for e1, e2 in zip(embeddings1, embeddings2):
-        difference.append(e2 - e1)
+    total_difference = []
+
+    for batch1, batch2 in zip(train_data1, train_data2):
+        with torch.no_grad():
+            batch_embeddings1 = model(batch1['input_id'])
+            batch_embeddings2 = model(batch2['input_id'])
+        difference = batch_embeddings2 - batch_embeddings1
+        distance = torch.norm(difference, dim=2)
+        for sentence1, sentence2, dist in zip(batch1['input_id'], batch2['input_id'], distance):
+            if len(total_difference) < 1000:
+                heapq.heappush(total_difference, (dist, difference, sentence1, sentence2))
+            else:
+                heapq.heappushpop(total_difference, (dist, difference, sentence1, sentence2))
+    
+    with open("highest_diff_data_" + args.task + "_" + args.dataset + ".txt", "a") as f:
+        for dist,_, sentence1, sentence2 in sorted(total_difference, reverse=True):
+            f.write("Sentence 1:", sentence1, "\n")
+            f.write("Sentence 2:", sentence2, "\n")
+            f.write("Distance:", dist, "\n")
+            f.write("\n\n\n")
+
+    _, difference, _, _ = zip(*total_difference)
 
     # cosine_similarities = cosine_similarity(embeddings1, embeddings2)
 
     # plot_and_compare_emb(embeddings1, embeddings2, args.task + '.png')
 
-    plot_emb(difference, args.dataset + '_' + args.augmentors + str(AUGMENT_LOOPS) + "_" + str(args.datapoints) + '.png', args.datapoints)
+    plot_emb(list(difference), args.dataset + '_' + args.augmentors + str(AUGMENT_LOOPS) + "_" + str(args.datapoints) + '.png', args.datapoints)

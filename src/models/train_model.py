@@ -447,6 +447,8 @@ def language_model(args):
 
 def text_classify_policy(args):
 
+    data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
+
     data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage,
         augmentors = [],
@@ -499,9 +501,6 @@ def text_classify_policy(args):
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
     if args.use_default_augmentation_params == 0:
-            
-
-        data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
         
         policy = parse_policy('fast_aa_search_policies_' + str(args.dataset) + '.txt')
 

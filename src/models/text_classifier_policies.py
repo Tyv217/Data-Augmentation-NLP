@@ -53,9 +53,9 @@ class TextClassifierPolicyModule(pl.LightningModule):
     
     def generate_training_policy(self, augmentors, num_policies, num_ops):
         policy = []
-        for i in num_policies:
+        for i in range(num_policies):
             subpolicy = []
-            for j in num_ops:
+            for j in range(num_ops):
                 augmentor = deepcopy(np.random.choice(augmentors), 1)
                 augmentation_prob = random.uniform(0, 0.3)
                 augmentor.augmentation_percentage = augmentation_prob

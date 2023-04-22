@@ -519,11 +519,9 @@ def text_classify_policy(args):
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        training_policy = policy
+        training_policy = policy,
+        use_default_augmentation_params = args.use_default_augmentation_params
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
-    if args.use_default_augmentation_params == 0:
-        model.generate_training_policy(AUGMENTOR_LIST, args.num_policy, args.num_op)
     
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)

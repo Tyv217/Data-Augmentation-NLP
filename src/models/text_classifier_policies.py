@@ -8,7 +8,7 @@ from copy import deepcopy
 import random
 
 class TextClassifierPolicyModule(pl.LightningModule):
-    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, training_policy = [], embed_augmentors = []):
+    def __init__(self, learning_rate, max_epochs, tokenizer, steps_per_epoch, num_labels, id2label, label2id, pretrain = True, training_policy = [], use_default_augmentation_params = 0, embed_augmentors = []):
         super().__init__()
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
@@ -24,9 +24,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         self.embed_augmentors = embed_augmentors
         self.saliency_scores = {}
         self.saliency_scores_per_word = {}
-
-    def set_validation_policy(self, validation_policy):
-        self.validation_policy = validation_policy
+        self.use_default_augmentation_params = True if use_default_augmentation_params != 0 else False
 
     def forward(self, input_id, attention_mask, label):
         label = label.to(torch.float)
@@ -51,17 +49,17 @@ class TextClassifierPolicyModule(pl.LightningModule):
 
         return [optimizer], [lr_scheduler]
     
-    def generate_training_policy(self, augmentors, num_policies, num_ops):
-        policy = []
-        for i in range(num_policies):
-            subpolicy = []
-            for j in range(num_ops):
-                augmentor = deepcopy(np.random.choice(augmentors))
-                augmentation_prob = random.uniform(0, 0.3)
-                augmentor.augmentation_percentage = augmentation_prob
-                subpolicy.append(augmentor)
-            policy.append(subpolicy)
-        self.training_policy = np.array(policy)
+    # def generate_training_policy(self, augmentors, num_policies, num_ops):
+    #     policy = []
+    #     for i in range(num_policies):
+    #         subpolicy = []
+    #         for j in range(num_ops):
+    #             augmentor = deepcopy(np.random.choice(augmentors))
+    #             augmentation_prob = random.uniform(0, 0.3)
+    #             augmentor.augmentation_percentage = augmentation_prob
+    #             subpolicy.append(augmentor)
+    #         policy.append(subpolicy)
+    #     self.training_policy = np.array(policy)
     
     def training_step(self, batch, batch_idx):
         original_lines = batch['input_lines']
@@ -70,13 +68,25 @@ class TextClassifierPolicyModule(pl.LightningModule):
         augmentors_on_words = [[] for i in range(len(original_lines))]
         augmentors_on_embeddings = [[] for i in range(len(original_lines))]
         if len(self.training_policy) > 0:
-            policies = self.training_policy[np.random.choice(self.training_policy.shape[0], len(original_lines), replace = True)]
-            for i, row in enumerate(policies):
-                for augmentor in row:
+            if self.use_default_augmentation_params:
+                augmentors = []
+                for _ in range(len(original_lines)):
+                    augmentor = deepcopy(np.random.choice(AUGMENTOR_LIST))
+                    augmentor.augmentation_percentage = np.random.uniform(0, 0.3)
+                    augmentors.append(augmentor)
+                for i, augmentor in enumerate(augmentors):
                     if augmentor.operate_on_embeddings:
-                        augmentors_on_embeddings[i].append(augmentor)
+                        augmentors_on_embeddings[i] = [augmentor]
                     else:
-                        augmentors_on_words[i].append(augmentor)
+                        augmentors_on_words[i] = [augmentor]
+            else:
+                policies = self.training_policy[np.random.choice(self.training_policy.shape[0], len(original_lines), replace = True)]
+                for i, row in enumerate(policies):
+                    for augmentor in row:
+                        if augmentor.operate_on_embeddings:
+                            augmentors_on_embeddings[i].append(augmentor)
+                        else:
+                            augmentors_on_words[i].append(augmentor)
 
         new_lines = []
         for line, augmentors in zip(original_lines, augmentors_on_words):

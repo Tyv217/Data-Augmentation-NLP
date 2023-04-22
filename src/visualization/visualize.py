@@ -8,6 +8,7 @@ from ..helpers import parse_augmentors
 import torch
 import heapq
 from transformers import AutoModelForSequenceClassification
+from torch.utils.data import DataLoader
 
 def visualize_data(args):
     if args.visualize == 1:
@@ -131,6 +132,7 @@ def visualize_augmentor_change_data(args):
     data.setup("fit")
 
     train_data1 = list(data.get_dataset_text())
+    train_dataloader1 = data.train_dataloader()
     # random.shuffle(train_data1)
     # train_data1 = train_data1[:1000]
 
@@ -144,6 +146,8 @@ def visualize_augmentor_change_data(args):
         for _ in range(AUGMENT_LOOPS):
             train_data2, _, _ = augmentor.augment_dataset(train_data2, None, None)
 
+    train_dataloader2 = DataLoader(data.split_and_tokenize((train_data2, [0 for _ in range(len(train_data2))]), format = False), batch_size = data.batch_size)
+
     if args.task == "classify":
         model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels = len(data.id2label), id2label = data.id2label, label2id = data.label2id, problem_type="multi_label_classification", output_attentions=True).distilbert.embeddings
     elif args.task == "translate":
@@ -153,17 +157,22 @@ def visualize_augmentor_change_data(args):
     
     total_difference = []
 
-    for batch1, batch2 in zip(train_data1, train_data2):
+    for batch1, batch2 in zip(train_dataloader1, train_dataloader2):
         with torch.no_grad():
             batch_embeddings1 = model(batch1['input_id'])
             batch_embeddings2 = model(batch2['input_id'])
         difference = batch_embeddings2 - batch_embeddings1
+        import pdb
+        pdb.set_trace()
         distance = torch.norm(difference, dim=2)
-        for sentence1, sentence2, dist in zip(batch1['input_id'], batch2['input_id'], distance):
-            if len(total_difference) < 1000:
-                heapq.heappush(total_difference, (dist, difference, sentence1, sentence2))
-            else:
-                heapq.heappushpop(total_difference, (dist, difference, sentence1, sentence2))
+        for sentence1, sentence2, dist, diff in zip(batch1['input_id'], batch2['input_id'], distance, difference):
+            import pdb
+            pdb.set_trace()
+            if len(total_difference) < 2000 or dist > total_difference[-1][0]:
+                total_difference.append((dist, diff, sentence1, sentence2))
+                total_difference = sorted(total_difference, key=lambda x: x[0], reverse=True)[:1000]
+
+    total_difference = sorted(total_difference, key=lambda x: x[0], reverse=True)[:1000]
     
     with open("highest_diff_data_" + args.task + "_" + args.dataset + ".txt", "a") as f:
         for dist,_, sentence1, sentence2 in sorted(total_difference, reverse=True):

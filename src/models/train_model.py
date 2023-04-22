@@ -18,6 +18,7 @@ from .language_model import LanguageModelModule
 import signal, os
 import statistics
 import numpy as np
+from .data_augmentors import AUGMENTOR_LIST
 
 def train_model(args):
     if args.task == 'classify':
@@ -446,13 +447,6 @@ def language_model(args):
 
 def text_classify_policy(args):
 
-    data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
-    
-    policy = parse_policy('fast_aa_search_policies_' + str(args.dataset) + '.txt')
-
-    
-    policy = np.array(policy)
-
     data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage,
         augmentors = [],
@@ -504,6 +498,19 @@ def text_classify_policy(args):
     # id2label = {0: "WORLD", 1: "SPORTS", 2: "BUSINESS", 3: "SCIENCE"}
     # label2id = {"WORLD": 0, "SPORTS": 1, "BUSINESS": 2, "SCIENCE": 3}
 
+    if args.use_default_augmentation_params == 0:
+            
+
+        data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
+        
+        policy = parse_policy('fast_aa_search_policies_' + str(args.dataset) + '.txt')
+
+    else:
+        
+        policy = []
+
+    policy = np.array(policy)
+
     model = TextClassifierPolicyModule(
         learning_rate = learning_rate,
         max_epochs = args.max_epochs,
@@ -515,6 +522,9 @@ def text_classify_policy(args):
         pretrain = args.pretrain,
         training_policy = policy
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+    if args.use_default_augmentation_params == 0:
+        model.generate_training_policy(AUGMENTOR_LIST, args.num_policies, args.num_ops)
     
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)

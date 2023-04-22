@@ -28,6 +28,7 @@ from ray.tune.integration.pytorch_lightning import TuneReportCallback, \
 import numpy as np
 from torch.utils.data import DataLoader
 from optuna import distributions
+from copy import deepcopy
 
 def hyper_param_search(args):
     if args.task == 'classify':
@@ -424,7 +425,7 @@ def suggest_policies(trial, args):
         for j in range(args.num_op):
             # Sample from a categorical distribution that represents a possible augmentation method
 
-            augmentor = trial.suggest_categorical(f"augmentor_{i}_{j}", AUGMENTOR_LIST)
+            augmentor = deepcopy(trial.suggest_categorical(f"augmentor_{i}_{j}", AUGMENTOR_LIST))
 
             lam = trial.suggest_float(f"augmentor_{i}_{j}_prob", 0, 1)
             

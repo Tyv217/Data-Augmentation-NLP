@@ -116,7 +116,7 @@ def parse_policy(file_name):
                 subpolicy = []
                 for augmentor_details in augmentors:
                     augmentor_details = augmentor_details.split(",")
-                    if(len(augmentor_details > 1)):
+                    if(len(augmentor_details) > 1):
                         aug_name = augmentor_details[0]
                         aug_prob = augmentor_details[1]
                         augmentor = deepcopy(AUGMENTATOR_MAPPING[aug_name])

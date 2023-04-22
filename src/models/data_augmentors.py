@@ -80,6 +80,7 @@ class Synonym_Replacer(Augmentor):
         return word_list
 
     def augment_one_sample(self, sentence):
+        sentence = str(sentence)
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
             if(random.random() < self.augmentation_percentage):
@@ -272,6 +273,7 @@ class Insertor(Augmentor):
         return sentence
     
     def augment_one_sample(self, sentence):
+        sentence = str(sentence)
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
             if(random.random() < self.augmentation_percentage):

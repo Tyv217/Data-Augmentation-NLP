@@ -1,4 +1,5 @@
 from ..models.data_augmentors import Synonym_Replacer, Back_Translator, Insertor, Deletor, CutOut, CutMix, MixUp
+from copy import deepcopy
 AUGMENTATOR_MAPPING = {"sr": Synonym_Replacer("english"), "bt": Back_Translator("en"), "in": Insertor("english"), "de": Deletor(), "co": CutOut(), "cm": CutMix(), "mu": MixUp()}
 
 def parse_augmentors(args):
@@ -105,6 +106,23 @@ def parse_augmentors(args):
             augmentors_on_words.append(augmentor)
 
     return augmentors_on_words, augmentors_on_tokens
+
+def parse_policy(file_name):
+    policy = []
+    with open(file_name, 'r') as f:
+        for line in f:
+            augmentors = line.split(";")
+            subpolicy = []
+            for augmentor_details in augmentors:
+                aug_name = augmentor_details.split(",")[0]
+                aug_prob = augmentor_details.split(",")[0]
+                augmentor = deepcopy(AUGMENTATOR_MAPPING[aug_name])
+                augmentor.augmentation_percentage = float(aug_prob)
+                subpolicy.append(augmentor)
+            policy.append(subpolicy)
+    return policy
+            
+
 
 def parse_augmentors_string(augmentor_names, augmentation_params):
     augmentor_names = filter(lambda x: x != "", (augmentor_names.split(",")))

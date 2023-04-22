@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 import pytorch_lightning as pl
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 from pytorch_lightning.callbacks import LearningRateMonitor, early_stopping, ModelCheckpoint
-from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed
+from ..helpers import EnglishPreProcessor, Logger, parse_augmentors, set_seed, parse_policy
 from ..visualization import plot_saliency_scores
 from .translator import TranslatorModule
 from ..data import IWSLT17DataModule, AGNewsDataModule, ColaDataModule, QNLIDataModule, SST2DataModule, TwitterDataModule, BabeDataModule, IMDBDataModule, TrecDataModule, DBPediaDataModule, FewShotTextClassifyWrapperModule, WikiTextDataModule
@@ -447,22 +447,11 @@ def language_model(args):
 def text_classify_policy(args):
 
     data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
-
-    policies = []
     
-    with open('fast_aa_search_policies_' + str(args.dataset) + '.txt', 'r') as f:
-        for line in f:
-            augmentors = line.split(";")
-            subpolicy = []
-            for aug in augmentors:
-                augmentor = aug.split(",")[0]
-                probability = aug.split(",")[0]
-                augmentor.augmentation_percentage = probability
-                subpolicy.append(augmentor)
-            policies.append(subpolicy)
+    policy = parse_policy('fast_aa_search_policies_')
 
     
-    policies = np.array(policies)
+    policy = np.array(policy)
 
     data = data_modules[args.dataset](
         dataset_percentage = args.dataset_percentage,
@@ -480,7 +469,7 @@ def text_classify_policy(args):
     if args.samples_per_class is not None:
         args.dataset_percentage = 100
 
-    filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "_fast_aa_search_" + str(i)
+    filename = args.task + "_" + args.augmentors + "_data=" + str(args.dataset_percentage) + "seed=" + str(args.seed) + "_fast_aa_test"
 
     logger = TensorBoardLogger(
         args.logger_dir, name=filename
@@ -524,7 +513,7 @@ def text_classify_policy(args):
         id2label = data.id2label,
         label2id = data.label2id,
         pretrain = args.pretrain,
-        training_policy = policies
+        training_policy = policy
     ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     
     # most basic trainer, uses good defaults (1 gpu)

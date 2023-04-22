@@ -83,28 +83,28 @@ class TextClassifierPolicyModule(pl.LightningModule):
         input_ids, attention_masks = input_encoding.input_ids.to(self.device), input_encoding.attention_mask.to(self.device)
         inputs_embeds = self.model.distilbert.embeddings(input_ids)
 
-        new_samples = []
-        all_samples = list(zip(inputs_embeds, attention_masks, label))
+        # new_samples = []
+        # all_samples = list(zip(inputs_embeds, attention_masks, label))
 
-        for sample, augmentors in zip(all_samples, augmentors_on_embeddings):
-            sentence, attention_mask, label = sample
-            new_samples_curr = []
-            for augmentor in augmentors:
-                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
-                if(new_lines is not None):
-                    if(len(new_lines) == 1): # Cutout
-                        sentence, attention_mask, label = new_lines[0]
-                    else: # Mixup or CutMix
-                        new_samples_curr.append(new_lines[1])
+        # for sample, augmentors in zip(all_samples, augmentors_on_embeddings):
+        #     sentence, attention_mask, label = sample
+        #     new_samples_curr = []
+        #     for augmentor in augmentors:
+        #         new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
+        #         if(new_lines is not None):
+        #             if(len(new_lines) == 1): # Cutout
+        #                 sentence, attention_mask, label = new_lines[0]
+        #             else: # Mixup or CutMix
+        #                 new_samples_curr.append(new_lines[1])
 
-            new_samples_curr.append((sentence, attention_mask, label))
-            new_samples.extend(new_samples_curr)
-        inputs_embeds, attention_masks, label = zip(*new_samples)
-        try:
-            inputs_embeds = torch.stack(inputs_embeds)
-        except:
-            import pdb
-            pdb.set_trace()
+        #     new_samples_curr.append((sentence, attention_mask, label))
+        #     new_samples.extend(new_samples_curr)
+        # inputs_embeds, attention_masks, label = zip(*new_samples)
+        # try:
+        #     inputs_embeds = torch.stack(inputs_embeds)
+        # except:
+        #     import pdb
+        #     pdb.set_trace()
         attention_masks = torch.stack(attention_masks)
         label = torch.stack(label)
 

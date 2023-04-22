@@ -448,7 +448,7 @@ def text_classify_policy(args):
 
     data_modules = {"cola": ColaDataModule, "twitter": TwitterDataModule, "babe": BabeDataModule, "ag_news": AGNewsDataModule, "imdb": IMDBDataModule, "trec": TrecDataModule, "dbpedia": DBPediaDataModule, "qnli": QNLIDataModule, "sst2": SST2DataModule}
     
-    policy = parse_policy('fast_aa_search_policies_')
+    policy = parse_policy('fast_aa_search_policies_' + str(args.dataset) + '.txt')
 
     
     policy = np.array(policy)

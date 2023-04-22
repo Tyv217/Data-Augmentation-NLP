@@ -121,8 +121,6 @@ def parse_policy(file_name):
                 subpolicy.append(augmentor)
             policy.append(subpolicy)
     return policy
-            
-
 
 def parse_augmentors_string(augmentor_names, augmentation_params):
     augmentor_names = filter(lambda x: x != "", (augmentor_names.split(",")))

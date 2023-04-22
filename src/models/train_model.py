@@ -450,7 +450,7 @@ def text_classify_policy(args):
 
     policies = []
     
-    with open('fast_aa_search_policies' + str(args.dataset) + "_seed=" + str(args.seed) + '.txt', 'r') as f:
+    with open('fast_aa_search_policies_' + str(args.dataset) + '.txt', 'r') as f:
         for line in f:
             augmentors = line.split(";")
             subpolicy = []

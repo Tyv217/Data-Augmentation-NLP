@@ -115,7 +115,7 @@ def parse_policy(file_name):
             subpolicy = []
             for augmentor_details in augmentors:
                 aug_name = augmentor_details.split(",")[0]
-                aug_prob = augmentor_details.split(",")[0]
+                aug_prob = augmentor_details.split(",")[1]
                 augmentor = deepcopy(AUGMENTATOR_MAPPING[aug_name])
                 augmentor.augmentation_percentage = float(aug_prob)
                 subpolicy.append(augmentor)

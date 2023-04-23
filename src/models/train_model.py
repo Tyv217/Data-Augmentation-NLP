@@ -526,6 +526,11 @@ def text_classify_policy(args):
     # most basic trainer, uses good defaults (1 gpu)
     trainer.fit(model, data)
     trainer.test(model, dataloaders = data.test_dataloader())
+
+    if args.use_default_augmentation_params == 0:
+        print('Used searched policy.')
+    else:
+        print('Used Trivial Aug.')
     
 
     

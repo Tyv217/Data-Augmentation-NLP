@@ -37,7 +37,7 @@ def parse_augmentors(args):
             "cm": [30],
         },
         "cola": {
-            "sr": [0],
+            "sr": [45],
             "in": [45],
             "de": [45],
             "sr,in,de": [0,0,0],

@@ -79,7 +79,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
             
         elif self.use_default_augmentation_params:
             augmentors = []
-            augmetation_percentages = np.random.uniform(0, 0.3, size=len(original_lines))
+            augmentation_percentages = np.random.uniform(0, 0.3, size=len(original_lines))
             for i in range(len(original_lines)):
                 augmentor = np.random.choice(AUGMENTOR_LIST)
                 augmentors.append(augmentor)
@@ -111,7 +111,7 @@ class TextClassifierPolicyModule(pl.LightningModule):
         new_samples = []
         all_samples = list(zip(inputs_embeds, attention_masks, label))
 
-        for sample, augmentors, augmentation_percentage in zip(all_samples, augmentors_on_embeddings, augmetation_percentages):
+        for sample, augmentors, augmentation_percentage in zip(all_samples, augmentors_on_embeddings, augmentation_percentages):
             sentence, attention_mask, label = sample
             new_samples_curr = []
             for augmentor in augmentors:

@@ -67,32 +67,33 @@ class TextClassifierPolicyModule(pl.LightningModule):
         
         augmentors_on_words = [[] for i in range(len(original_lines))]
         augmentors_on_embeddings = [[] for i in range(len(original_lines))]
+        augmentation_percentages =  np.full((len(original_lines),), None)
         if len(self.training_policy) > 0:
-            if self.use_default_augmentation_params:
-                augmentors = []
-                for _ in range(len(original_lines)):
-                    augmentor = deepcopy(np.random.choice(AUGMENTOR_LIST))
-                    augmentor.augmentation_percentage = np.random.uniform(0, 0.3)
-                    augmentors.append(augmentor)
-                for i, augmentor in enumerate(augmentors):
+            policies = self.training_policy[np.random.choice(self.training_policy.shape[0], len(original_lines), replace = True)]
+            for i, row in enumerate(policies):
+                for augmentor in row:
                     if augmentor.operate_on_embeddings:
-                        augmentors_on_embeddings[i] = [augmentor]
+                        augmentors_on_embeddings[i].append(augmentor)
                     else:
-                        augmentors_on_words[i] = [augmentor]
-            else:
-                policies = self.training_policy[np.random.choice(self.training_policy.shape[0], len(original_lines), replace = True)]
-                for i, row in enumerate(policies):
-                    for augmentor in row:
-                        if augmentor.operate_on_embeddings:
-                            augmentors_on_embeddings[i].append(augmentor)
-                        else:
-                            augmentors_on_words[i].append(augmentor)
-
+                        augmentors_on_words[i].append(augmentor)
+            
+        elif self.use_default_augmentation_params:
+            augmentors = []
+            augmetation_percentages = np.random.uniform(0, 0.3, size=len(original_lines))
+            for i in range(len(original_lines)):
+                augmentor = np.random.choice(AUGMENTOR_LIST)
+                augmentors.append(augmentor)
+            for i, augmentor in enumerate(augmentors):
+                if augmentor.operate_on_embeddings:
+                    augmentors_on_embeddings[i] = [augmentor]
+                else:
+                    augmentors_on_words[i] = [augmentor]
+                
         new_lines = []
-        for line, augmentors in zip(original_lines, augmentors_on_words):
+        for line, augmentors, augmentation_percentage in zip(original_lines, augmentors_on_words, augmentation_percentages):
             new_line = line
             for augmentor in augmentors:
-                new_line = augmentor.augment_one_sample(new_line)
+                new_line = augmentor.augment_one_sample(new_line, augmentation_percentage)
             new_lines.append(new_line)
 
         input_encoding = self.tokenizer.batch_encode_plus(
@@ -110,11 +111,11 @@ class TextClassifierPolicyModule(pl.LightningModule):
         new_samples = []
         all_samples = list(zip(inputs_embeds, attention_masks, label))
 
-        for sample, augmentors in zip(all_samples, augmentors_on_embeddings):
+        for sample, augmentors, augmentation_percentage in zip(all_samples, augmentors_on_embeddings, augmetation_percentages):
             sentence, attention_mask, label = sample
             new_samples_curr = []
             for augmentor in augmentors:
-                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples)
+                new_lines = augmentor.augment_one_sample(sentence, attention_mask, label, all_samples, augmentation_percentage)
                 if(new_lines is not None):
                     if(len(new_lines) == 1): # Cutout
                         sentence, attention_mask, label = new_lines[0]

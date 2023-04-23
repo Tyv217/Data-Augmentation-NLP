@@ -79,11 +79,12 @@ class Synonym_Replacer(Augmentor):
                     word_list.append((word, self.pos_mapper[token.pos_]))
         return word_list
 
-    def augment_one_sample(self, sentence):
+    def augment_one_sample(self, sentence, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
         sentence = str(sentence)
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
-            if(random.random() < self.augmentation_percentage):
+            if(random.random() < augmentation_percentage):
                 curr_sentence = sentence
                 synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
@@ -184,8 +185,9 @@ class Back_Translator(Augmentor):
             models.append((model1, model2, tokenizer1, tokenizer2))
         return models
     
-    def augment_one_sample(self, sentence):
-        if(random.random() < self.augmentation_percentage):
+    def augment_one_sample(self, sentence, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
+        if(random.random() < augmentation_percentage):
             translators = self.get_translators()
             (model1, model2, tokenizer1, tokenizer2) = random.choice(translators)
             return self.back_translate(sentence, model1, model2, tokenizer1, tokenizer2)
@@ -272,11 +274,12 @@ class Insertor(Augmentor):
             sentence = sentence[:index] + " " + word +  sentence[index:]
         return sentence
     
-    def augment_one_sample(self, sentence):
+    def augment_one_sample(self, sentence, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
         sentence = str(sentence)
         word_list = self.get_word_list(sentence)
         for word,pos in word_list:
-            if(random.random() < self.augmentation_percentage):
+            if(random.random() < augmentation_percentage):
                 curr_sentence = sentence
                 synonyms = self.get_synonym(word, pos)
                 synonyms = list(filter(lambda x: '_' not in x, synonyms))
@@ -334,11 +337,12 @@ class Deletor(Augmentor):
     def set_augmentation_percentage(self, augmentation_percentage):
         self.augmentation_percentage = augmentation_percentage
 
-    def augment_one_sample(self, sentence):
+    def augment_one_sample(self, sentence, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
         word_list = sentence.split(" ")
         to_delete = []
         for word in word_list:
-            if (random.random() < self.augmentation_percentage):
+            if (random.random() < augmentation_percentage):
                 to_delete.append(word)
         for word in to_delete:
             word_list.remove(word)
@@ -386,8 +390,9 @@ class CutOut(Augmentor):
             return [(sentence * mask, attention_mask, label)]
         return None
     
-    def augment_one_sample(self, sentence: torch.Tensor, attention_mask, label, other_samples):
-        if(random.random() < self.augmentation_percentage):
+    def augment_one_sample(self, sentence: torch.Tensor, attention_mask, label, other_samples, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
+        if(random.random() < augmentation_percentage):
             h, w = sentence.shape
 
             mask = np.ones((h, w), np.float32)
@@ -461,8 +466,9 @@ class MixUp(Augmentor):
 
         return sentence, attention_mask, label
     
-    def augment_one_sample(self, sentence, attention_mask, label, other_samples):
-        if random.random() < self.augmentation_percentage:
+    def augment_one_sample(self, sentence, attention_mask, label, other_samples, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
+        if random.random() < augmentation_percentage:
 
             index = np.random.randint(0, len(other_samples))
             sentence2, attention_mask2, label2 = other_samples[index]
@@ -578,8 +584,9 @@ class CutMix(Augmentor):
 
         return sentence, attention_mask, label
     
-    def augment_one_sample(self, sentence, attention_mask, label, other_samples):
-        if random.random() < self.augmentation_percentage:
+    def augment_one_sample(self, sentence, attention_mask, label, other_samples, augmentation_percentage = None):
+        augmentation_percentage = augmentation_percentage if augmentation_percentage is not None else self.augmentation_percentage
+        if random.random() < augmentation_percentage:
             index = np.random.randint(0, len(other_samples))
             sentence2, attention_mask2, label2 = other_samples[index]
             return [(sentence, attention_mask, label), (self.cutmix_randomly(sentence, sentence2, attention_mask, attention_mask2, label, label2))]

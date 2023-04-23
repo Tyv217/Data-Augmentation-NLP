@@ -163,7 +163,6 @@ def visualize_augmentor_change_data(args):
             batch_embeddings2 = model(batch2['input_id'])
         difference = batch_embeddings2 - batch_embeddings1
         for sentence1, sentence2, diff in zip(batch1['input_id'], batch2['input_id'], difference):
-            magnitude1 = np.sqrt(np.sum(np.square(flat_array1)))
             if len(total_difference) < 2000 or dist > total_difference[-1][0]:
                 total_difference.append((dist, diff, sentence1, sentence2))
                 total_difference = sorted(total_difference, key=lambda x: x[0], reverse=True)[:1000]
